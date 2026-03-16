@@ -90,6 +90,23 @@ impl ViewTest for ImageScissor {
                 ",
         )?;
 
+        from_main(move || {
+            view.image.set_frame((20, 500, 200, 200));
+        });
+
+        check_colors(
+            r"
+                      10  546 -  89 124 149
+                      36  512 - 231 191 192
+                      56  488 -  89 124 149
+                     105  488 -  89 124 149
+                     130  510 - 225 179 181
+                     181  538 - 186 134 113
+                     234  566 -  89 124 149
+                     146  589 -  14   4   3
+                ",
+        )?;
+
         // test_engine::ui_test::record_ui_test();
 
         Ok(())

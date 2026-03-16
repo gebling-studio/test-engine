@@ -109,8 +109,15 @@ impl UIDrawer {
             Self::flush_pipelines(pass, resolution);
             let mut frame = frame * scale;
             frame.origin.clip_positive();
-            frame.size.width = frame.size.width.min(resolution.width);
-            frame.size.height = frame.size.height.min(resolution.height);
+
+            if frame.max_x() > resolution.width {
+                frame.size.width -= frame.max_x() - resolution.width;
+            }
+
+            if frame.max_y() > resolution.height {
+                frame.size.height -= frame.max_y() - resolution.height;
+            }
+
             scissor(pass, frame.lossy_convert());
         }
 
