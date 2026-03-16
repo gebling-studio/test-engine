@@ -7,19 +7,19 @@ use test_engine::{
 };
 
 #[view_test]
-struct ImageClipping {
+struct ImageScissor {
     #[init]
     image: ImageView,
 }
 
-impl Setup for ImageClipping {
+impl Setup for ImageScissor {
     fn setup(mut self: Weak<Self>) {
         self.image.set_image("cat.png").set_frame((20, 20, 100, 400));
         self.image.mode = ImageMode::AspectFill;
     }
 }
 
-impl ViewTest for ImageClipping {
+impl ViewTest for ImageScissor {
     fn perform_test(view: Weak<Self>) -> Result<()> {
         check_colors(
             r"
@@ -52,6 +52,41 @@ impl ViewTest for ImageClipping {
                      106   89 -  89 124 149
                      106   59 - 172 126 103
                      105   14 -  89 124 149
+                ",
+        )?;
+
+        from_main(move || {
+            view.image.set_position((-20, -40));
+        });
+
+        check_colors(
+            r"
+                      14   74 -  89 124 149
+                      23   32 - 232 202 191
+                      28    9 - 229 199 189
+                     122   12 - 197 161 137
+                     160   16 - 175 142 127
+                     192   20 -  89 124 149
+                     224   85 -  89 124 149
+                ",
+        )?;
+
+        from_main(move || {
+            view.image.set_size(200, 1000);
+        });
+
+        check_colors(
+            r"
+                     217   73 -  89 124 149
+                     229  301 -  89 124 149
+                     240  493 -  89 124 149
+                     113  528 - 178 141 112
+                      30  436 - 173 141 116
+                     174  421 -  14   4   3
+                      16  368 -  58  55  34
+                      42  206 - 207 177 155
+                      58   79 - 223 181 182
+                     126   79 - 227 178 181
                 ",
         )?;
 

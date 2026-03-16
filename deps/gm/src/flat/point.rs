@@ -91,6 +91,11 @@ impl Point<f32> {
     pub fn neg(&self) -> Self {
         (-self.x, -self.y).into()
     }
+
+    pub fn clip_positive(&mut self) {
+        self.x = self.x.max(0.0);
+        self.y = self.y.max(0.0);
+    }
 }
 
 impl Point<f32> {
