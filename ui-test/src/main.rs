@@ -34,6 +34,8 @@ mod inspect;
 mod level;
 mod views;
 
+test_engine::export_ui_tests!();
+
 #[derive(Parser)]
 struct Args {
     #[arg(long, short)]
@@ -49,12 +51,20 @@ fn run(test_name: Option<String>) -> Result<()> {
             UIManager::override_scale(1.0);
         });
 
-        let mut tests: BTreeMap<_, _> = test_game::UI_TESTS.lock().clone();
+        let mut my_tests: BTreeMap<_, _> = crate::UI_TESTS.lock().clone();
+        my_tests.append(&mut crate::UI_TESTS.lock().clone());
 
-        tests.append(&mut test_engine::UI_TESTS.lock().clone());
+        let mut te_tests: BTreeMap<_, _> = test_game::UI_TESTS.lock().clone();
+        te_tests.append(&mut test_engine::UI_TESTS.lock().clone());
 
         if let Some(test_name) = test_name {
-            let test = match tests.get(&test_name) {
+            if let Some(test) = my_tests.get(&test_name) {
+                test()?;
+                AppRunner::stop();
+                return Ok(());
+            }
+
+            let test = match te_tests.get(&test_name) {
                 Some(test) => test,
                 None => {
                     println!("Test: {test_name} not found");
@@ -73,7 +83,7 @@ fn run(test_name: Option<String>) -> Result<()> {
             test().await?;
             info!("Cycle {i}: OK");
 
-            for (_name, test) in tests.iter() {
+            for (_name, test) in te_tests.iter() {
                 test()?;
             }
         }

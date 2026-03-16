@@ -1,5 +1,5 @@
 use std::{
-    ops::{Deref, DerefMut},
+    ops::Deref,
     path::PathBuf,
     sync::{
         OnceLock,
@@ -19,8 +19,7 @@ use refs::{Own, Weak};
 use window::Window;
 
 use crate::{
-    DEBUG_VIEW, Keymap, RootView, Setup, TouchStack, UIAnimation, UIEvent, UIEvents, View, ViewData,
-    ViewFrame, WeakView,
+    Keymap, RootView, Setup, TouchStack, UIAnimation, UIEvent, UIEvents, View, ViewData, ViewFrame, WeakView,
 };
 
 pub(crate) static DELETED_VIEWS: Mutex<Vec<Own<dyn View>>> = Mutex::new(Vec::new());
@@ -192,10 +191,6 @@ impl UIManager {
 
     pub fn display_scale() -> f32 {
         Window::screen_scale()
-    }
-
-    pub fn debug_view() -> Option<&'static mut dyn View> {
-        DEBUG_VIEW.get_mut().as_mut().map(DerefMut::deref_mut)
     }
 
     pub fn root_view() -> Weak<RootView> {

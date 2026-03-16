@@ -44,9 +44,6 @@ impl UIDrawer {
     pub(crate) fn update() {
         UIManager::commit_animations();
         Self::update_view(UIManager::root_view().deref_mut());
-        if let Some(debug_view) = UIManager::debug_view() {
-            Self::update_view(debug_view);
-        }
     }
 
     pub(crate) fn draw<'a>(pass: &mut RenderPass<'a>) {
@@ -77,17 +74,6 @@ impl UIDrawer {
             rect_view,
             &mut scissor_stack,
         );
-        if let Some(debug_view) = UIManager::debug_view() {
-            Self::draw_view(
-                pass,
-                debug_view,
-                &mut text_groups,
-                debug_frames,
-                scale,
-                rect_view,
-                &mut scissor_stack,
-            );
-        }
 
         Self::flush_pipelines(pass, rect_view);
         scissor_checked(

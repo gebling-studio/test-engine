@@ -7,8 +7,8 @@ use test_engine::{
     ui::{
         AddLabel, Anchor,
         Anchor::{Top, X},
-        BLACK, Button, DebugView, DrawingView, Image, ImageView, Label, NumberView, Point, PointsPath, Setup,
-        Size, TURQUOISE, ViewData, ViewTouch, WHITE, view,
+        BLACK, Button, DrawingView, Image, ImageView, Label, NumberView, Point, PointsPath, Setup, Size,
+        TURQUOISE, ViewData, ViewTouch, WHITE, view,
     },
 };
 
@@ -95,8 +95,6 @@ impl NoiseView {
 impl Setup for NoiseView {
     fn setup(self: Weak<Self>) {
         const WIDTH: u32 = 100;
-
-        DebugView::disable();
 
         LevelManager::set_level(NoiseLevel::default());
 
