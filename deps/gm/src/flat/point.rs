@@ -33,7 +33,6 @@ pub struct Point<T = f32> {
 }
 
 unsafe impl<T: Zeroable> Zeroable for Point<T> {}
-
 unsafe impl<T: Pod> Pod for Point<T> {}
 
 impl<T> Point<T> {

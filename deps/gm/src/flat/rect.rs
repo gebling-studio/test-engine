@@ -4,23 +4,50 @@ use bytemuck::{Pod, Zeroable};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    Zero,
     axis::Axis,
     flat::{Point, Size},
     num::into_f32::ToF32,
 };
 
 #[repr(C)]
-#[derive(Copy, Clone, Default, Debug, PartialEq, Serialize, Deserialize, Zeroable, Pod)]
-pub struct Rect {
-    pub origin: Point,
-    pub size:   Size,
+#[derive(Copy, Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Rect<T = f32> {
+    pub origin: Point<T>,
+    pub size:   Size<T>,
 }
 
-impl Rect {
-    pub fn new(x: f32, y: f32, w: f32, h: f32) -> Self {
-        (x, y, w, h).into()
+unsafe impl<T: Zeroable> Zeroable for Rect<T> {}
+unsafe impl<T: Pod> Pod for Rect<T> {}
+
+impl<T> Rect<T> {
+    pub const fn new(x: T, y: T, w: T, h: T) -> Self {
+        Self {
+            origin: Point::new(x, y),
+            size:   Size::new(w, h),
+        }
+    }
+}
+
+impl<T: Copy> Rect<T> {
+    pub fn x(&self) -> T {
+        self.origin.x
     }
 
+    pub fn y(&self) -> T {
+        self.origin.y
+    }
+
+    pub fn width(&self) -> T {
+        self.size.width
+    }
+
+    pub fn height(&self) -> T {
+        self.size.height
+    }
+}
+
+impl Rect<f32> {
     pub fn max_x(&self) -> f32 {
         self.x() + self.width()
     }
@@ -51,22 +78,6 @@ impl Rect {
         x1 < x4 && x2 > x3 && y1 < y4 && y2 > y3
     }
 
-    pub fn x(&self) -> f32 {
-        self.origin.x
-    }
-
-    pub fn y(&self) -> f32 {
-        self.origin.y
-    }
-
-    pub fn width(&self) -> f32 {
-        self.size.width
-    }
-
-    pub fn height(&self) -> f32 {
-        self.size.height
-    }
-
     pub fn square(&self) -> Size {
         let side = if self.height() < self.width() {
             self.height()
@@ -74,13 +85,6 @@ impl Rect {
             self.width()
         };
         (side, side).into()
-    }
-
-    pub fn short_display(&self) -> String {
-        format!(
-            "x: {} y: {} w: {} h: {}",
-            self.origin.x, self.origin.y, self.size.width, self.size.height
-        )
     }
 
     pub fn fit_aspect_ratio(&self, size: Size) -> Rect {
@@ -209,10 +213,13 @@ impl Rect {
     }
 }
 
-impl From<Size> for Rect {
-    fn from(size: Size) -> Self {
+impl<T: Zero> From<Size<T>> for Rect<T> {
+    fn from(size: Size<T>) -> Self {
         Rect {
-            origin: Point { x: 0.0, y: 0.0 },
+            origin: Point {
+                x: T::zero(),
+                y: T::zero(),
+            },
             size,
         }
     }
@@ -253,9 +260,9 @@ impl<T: ToF32> Mul<T> for &Rect {
     }
 }
 
-impl<T: ToF32> Mul<T> for Rect {
-    type Output = Rect;
-    fn mul(self, rhs: T) -> Rect {
+impl<T: ToF32> Mul<T> for Rect<f32> {
+    type Output = Rect<f32>;
+    fn mul(self, rhs: T) -> Rect<f32> {
         (&self).mul(rhs)
     }
 }

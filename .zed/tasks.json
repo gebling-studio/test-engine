@@ -1,25 +1,25 @@
 [
   {
-    "label": "Run Test Game",
+    "label": "Test Game",
     "command": "cargo run -p test-game",
     "env": {
       "RUST_BACKTRACE": "1",
     },
   },
   {
-    "label": "Run Example App",
+    "label": "Example App",
     "command": "cargo run -p example-app",
   },
   {
-    "label": "Run UI Test",
+    "label": "UI Test",
     "command": "cargo run -p ui-test",
   },
   {
-    "label": "Run Level Test",
+    "label": "Level Test",
     "command": "cargo run -p level-test",
   },
   {
-    "label": "Run Inspector",
+    "label": "Inspector",
     "command": "cargo run -p inspector",
   },
   {
