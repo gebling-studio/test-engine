@@ -67,13 +67,13 @@ impl UIDrawer {
             resolution,
             _padding: 0,
         };
-        let mut font = Font::default();
-        font.brush.queue(Window::device(), Window::queue(), text_sections).unwrap();
-        font.brush.draw(pass);
 
         Pipelines::rect().draw(pass, rect_view);
         IMAGE_RECT_DRAWER.get_mut().draw(pass, rect_view);
         GRADIENT_DRAWER.get_mut().draw(pass, rect_view);
+        let mut font = Font::default();
+        font.brush.queue(Window::device(), Window::queue(), text_sections).unwrap();
+        font.brush.draw(pass);
     }
 
     fn update_view(view: &mut dyn View) {
@@ -109,7 +109,7 @@ impl UIDrawer {
         let clips = view.clips_to_bounds();
 
         if clips {
-            Self::flush_pipelines(pass, resolution, text_sections.drain(..));
+            // Self::flush_pipelines(pass, resolution, text_sections.drain(..));
             let frame = frame * scale;
             scissor(pass, frame.lossy_convert());
         }
@@ -193,7 +193,7 @@ impl UIDrawer {
         }
 
         if clips {
-            Self::flush_pipelines(pass, resolution, text_sections.drain(..));
+            // Self::flush_pipelines(pass, resolution, text_sections.drain(..));
             scissor(
                 pass,
                 Size::<u32>::new(

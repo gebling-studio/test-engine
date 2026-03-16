@@ -1,7 +1,7 @@
 use anyhow::Result;
 use test_engine::{
     refs::Weak,
-    ui::{LIGHT_GRAY, Label, ScrollView, Setup, ViewData, ViewSubviews, ViewTest, WHITE, view_test},
+    ui::{Label, ScrollView, Setup, ViewData, ViewSubviews, ViewTest, WHITE, view_test},
 };
 
 #[view_test]
@@ -22,7 +22,7 @@ impl Setup for LabelScissor {
         self.scroll
             .add_view::<Label>()
             .set_text("Scrolling")
-            .set_color(LIGHT_GRAY)
+            .set_color(WHITE)
             .place()
             .center()
             .size(150, 50);
