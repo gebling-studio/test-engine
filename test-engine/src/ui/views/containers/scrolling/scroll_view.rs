@@ -6,8 +6,8 @@ use gm::{
 };
 use refs::{Own, Weak, weak_from_ref};
 use ui::{
-    NO_TOUCH_ID, Scrollable, Setup, Touch, TouchStack, UIAnimation, UIEvent, UIManager, View,
-    ViewCallbacks, ViewData, ViewFrame, ViewSubviews, view,
+    NO_TOUCH_ID, Scrollable, Setup, Touch, TouchStack, UIAnimation, UIEvent, UIManager, View, ViewData,
+    ViewFrame, ViewSubviews, view,
 };
 use vents::Event;
 
@@ -130,12 +130,6 @@ impl Scrollable for ScrollView {
         }
 
         false
-    }
-}
-
-impl ViewCallbacks for ScrollView {
-    fn clips_to_bounds(&self) -> bool {
-        true
     }
 }
 

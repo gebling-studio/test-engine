@@ -17,7 +17,6 @@ pub(super) fn test_basic_scroll(mut view: Weak<InfiniteScrollTest>) -> Result<()
                      382  318 -  85  85 170
                      385  434 -  51  51  51
                      306  461 -  89 124 149
-                     228  489 -  89 124 149
                       10  512 -  89 124 149
                      127   59 -  89 124 149
                 ",

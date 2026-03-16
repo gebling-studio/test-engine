@@ -32,7 +32,7 @@ impl UIDrawer {
         Self::update_view(UIManager::root_view().deref_mut());
     }
 
-    pub(crate) fn draw<'a>(pass: &mut RenderPass<'a>) {
+    pub(crate) fn draw(pass: &mut RenderPass) {
         let resolution = UIManager::window_resolution();
         let display_rect: Rect<u32> = Size::<u32>::new(
             resolution.width.lossy_convert(),
@@ -54,15 +54,15 @@ impl UIDrawer {
             resolution,
         );
 
-        Self::flush_pipelines(pass, resolution, text_sections);
+        Self::flush_pipelines(pass, resolution);
         scissor(pass, display_rect);
+
+        let mut font = Font::default();
+        font.brush.queue(Window::device(), Window::queue(), text_sections).unwrap();
+        font.brush.draw(pass);
     }
 
-    fn flush_pipelines<'a>(
-        pass: &mut RenderPass,
-        resolution: Size,
-        text_sections: impl IntoIterator<Item = Section<'a>>,
-    ) {
+    fn flush_pipelines(pass: &mut RenderPass, resolution: Size) {
         let rect_view = RectView {
             resolution,
             _padding: 0,
@@ -71,9 +71,6 @@ impl UIDrawer {
         Pipelines::rect().draw(pass, rect_view);
         IMAGE_RECT_DRAWER.get_mut().draw(pass, rect_view);
         GRADIENT_DRAWER.get_mut().draw(pass, rect_view);
-        let mut font = Font::default();
-        font.brush.queue(Window::device(), Window::queue(), text_sections).unwrap();
-        font.brush.draw(pass);
     }
 
     fn update_view(view: &mut dyn View) {
@@ -109,7 +106,7 @@ impl UIDrawer {
         let clips = view.clips_to_bounds();
 
         if clips {
-            // Self::flush_pipelines(pass, resolution, text_sections.drain(..));
+            Self::flush_pipelines(pass, resolution);
             let frame = frame * scale;
             scissor(pass, frame.lossy_convert());
         }
@@ -193,7 +190,7 @@ impl UIDrawer {
         }
 
         if clips {
-            // Self::flush_pipelines(pass, resolution, text_sections.drain(..));
+            Self::flush_pipelines(pass, resolution);
             scissor(
                 pass,
                 Size::<u32>::new(

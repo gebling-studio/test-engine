@@ -12,7 +12,7 @@ mod custom_text_field;
 mod gradient;
 mod inject_touch;
 mod label;
-mod label_scissor;
+mod image_clipping;
 mod label_image;
 mod multiline_label;
 mod nine_segment;
