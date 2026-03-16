@@ -2,6 +2,8 @@
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_precision_loss)]
 
+use crate::flat::Rect;
+
 pub trait LossyConvert<To> {
     fn lossy_convert(self) -> To;
 }
@@ -127,5 +129,16 @@ impl LossyConvert<f32> for u32 {
 impl LossyConvert<f32> for i32 {
     fn lossy_convert(self) -> f32 {
         self as f32
+    }
+}
+
+impl<T: Copy + LossyConvert<U>, U> LossyConvert<Rect<U>> for Rect<T> {
+    fn lossy_convert(self) -> Rect<U> {
+        Rect::new(
+            self.x().lossy_convert(),
+            self.y().lossy_convert(),
+            self.width().lossy_convert(),
+            self.height().lossy_convert(),
+        )
     }
 }
