@@ -75,22 +75,20 @@ impl UIDrawer {
         );
 
         Self::flush_pipelines(pass, rect_view);
-        scissor_checked(pass, display_rect);
+        scissor(pass, display_rect);
 
         for group in text_groups {
             if group.sections.is_empty() {
                 continue;
             }
             let rect = group.scissor.unwrap_or(display_rect);
-            scissor_checked(pass, rect);
-            Font::default()
-                .brush
-                .queue(Window::device(), Window::queue(), group.sections)
-                .unwrap();
-            Font::default().brush.draw(pass);
+            scissor(pass, rect);
+            let mut font = Font::default();
+            font.brush.queue(Window::device(), Window::queue(), group.sections).unwrap();
+            font.brush.draw(pass);
         }
 
-        scissor_checked(pass, display_rect);
+        scissor(pass, display_rect);
     }
 
     fn flush_pipelines(pass: &mut RenderPass, rect_view: RectView) {
@@ -135,15 +133,15 @@ impl UIDrawer {
         if clips {
             Self::flush_pipelines(pass, rect_view);
 
-            let pf = frame * scale;
-            let vp_w = rect_view.resolution.width.lossy_convert();
-            let vp_h = rect_view.resolution.height.lossy_convert();
-            let x = pf.x().max(0.0).lossy_convert();
-            let y = pf.y().max(0.0).lossy_convert();
-            let pf_max_x: u32 = pf.max_x().lossy_convert();
-            let pf_max_y: u32 = pf.max_y().lossy_convert();
-            let max_x = pf_max_x.min(vp_w);
-            let max_y = pf_max_y.min(vp_h);
+            let frame = frame * scale;
+            let resolution_width = rect_view.resolution.width.lossy_convert();
+            let resolution_height = rect_view.resolution.height.lossy_convert();
+            let x = frame.x().max(0.0).lossy_convert();
+            let y = frame.y().max(0.0).lossy_convert();
+            let max_x: u32 = frame.max_x().lossy_convert();
+            let max_y: u32 = frame.max_y().lossy_convert();
+            let max_x = max_x.min(resolution_width);
+            let max_y = max_y.min(resolution_height);
             let w = max_x.saturating_sub(x);
             let h = max_y.saturating_sub(y);
 
@@ -162,7 +160,7 @@ impl UIDrawer {
             }
 
             scissor_stack.push(new_scissor);
-            scissor_checked(pass, new_scissor);
+            scissor(pass, new_scissor);
             text_groups.push(TextGroup::new(Some(new_scissor)));
         }
 
@@ -261,10 +259,10 @@ impl UIDrawer {
             let vp_h = rect_view.resolution.height.lossy_convert();
 
             if let Some(&parent) = scissor_stack.last() {
-                scissor_checked(pass, parent);
+                scissor(pass, parent);
                 text_groups.push(TextGroup::new(Some(parent)));
             } else {
-                scissor_checked(pass, Rect::new(0, 0, vp_w, vp_h));
+                scissor(pass, Rect::new(0, 0, vp_w, vp_h));
                 text_groups.push(TextGroup::new(None));
             }
         }
@@ -323,6 +321,6 @@ impl UIDrawer {
     }
 }
 
-fn scissor_checked(pass: &mut RenderPass, rect: Rect<u32>) {
+fn scissor(pass: &mut RenderPass, rect: Rect<u32>) {
     pass.set_scissor_rect(rect.x(), rect.y(), rect.width(), rect.height());
 }
