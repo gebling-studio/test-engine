@@ -31,7 +31,7 @@ impl Default for UIPathPipeline {
 
         let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
             label:              Some("Path Pipeline Layout"),
-            bind_group_layouts: &[&z_pos_layout, &PathData::uniform_layout()],
+            bind_group_layouts: &[Some(&z_pos_layout), Some(&PathData::uniform_layout())],
             immediate_size:     0,
         });
 

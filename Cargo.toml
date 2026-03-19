@@ -74,8 +74,8 @@ tokio = { version = "1.50", features = ["full"] }
 usvg = "0.47"
 wasm-bindgen-futures = "0.4"
 web-time = "1.1"
-wgpu = "28.0"
-wgpu_text = "28.0"
+wgpu = "29.0"
+wgpu_text = "29.0"
 winit = "0.30"
 
 # hreads = { path = "../deps/hreads" }
@@ -114,5 +114,5 @@ window = { path = "deps/window" }
 #wgpu = { path = "../3/wgpu/wgpu" }
 #vents = { path = "../deps/vents/vents" }
 #reflected = { path = "../deps/reflected/reflected" }
-#wgpu_text = { git = "https://github.com/VladasZ/wgpu-text", rev = "0f25a5fa912cafd6161158fce16f0ae5236047ca" }
+wgpu_text = { git = "https://github.com/VladasZ/wgpu-text", rev = "bc69675bf8e8609c2ee6862700cdcc7e27548bf4" }
 #hreads = { path = "../deps/hreads" }

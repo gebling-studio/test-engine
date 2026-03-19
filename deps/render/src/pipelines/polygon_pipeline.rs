@@ -46,7 +46,7 @@ impl Default for PolygonPipeline {
 
         let uniform_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
             label:              "polygon_pipeline_layout".into(),
-            bind_group_layouts: &[&view_layout, &polygon_view_layout],
+            bind_group_layouts: &[Some(&view_layout), Some(&polygon_view_layout)],
             immediate_size:     0,
         });
 

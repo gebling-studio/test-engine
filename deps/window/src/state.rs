@@ -12,7 +12,7 @@ use gm::{
 use log::{info, warn};
 use plat::Platform;
 use refs::manage::DataManager;
-use wgpu::TextureFormat;
+use wgpu::{CurrentSurfaceTexture, TextureFormat};
 
 use crate::{
     Font, Screenshot, Window, app_handler::AppHandler, frame_counter::FrameCounter, image::Texture,
@@ -129,7 +129,12 @@ impl State {
             return Ok(());
         }
 
-        let surface_texture = surface.presentable.get_current_texture()?;
+        let surface_texture = match surface.presentable.get_current_texture() {
+            CurrentSurfaceTexture::Success(tex) => tex,
+            CurrentSurfaceTexture::Occluded => return Ok(()),
+            _ => panic!("Failed to get texture"),
+        };
+
         let view = surface_texture.texture.create_view(&wgpu::TextureViewDescriptor::default());
         let mut encoder = Window::device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("Render Encoder"),

@@ -51,12 +51,12 @@ impl<
         let sprite_view_layout =
             make_uniform_layout(&format!("{NAME}_uniform_layout"), ShaderStages::VERTEX_FRAGMENT);
 
-        let mut bind_group_layouts = vec![&sprite_view_layout];
+        let mut bind_group_layouts = vec![Some(&sprite_view_layout)];
 
         let image_layout = Image::uniform_layout();
 
         if TYPE.image() {
-            bind_group_layouts.push(&image_layout);
+            bind_group_layouts.push(Some(&image_layout));
         }
 
         let uniform_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {

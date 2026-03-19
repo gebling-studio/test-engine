@@ -28,8 +28,8 @@ impl Font {
 
         let brush = BrushBuilder::using_font(font).with_depth_stencil( DepthStencilState {
             format:              TextureFormat::Depth32Float,
-            depth_write_enabled: true,
-            depth_compare:       CompareFunction::Less,
+            depth_write_enabled: Some(true),
+            depth_compare:       Some(CompareFunction::Less),
             stencil:             StencilState::default(),
             bias:                DepthBiasState::default(),
         }.into())

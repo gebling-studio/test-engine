@@ -72,7 +72,7 @@ impl Default for BackgroundPipeline {
 
         let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
             label:              "background_pipeline_layout".into(),
-            bind_group_layouts: &[&vertex_layout, &Image::uniform_layout()],
+            bind_group_layouts: &[Some(&vertex_layout), Some(&Image::uniform_layout())],
             immediate_size:     0,
         });
 
