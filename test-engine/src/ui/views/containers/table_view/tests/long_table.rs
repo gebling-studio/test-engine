@@ -7,7 +7,7 @@ use refs::Weak;
 use ui::{Container, Label, Setup, View, ViewData, ViewSubviews, ViewTest, view_test};
 
 use crate::{
-    self as test_engine, AppRunner,
+    self as test_engine,
     ui::{CellRegistry, TableData, TableView},
     ui_test::inject_touches,
 };
@@ -61,7 +61,10 @@ impl ViewTest for LongTableTest {
     fn perform_test(mut view: Weak<Self>) -> Result<()> {
         N_CELLS.store(2_000_000, Ordering::Relaxed);
 
-        AppRunner::set_window_size((1000, 1000));
+        #[cfg(desktop)]
+        {
+            crate::AppRunner::set_window_size((1000, 1000));
+        }
 
         wait_for_next_frame();
         wait_for_next_frame();

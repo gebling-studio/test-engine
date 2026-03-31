@@ -93,10 +93,14 @@ impl State {
             Window::outer_size(),
         );
 
-        window.is_resizing = false;
+        #[cfg(desktop)]
+        {
+            window.is_resizing = false;
+        }
     }
 
     pub fn update(&mut self) {
+        #[cfg(desktop)]
         if Window::is_resizing() {
             return;
         }
@@ -125,6 +129,7 @@ impl State {
             return Ok(());
         };
 
+        #[cfg(desktop)]
         if Window::is_resizing() {
             return Ok(());
         }

@@ -42,7 +42,9 @@ pub struct Window {
 
     pub(crate) surface: Option<Surface>,
 
-    pub(crate) title_set:   bool,
+    pub(crate) title_set: bool,
+
+    #[cfg(desktop)]
     pub(crate) is_resizing: bool,
 
     pub(crate) winit_window: Arc<winit::window::Window>,
@@ -61,6 +63,7 @@ impl Window {
         &Self::current().queue
     }
 
+    #[cfg(desktop)]
     pub fn is_resizing() -> bool {
         Self::current().is_resizing
     }
@@ -194,6 +197,7 @@ impl Window {
             device,
             queue,
             surface,
+            #[cfg(desktop)]
             is_resizing: false,
             title_set: false,
             winit_window,
@@ -216,6 +220,7 @@ impl Window {
         });
     }
 
+    #[cfg(desktop)]
     pub fn set_size(&mut self, size: impl Into<Size<u32>>) {
         let size = size.into();
 

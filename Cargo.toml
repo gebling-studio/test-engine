@@ -36,13 +36,13 @@ chrono = "0.4"
 clap = { version = "4.6", features = ["derive"] }
 console_error_panic_hook = "0.1"
 console_log = "1.0"
-ctor = "0.6"
+ctor = "0.8"
 dirs = "6.0"
 dotenvy = "0.15"
 educe = "0.6"
 fastrand = "2.3"
 fern = "0.7"
-gloo-timers = { version = "0.3", features = ["futures"] }
+gloo-timers = { version = "0.4", features = ["futures"] }
 gltf = "1.4"
 hex = "0.4"
 image = "0.25"
@@ -61,7 +61,7 @@ quote = "1.0"
 rapier2d = { version = "0.32" }
 resvg = "0.47"
 rfd = "0.17"
-rust_decimal = "1.40"
+rust_decimal = "1.41"
 sentry = { version = "0.47", default-features = false, features = [
     "reqwest",
     "rustls",
@@ -81,12 +81,12 @@ winit = "0.30"
 # hreads = { path = "../deps/hreads" }
 hreads = "0.13"
 
-netrun = "0.32"
+netrun = "0.35"
 # refs = { path = "../deps/refs/refs" }
 refs = { version = "0.50", default-features = true }
 # netrun = { path = "../deps/netrun/netrun" }
 plat = "0.9"
-reflected = "0.29"
+reflected = "0.30"
 vents = "0.15"
 
 audio = { path = "deps/audio" }

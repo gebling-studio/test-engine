@@ -5,7 +5,7 @@ use gm::{
     LossyConvert,
     flat::{Point, Size},
 };
-use hreads::{from_main, invoke_dispatched, wait_for_next_frame};
+use hreads::{from_main, invoke_dispatched};
 use level::{LevelBase, LevelManager};
 use log::debug;
 use refs::{Own, main_lock::MainLock};
@@ -193,11 +193,12 @@ impl AppRunner {
         Window::set_title(title);
     }
 
+    #[cfg(desktop)]
     pub fn set_window_size(size: impl Into<Size<u32>> + Send + 'static) {
         from_main(|| {
             Window::current().set_size(size);
         });
-        wait_for_next_frame();
+        hreads::wait_for_next_frame();
     }
 
     pub fn take_screenshot() -> Result<Screenshot> {
@@ -216,8 +217,6 @@ impl window::WindowEvents for AppRunner {
         static INIT: Once = Once::new();
 
         INIT.call_once(|| {
-            debug!("window ready");
-
             Pipelines::initialize();
 
             let mut root = UIManager::root_view();
@@ -240,9 +239,14 @@ impl window::WindowEvents for AppRunner {
                 Window::outer_size(),
             );
 
+            debug!("UI init: OK");
+
             #[cfg(not_wasm)]
             {
-                Window::current().set_size(self.app.initial_size().lossy_convert());
+                #[cfg(desktop)]
+                {
+                    Window::current().set_size(self.app.initial_size().lossy_convert());
+                }
                 if self.app.enable_inspection() {
                     crate::inspect::InspectService::start_listening();
                 }
@@ -263,6 +267,7 @@ impl window::WindowEvents for AppRunner {
 
             #[cfg(not_wasm)]
             hreads::spawn(async {
+                debug!("window ready");
                 WINDOW_READY.lock().trigger(());
             });
         });

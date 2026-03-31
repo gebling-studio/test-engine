@@ -6,7 +6,7 @@ use parking_lot::Mutex;
 use refs::{Own, Weak};
 use ui::{Setup, UIManager, View, ViewData, ViewTest};
 
-use crate::{AppRunner, ui_test::clear_state};
+use crate::ui_test::clear_state;
 
 pub static TEST_NAME: Mutex<String> = Mutex::new(String::new());
 
@@ -40,7 +40,10 @@ impl UITest {
 
         clear_state();
 
-        AppRunner::set_window_size((width, height));
+        #[cfg(desktop)]
+        {
+            crate::AppRunner::set_window_size((width, height));
+        }
         wait_for_next_frame();
         let view = from_main(move || {
             let weak = view.weak();
