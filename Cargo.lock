@@ -4743,13 +4743,12 @@ dependencies = [
 
 [[package]]
 name = "refs"
-version = "0.50.0"
+version = "0.51.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3e5315feb8e03f76e777be66d790efa8d078d3f33f81774d4fa3cdc9d450e13"
+checksum = "0af61ee3d4ab29de8b53671abc742980c0744850ba5d93796505c03b913615a1"
 dependencies = [
  "anyhow",
  "hreads",
- "instant",
  "log",
  "parking_lot",
  "reqwest 0.13.2",

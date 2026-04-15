@@ -77,7 +77,7 @@ impl UIManager {
     }
 
     pub fn scale() -> f32 {
-        f32::from_le_bytes(Self::get().scale.load(Ordering::Relaxed).to_le_bytes())
+        f32::from_bits(Self::get().scale.load(Ordering::Relaxed))
     }
 
     pub fn cursor_position() -> Point {
@@ -93,11 +93,11 @@ impl UIManager {
             let sf = Self::get();
             let scale = scale.to_f32();
 
-            let manual_scale = f32::from_le_bytes(sf.manual_scale.load(Ordering::Relaxed).to_le_bytes());
+            let manual_scale = f32::from_bits(sf.manual_scale.load(Ordering::Relaxed));
 
             let scale = if manual_scale == 0.0 { scale } else { manual_scale };
 
-            sf.scale.store(u32::from_le_bytes(scale.to_le_bytes()), Ordering::Relaxed);
+            sf.scale.store(scale.to_bits(), Ordering::Relaxed);
             sf.scale_changed.trigger(scale);
         });
     }
@@ -108,8 +108,7 @@ impl UIManager {
 
         let scale = scale.to_f32();
 
-        sf.manual_scale
-            .store(u32::from_le_bytes(scale.to_le_bytes()), Ordering::Relaxed);
+        sf.manual_scale.store(scale.to_bits(), Ordering::Relaxed);
 
         Self::set_scale(scale);
     }
@@ -161,8 +160,8 @@ impl UIManager {
             touch_disabled: false.into(),
             cursor_position: Mutex::new(Point::default()),
             draw_debug_frames: false.into(),
-            scale: AtomicU32::new(u32::from_le_bytes(1.0f32.to_le_bytes())),
-            manual_scale: AtomicU32::new(u32::from_le_bytes(0.0f32.to_le_bytes())),
+            scale: AtomicU32::new(1.0f32.to_bits()),
+            manual_scale: AtomicU32::new(0.0f32.to_bits()),
             scale_changed: UIEvent::default(),
             on_drop_file: UIEvent::default(),
             draw_touches: false.into(),

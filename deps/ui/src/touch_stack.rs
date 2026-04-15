@@ -1,4 +1,4 @@
-use std::{ops::Deref, sync::OnceLock};
+use std::sync::OnceLock;
 
 use hreads::from_main;
 use nonempty::NonEmpty;
@@ -32,28 +32,18 @@ impl TouchStack {
 
 impl TouchStack {
     fn layer_for(&mut self, view: WeakView) -> &mut TouchLayer {
-        let view = view.deref();
-
-        let mut view_stack = vec![];
-
-        view_stack.push(view.label().to_string());
-
-        let mut sup = view.superview();
-
-        while sup.is_ok() {
-            view_stack.push(sup.label().to_string());
-            sup = sup.superview();
-        }
-
         for layer in self.stack.iter_mut().rev() {
-            for label in &view_stack {
-                if layer.root_name() == *label {
+            let root_raw = layer.root.raw();
+            let mut cur: WeakView = view;
+            while cur.is_ok() {
+                if cur.raw() == root_raw {
                     return layer;
                 }
+                cur = *cur.superview();
             }
         }
 
-        unreachable!("Failed to found view touch layer")
+        unreachable!("Failed to find touch layer for view: {}", view.label())
     }
 }
 
