@@ -1,4 +1,8 @@
-use std::sync::{Arc, mpsc::Receiver};
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, AtomicU32, Ordering},
+    mpsc::Receiver,
+};
 
 use gm::{
     LossyConvert,
@@ -22,7 +26,8 @@ use crate::{
     surface::Surface,
 };
 
-const ENABLE_VSYNC: bool = true;
+static VSYNC: AtomicBool = AtomicBool::new(true);
+static MAX_FRAME_LATENCY: AtomicU32 = AtomicU32::new(2);
 /// Doesn't work on some Androids and on Web
 pub(crate) const SUPPORT_SCREENSHOT: bool = !Platform::ANDROID && !Platform::WASM;
 
@@ -251,6 +256,33 @@ impl Window {
         self.state.frame_counter.frame_count
     }
 
+    /// Always enabled on mobile platforms. Takes effect on the next frame.
+    pub fn set_vsync(enable: bool) {
+        on_main(move || {
+            VSYNC.store(enable, Ordering::Relaxed);
+            Self::reconfigure_surface();
+        });
+    }
+
+    /// How many frames the GPU is allowed to buffer ahead of the display.
+    /// Default is 2 - lowest input latency. 3 renders faster but adds up to
+    /// one frame of lag. Backends clamp unsupported values.
+    pub fn set_max_frame_latency(latency: u32) {
+        on_main(move || {
+            MAX_FRAME_LATENCY.store(latency, Ordering::Relaxed);
+            Self::reconfigure_surface();
+        });
+    }
+
+    fn reconfigure_surface() {
+        let window = Self::current();
+
+        if let Some(surface) = &window.surface {
+            let size: Size<u32> = Self::render_size().lossy_convert();
+            surface.presentable.configure(&window.device, &surface_config_with_size(size));
+        }
+    }
+
     pub fn display_refresh_rate() -> u32 {
         Self::winit_window().current_monitor().map_or(60, |monitor| {
             monitor.refresh_rate_millihertz().unwrap_or(60_000) / 1000
@@ -270,7 +302,7 @@ pub(crate) fn surface_config_with_size(size: impl Into<Size<u32>>) -> SurfaceCon
         format:       RGBA_TEXTURE_FORMAT,
         width:        size.width,
         height:       size.height,
-        present_mode: if ENABLE_VSYNC || Platform::MOBILE {
+        present_mode: if VSYNC.load(Ordering::Relaxed) || Platform::MOBILE {
             PresentMode::AutoVsync
         } else {
             PresentMode::AutoNoVsync
@@ -278,6 +310,6 @@ pub(crate) fn surface_config_with_size(size: impl Into<Size<u32>>) -> SurfaceCon
         alpha_mode:   CompositeAlphaMode::Auto,
         view_formats: vec![],
 
-        desired_maximum_frame_latency: 2,
+        desired_maximum_frame_latency: MAX_FRAME_LATENCY.load(Ordering::Relaxed),
     }
 }

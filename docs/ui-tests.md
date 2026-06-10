@@ -39,6 +39,12 @@ Headless environments (CI, linux without display) skip UI tests automatically.
 Every test prints `Name: Started` and `Name: OK`. On a hang or failure the broken test is the
 one with `Started` and no `OK` — usually the last line of the log.
 
+The test app disables vsync and raises max frame latency at startup (`Window::set_vsync(false)`,
+`Window::set_max_frame_latency(3)`) so tests are not capped to the display refresh rate. At the
+end of the suite an FPS report is printed: frames, duration and average fps per test. Per-test
+fps varies a lot between runs — macOS sometimes paces frames at display rate anyway — so don't
+compare single runs.
+
 ## Two kinds of tests
 
 1. **Registered** — a view marked `#[view_test]` instead of `#[view]`, with

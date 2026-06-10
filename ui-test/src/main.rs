@@ -15,7 +15,7 @@ use anyhow::{Result, bail};
 use clap::Parser;
 use log::info;
 use test_engine::{
-    AppRunner,
+    AppRunner, Window,
     dispatch::from_main,
     ui::{Label, UIManager},
     ui_test::UITest,
@@ -71,6 +71,8 @@ fn run(args: Args) -> Result<()> {
 
         from_main(|| {
             UIManager::override_scale(1.0);
+            Window::set_vsync(false);
+            Window::set_max_frame_latency(3);
         });
 
         let mut my_tests: BTreeMap<_, _> = crate::UI_TESTS.lock().clone();
