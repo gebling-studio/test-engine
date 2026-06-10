@@ -2,14 +2,16 @@ use anyhow::Result;
 use test_engine::{
     AppRunner,
     dispatch::from_main,
-    inspect::views::PlacerView,
-    refs::Weak,
+    inspect::{ViewRepr, ViewToInspect, views::PlacerView},
+    refs::{Own, Weak},
     ui::{Container, Setup, TURQUOISE, ViewData, ViewFrame, view},
     ui_test::UITest,
 };
 
 #[view]
 struct PlacerViewTest {
+    repr: Own<ViewRepr>,
+
     #[init]
     placer_view: PlacerView,
     view:        Container,
@@ -32,7 +34,9 @@ pub(crate) async fn test_placer_view() -> Result<()> {
     AppRunner::set_window_size((1000, 1000));
 
     from_main(move || {
-        view.placer_view.set_placer("sokol", &view.view.place());
+        let mut view = view;
+        view.repr = view.view.view_to_inspect();
+        view.placer_view.set_view(view.repr.weak());
     });
 
     // test_engine::ui_test::record_ui_test();

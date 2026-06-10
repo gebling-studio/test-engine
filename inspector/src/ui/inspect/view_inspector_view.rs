@@ -28,7 +28,7 @@ impl ViewInspectorView {
     pub fn set_view(mut self: Weak<Self>, view: Weak<ViewRepr>) {
         self.label.set_text(format!("Label: {}", view.label));
         self.id.set_text_size(10).set_text(format!("{}", view.id));
-        self.placer_view.set_placer(&view.id, &view.placer);
+        self.placer_view.set_view(view);
 
         self.view = view;
     }

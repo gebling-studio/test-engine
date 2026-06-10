@@ -30,8 +30,6 @@ impl Placer {
         let old_frame = *self.view.frame();
         let mut new_frame = old_frame;
 
-        let s_content = *self.s_content.deref();
-
         for rule in this.rules().iter().filter(|r| r.enabled) {
             match &rule.placement {
                 Placement::Side { side, offset } => self.simple_layout(&mut new_frame, *side, *offset),
@@ -46,7 +44,7 @@ impl Placer {
                 Placement::BetweenSuper { side, view } => {
                     self.between_super_layout(&mut new_frame, *side, *view);
                 }
-                Placement::Tiling(tiling) => self.tiling_layout(&mut new_frame, s_content, tiling),
+                Placement::Tiling(tiling) => self.tiling_layout(&mut new_frame, tiling),
             }
         }
 
@@ -54,7 +52,7 @@ impl Placer {
             let Placement::Tiling(tiling) = &rule.placement else {
                 unreachable!("Only tiling rules are allowed in all_tiling_rules")
             };
-            self.tiling_layout(&mut new_frame, s_content, tiling);
+            self.tiling_layout(&mut new_frame, tiling);
         }
 
         if let Some(custom) = self.custom.borrow().as_ref() {
@@ -151,7 +149,9 @@ impl Placer {
         }
     }
 
-    fn tiling_layout(&mut self, frame: RMut, s_content: Size, tiling: &Tiling) {
+    fn tiling_layout(&mut self, frame: RMut, tiling: &Tiling) {
+        let s_content = *self.s_content.deref();
+
         match tiling {
             Tiling::Background => *frame = s_content.into(),
             Tiling::Horizontally => place_horizontally(self.view.subviews_weak(), *self.all_margin.borrow()),

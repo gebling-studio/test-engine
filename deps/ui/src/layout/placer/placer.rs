@@ -72,6 +72,10 @@ impl Placer {
         self.rules.borrow()
     }
 
+    pub fn edit_rule(&self, index: usize) -> RefMut<'_, LayoutRule> {
+        RefMut::map(self.rules.borrow_mut(), |rules| &mut rules[index])
+    }
+
     pub fn get_tiling_rules(&self) -> Ref<'_, Vec<LayoutRule>> {
         self.all_tiling_rules.borrow()
     }
