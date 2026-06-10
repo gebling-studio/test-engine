@@ -11,6 +11,13 @@ UI_TEST_CYCLES=5 cargo run -p ui-test         # more cycles
 cargo run -p ui-test -- --test-name RestRequest   # one test by view struct name
 ```
 
+Always tee the output to a temp file. The suite can get stuck, and with a plain
+pipe (`| tail`) you lose everything printed before the hang:
+
+```bash
+cargo run -p ui-test 2>&1 | tee /tmp/ui-test.log | tail -12
+```
+
 The suite stops on the first failure. Headless environments (CI, linux without display) skip
 UI tests automatically.
 

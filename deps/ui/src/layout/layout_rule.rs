@@ -1,3 +1,6 @@
+// For educe generated Debug impl
+#![allow(clippy::used_underscore_binding)]
+
 use educe::Educe;
 use gm::ToF32;
 
@@ -7,93 +10,181 @@ use crate::{
 };
 
 #[derive(Clone, Educe)]
-#[educe(Debug, Default)]
-#[allow(clippy::struct_excessive_bools)]
+#[educe(Debug)]
+pub enum Placement {
+    Side {
+        side:   Anchor,
+        offset: f32,
+    },
+    Anchor {
+        side:   Anchor,
+        offset: f32,
+        #[educe(Debug(ignore))]
+        view:   WeakView,
+    },
+    Relative {
+        side:  Anchor,
+        ratio: f32,
+        #[educe(Debug(ignore))]
+        view:  WeakView,
+    },
+    Same {
+        side: Anchor,
+        #[educe(Debug(ignore))]
+        view: WeakView,
+    },
+    Between {
+        #[educe(Debug(ignore))]
+        a: WeakView,
+        #[educe(Debug(ignore))]
+        b: WeakView,
+    },
+    BetweenSuper {
+        side: Anchor,
+        #[educe(Debug(ignore))]
+        view: WeakView,
+    },
+    Tiling(Tiling),
+}
+
+impl PartialEq for Placement {
+    fn eq(&self, other: &Self) -> bool {
+        fn same_view(a: &WeakView, b: &WeakView) -> bool {
+            a.raw() == b.raw()
+        }
+
+        match (self, other) {
+            (
+                Self::Side { side, offset },
+                Self::Side {
+                    side: o_side,
+                    offset: o_offset,
+                },
+            ) => side == o_side && offset == o_offset,
+            (
+                Self::Anchor { side, offset, view },
+                Self::Anchor {
+                    side: o_side,
+                    offset: o_offset,
+                    view: o_view,
+                },
+            ) => side == o_side && offset == o_offset && same_view(view, o_view),
+            (
+                Self::Relative { side, ratio, view },
+                Self::Relative {
+                    side: o_side,
+                    ratio: o_ratio,
+                    view: o_view,
+                },
+            ) => side == o_side && ratio == o_ratio && same_view(view, o_view),
+            (
+                Self::Same { side, view },
+                Self::Same {
+                    side: o_side,
+                    view: o_view,
+                },
+            )
+            | (
+                Self::BetweenSuper { side, view },
+                Self::BetweenSuper {
+                    side: o_side,
+                    view: o_view,
+                },
+            ) => side == o_side && same_view(view, o_view),
+            (Self::Between { a, b }, Self::Between { a: o_a, b: o_b }) => {
+                same_view(a, o_a) && same_view(b, o_b)
+            }
+            (Self::Tiling(tiling), Self::Tiling(o_tiling)) => tiling == o_tiling,
+            _ => false,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct LayoutRule {
-    pub side:   Option<Anchor>,
-    pub tiling: Option<Tiling>,
-    pub offset: f32,
-
-    #[educe(Debug(ignore))]
-    pub anchor_view:  Option<WeakView>,
-    #[educe(Debug(ignore))]
-    pub anchor_view2: Option<WeakView>,
-
-    pub relative: bool,
-    pub between:  bool,
-    pub same:     bool,
-
-    #[educe(Default = true)]
-    pub enabled: bool,
+    pub placement: Placement,
+    pub enabled:   bool,
 }
 
 impl LayoutRule {
-    pub fn enabled(&self) -> bool {
-        self.enabled
-    }
-
-    pub fn tiling(tiling: Tiling, offset: impl ToF32) -> Self {
+    fn new(placement: Placement) -> Self {
         Self {
-            tiling: tiling.into(),
-            offset: offset.to_f32(),
-            ..Default::default()
+            placement,
+            enabled: true,
         }
     }
 
     pub fn make(side: Anchor, offset: impl ToF32) -> Self {
-        Self {
-            side: Some(side),
-            offset: offset.to_f32(),
-            ..Default::default()
-        }
-    }
-
-    pub fn anchor(side: Anchor, offset: impl ToF32, anchor_view: WeakView) -> Self {
-        Self {
-            side: Some(side),
-            offset: offset.to_f32(),
-            anchor_view: Some(anchor_view),
-            ..Default::default()
-        }
-    }
-
-    pub fn relative(side: Anchor, ratio: impl ToF32, anchor_view: WeakView) -> Self {
-        Self {
-            side: Some(side),
-            offset: ratio.to_f32(),
-            anchor_view: Some(anchor_view),
-            relative: true,
-            ..Default::default()
-        }
-    }
-
-    pub fn same(side: Anchor, anchor_view: WeakView) -> Self {
-        Self {
-            side: Some(side),
-            anchor_view: Some(anchor_view),
-            same: true,
-            ..Default::default()
-        }
-    }
-
-    pub fn between(view_a: WeakView, view_b: WeakView, side: Option<Anchor>) -> Self {
-        Self {
+        Self::new(Placement::Side {
             side,
-            anchor_view: Some(view_a),
-            anchor_view2: Some(view_b),
-            between: true,
-            ..Default::default()
-        }
+            offset: offset.to_f32(),
+        })
+    }
+
+    pub fn anchor(side: Anchor, offset: impl ToF32, view: WeakView) -> Self {
+        Self::new(Placement::Anchor {
+            side,
+            offset: offset.to_f32(),
+            view,
+        })
+    }
+
+    pub fn relative(side: Anchor, ratio: impl ToF32, view: WeakView) -> Self {
+        Self::new(Placement::Relative {
+            side,
+            ratio: ratio.to_f32(),
+            view,
+        })
+    }
+
+    pub fn same(side: Anchor, view: WeakView) -> Self {
+        Self::new(Placement::Same { side, view })
+    }
+
+    pub fn between(a: WeakView, b: WeakView) -> Self {
+        Self::new(Placement::Between { a, b })
+    }
+
+    pub fn between_super(view: WeakView, side: Anchor) -> Self {
+        Self::new(Placement::BetweenSuper { side, view })
     }
 }
 
 impl LayoutRule {
+    pub fn side(&self) -> Option<Anchor> {
+        match &self.placement {
+            Placement::Side { side, .. }
+            | Placement::Anchor { side, .. }
+            | Placement::Relative { side, .. }
+            | Placement::Same { side, .. }
+            | Placement::BetweenSuper { side, .. } => Some(*side),
+            Placement::Between { .. } | Placement::Tiling(_) => None,
+        }
+    }
+
+    pub fn offset(&self) -> f32 {
+        match &self.placement {
+            Placement::Side { offset, .. } | Placement::Anchor { offset, .. } => *offset,
+            Placement::Relative { ratio, .. } => *ratio,
+            _ => 0.0,
+        }
+    }
+
+    pub fn set_offset(&mut self, offset: impl ToF32) {
+        let value = offset.to_f32();
+        match &mut self.placement {
+            Placement::Side { offset, .. } | Placement::Anchor { offset, .. } => *offset = value,
+            Placement::Relative { ratio, .. } => *ratio = value,
+            _ => {}
+        }
+    }
+
     pub fn width(&self) -> bool {
-        self.side.is_some_and(Anchor::is_width)
+        self.side().is_some_and(Anchor::is_width)
     }
 
     pub fn height(&self) -> bool {
-        self.side.is_some_and(Anchor::is_height)
+        self.side().is_some_and(Anchor::is_height)
     }
 }
 
@@ -105,26 +196,6 @@ impl From<Anchor> for LayoutRule {
 
 impl From<Tiling> for LayoutRule {
     fn from(tiling: Tiling) -> Self {
-        Self::tiling(tiling, 0)
-    }
-}
-
-impl PartialEq for LayoutRule {
-    fn eq(&self, other: &Self) -> bool {
-        fn compare_anchors(a: Option<&WeakView>, b: Option<&WeakView>) -> bool {
-            match (a, b) {
-                (None, None) => true,
-                (Some(_), None) | (None, Some(_)) => false,
-                (Some(a), Some(b)) => a.raw() == b.raw(),
-            }
-        }
-
-        self.side == other.side
-            && self.tiling == other.tiling
-            && self.offset == other.offset
-            && compare_anchors(self.anchor_view.as_ref(), other.anchor_view.as_ref())
-            && compare_anchors(self.anchor_view.as_ref(), other.anchor_view2.as_ref())
-            && self.relative == other.relative
-            && self.same == other.same
+        Self::new(Placement::Tiling(tiling))
     }
 }

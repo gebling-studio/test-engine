@@ -2,7 +2,6 @@ use std::{ops::Deref, sync::Arc};
 
 use gm::{ToF32, flat::Rect};
 use parking_lot::Mutex;
-use refs::Weak;
 
 use super::Placer;
 use crate::{
@@ -259,16 +258,12 @@ impl Placer {
         view_b: impl Deref<Target = impl View> + Copy,
     ) -> &Self {
         self.rules()
-            .push(LayoutRule::between(view_a.weak_view(), view_b.weak_view(), None));
+            .push(LayoutRule::between(view_a.weak_view(), view_b.weak_view()));
         self
     }
 
     pub fn between_super(&self, view: impl Deref<Target = impl View> + Copy, anchor: Anchor) -> &Self {
-        self.rules().push(LayoutRule::between(
-            view.weak_view(),
-            Weak::default(),
-            Some(anchor),
-        ));
+        self.rules().push(LayoutRule::between_super(view.weak_view(), anchor));
         self
     }
 

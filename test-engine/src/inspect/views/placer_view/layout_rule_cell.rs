@@ -39,7 +39,7 @@ impl Setup for LayoutRuleCell {
         self.value.place().at_right(self.anchor, 8).w(88).relative_height(self, 0.6);
         self.value.editing_ended.val(move |val| {
             let new_val: f32 = val.parse().unwrap();
-            self.rule.offset = new_val;
+            self.rule.set_offset(new_val);
             self.editing_ended.trigger(());
         });
 
@@ -52,9 +52,9 @@ impl Setup for LayoutRuleCell {
 
 impl LayoutRuleCell {
     pub fn set_rule(mut self: Weak<Self>, rule: &LayoutRule) {
-        if let Some(anchor) = rule.side {
+        if let Some(anchor) = rule.side() {
             self.anchor.set_anchor(anchor);
-            self.value.set_text(LossyConvert::<i64>::lossy_convert(rule.offset));
+            self.value.set_text(LossyConvert::<i64>::lossy_convert(rule.offset()));
             self.enabled.set_on(rule.enabled);
         } else {
             dbg!(&rule);
