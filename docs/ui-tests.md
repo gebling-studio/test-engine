@@ -21,6 +21,9 @@ cargo run -p ui-test 2>&1 | tee /tmp/ui-test.log | tail -12
 The suite stops on the first failure. Headless environments (CI, linux without display) skip
 UI tests automatically.
 
+Every test prints `Name: Started` and `Name: OK`. On a hang or failure the broken test is the
+one with `Started` and no `OK` — usually the last line of the log.
+
 ## Two kinds of tests
 
 1. **Registered** — a view marked `#[view_test]` instead of `#[view]`, with

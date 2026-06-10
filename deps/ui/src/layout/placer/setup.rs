@@ -5,12 +5,31 @@ use parking_lot::Mutex;
 
 use super::Placer;
 use crate::{
-    View,
+    View, WeakView,
     layout::{Anchor, Tiling, layout_rule::LayoutRule},
     view::{ViewFrame, ViewSubviews},
 };
 
 impl Placer {
+    fn add_size_rule(&self, rule: LayoutRule) {
+        if rule.width() {
+            self.has().width = true;
+            self.rules().retain(|r| !r.width());
+        } else {
+            self.has().height = true;
+            self.rules().retain(|r| !r.height());
+        }
+        self.rules().insert(0, rule);
+    }
+
+    fn assert_not_self(&self, view: WeakView) {
+        assert_ne!(
+            view.raw(),
+            self.view.weak_view().raw(),
+            "Trying to anchor View to itself"
+        );
+    }
+
     pub fn size(&self, width: impl ToF32, height: impl ToF32) -> &Self {
         self.view.weak_view().set_size(width, height);
         self.w(width).h(height)
@@ -41,21 +60,7 @@ impl Placer {
     }
 
     pub fn relative_height(&self, view: impl Deref<Target = impl View>, multiplier: impl ToF32) -> &Self {
-        if !self.has().height {
-            self.has().height = true;
-            self.rules().insert(
-                0,
-                LayoutRule::relative(Anchor::Height, multiplier, view.weak_view()),
-            );
-            return self;
-        }
-
-        self.rules().retain(|r| !r.height());
-        self.rules().insert(
-            0,
-            LayoutRule::relative(Anchor::Height, multiplier, view.weak_view()),
-        );
-        self
+        self.relative(Anchor::Height, view, multiplier)
     }
 
     pub fn relative_size(
@@ -81,39 +86,24 @@ impl Placer {
         view: impl Deref<Target = impl View> + Copy,
     ) -> &Self {
         for anchor in anchors {
-            self.has().width = if anchor.is_width() { true } else { self.has().width };
-            self.has().height = if anchor.is_height() {
-                true
-            } else {
-                self.has().height
-            };
+            let rule = LayoutRule::same(anchor, view.weak_view());
 
-            self.rules().push(LayoutRule::same(anchor, view.weak_view()));
+            if anchor.is_width() || anchor.is_height() {
+                self.add_size_rule(rule);
+            } else {
+                self.rules().push(rule);
+            }
         }
         self
     }
 
     pub fn w(&self, w: impl ToF32) -> &Self {
-        if !self.has().width {
-            self.rules().insert(0, LayoutRule::make(Anchor::Width, w));
-            self.has().width = true;
-            return self;
-        }
-
-        self.rules().retain(|r| !r.width());
-        self.rules().insert(0, LayoutRule::make(Anchor::Width, w));
+        self.add_size_rule(LayoutRule::make(Anchor::Width, w));
         self
     }
 
     pub fn h(&self, h: impl ToF32) -> &Self {
-        if !self.has().height {
-            self.rules().insert(0, LayoutRule::make(Anchor::Height, h));
-            self.has().height = true;
-            return self;
-        }
-
-        self.rules().retain(|r| !r.height());
-        self.rules().insert(0, LayoutRule::make(Anchor::Height, h));
+        self.add_size_rule(LayoutRule::make(Anchor::Height, h));
         self
     }
 
@@ -198,12 +188,15 @@ impl Placer {
         view: impl Deref<Target = impl View + ?Sized>,
         offset: impl ToF32,
     ) -> &Self {
-        assert_ne!(
-            view.weak_view().raw(),
-            self.view.weak_view().raw(),
-            "Trying to anchor View to itself"
-        );
-        self.rules().push(LayoutRule::anchor(side, offset, view.weak_view()));
+        self.assert_not_self(view.weak_view());
+
+        let rule = LayoutRule::anchor(side, offset, view.weak_view());
+
+        if side.is_width() || side.is_height() {
+            self.add_size_rule(rule);
+        } else {
+            self.rules().push(rule);
+        }
         self
     }
 
@@ -213,17 +206,15 @@ impl Placer {
         view: impl Deref<Target = impl View + ?Sized>,
         ratio: impl ToF32,
     ) -> &Self {
-        assert_ne!(
-            view.weak_view().raw(),
-            self.view.weak_view().raw(),
-            "Trying to assign relative View to itself"
-        );
+        self.assert_not_self(view.weak_view());
 
-        let mut has = self.has();
-        has.width = if side.is_width() { true } else { has.width };
-        has.height = if side.is_height() { true } else { has.height };
+        let rule = LayoutRule::relative(side, ratio, view.weak_view());
 
-        self.rules().push(LayoutRule::relative(side, ratio, view.weak_view()));
+        if side.is_width() || side.is_height() {
+            self.add_size_rule(rule);
+        } else {
+            self.rules().push(rule);
+        }
         self
     }
 }

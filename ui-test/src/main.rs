@@ -13,6 +13,7 @@ use test_engine::{
     AppRunner,
     dispatch::from_main,
     ui::{Label, UIManager},
+    ui_test::UITest,
 };
 
 use crate::inspect::test_inspect;
@@ -60,6 +61,7 @@ fn run(test_name: Option<String>) -> Result<()> {
         if let Some(test_name) = test_name {
             if let Some(test) = my_tests.get(&test_name) {
                 test()?;
+                UITest::finish();
                 AppRunner::stop();
                 return Ok(());
             }
@@ -73,6 +75,7 @@ fn run(test_name: Option<String>) -> Result<()> {
                 }
             };
             test()?;
+            UITest::finish();
             AppRunner::stop();
             return Ok(());
         }
@@ -88,6 +91,7 @@ fn run(test_name: Option<String>) -> Result<()> {
             }
         }
 
+        UITest::finish();
         AppRunner::stop();
 
         Ok(())

@@ -239,7 +239,7 @@ impl window::WindowEvents for AppRunner {
                 Window::outer_size(),
             );
 
-            debug!("UI init: OK");
+            debug!("UI initialized");
 
             #[cfg(not_wasm)]
             {

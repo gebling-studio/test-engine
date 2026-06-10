@@ -28,15 +28,17 @@ impl UITest {
         test_start: bool,
         new_test_name: String,
     ) -> Weak<T> {
-        let test_name = TEST_NAME.lock().clone();
+        if test_start {
+            let test_name = TEST_NAME.lock().clone();
 
-        if !test_name.is_empty() && test_start {
-            debug!("{test_name}: OK");
+            if !test_name.is_empty() {
+                debug!("{test_name}: OK");
+            }
+
+            debug!("{new_test_name}: Started");
         }
 
         TEST_NAME.lock().clone_from(&new_test_name);
-
-        debug!("{new_test_name}: Started");
 
         clear_state();
 
@@ -57,6 +59,16 @@ impl UITest {
         wait_for_next_frame();
 
         view
+    }
+
+    pub fn finish() {
+        let test_name = TEST_NAME.lock().clone();
+
+        if !test_name.is_empty() {
+            debug!("{test_name}: OK");
+        }
+
+        TEST_NAME.lock().clear();
     }
 }
 
