@@ -22,6 +22,10 @@ before a hang:
 cargo run -p ui-test -- --stop-on-failure --headless 2>&1 | tee /tmp/ui-test.log | tail -12
 ```
 
+Don't run the suite after every change. Run it only when the change can affect UI or
+rendering behavior, or once before a commit/push. Mechanical changes (renames, comments,
+docs) only need `cargo build` and `make lint`.
+
 On failure a report is printed: window resolution and scale, a path to a screenshot of
 the actual screen, and the view tree with frames. For `check_colors` failures the failing
 pixel also gets a highlight marker, visible in the screenshot. Read the screenshot and

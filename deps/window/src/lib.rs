@@ -13,7 +13,7 @@ mod vertex_buffer;
 pub use app_handler::AppHandler;
 pub use bytemuck::cast_slice;
 pub use screenshot::*;
-pub use state::RGBA_TEXTURE_FORMAT;
+pub use state::SURFACE_TEXTURE_FORMAT;
 pub use text::*;
 pub use vertex_buffer::VertexBuffer;
 pub use wgpu::{

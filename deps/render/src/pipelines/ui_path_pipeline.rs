@@ -27,7 +27,7 @@ impl Default for UIPathPipeline {
 
         let shader = device.create_shader_module(include_wgsl!("shaders/ui_path.wgsl"));
 
-        let z_pos_layout = make_uniform_layout("path_z_pos_layput", ShaderStages::VERTEX);
+        let z_pos_layout = make_uniform_layout("path_z_pos_layout", ShaderStages::VERTEX);
 
         let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
             label:              Some("Path Pipeline Layout"),

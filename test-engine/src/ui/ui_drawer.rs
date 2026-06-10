@@ -7,12 +7,11 @@ use gm::{
 };
 use refs::main_lock::MainLock;
 use render::{
-    UIGradientPipeline, UIImageRectPipepeline,
+    UIGradientPipeline, UIImageRectPipeline,
     data::{RectView, UIGradientInstance, UIImageInstance, UIRectInstance},
 };
 use ui::{
-    DrawingView, ImageView, Label, TextAlignment, UIManager, View, ViewData, ViewFrame, ViewLayout,
-    ViewSubviews,
+    ImageView, Label, TextAlignment, UIManager, View, ViewData, ViewFrame, ViewLayout, ViewSubviews,
 };
 use wgpu::RenderPass;
 use wgpu_text::glyph_brush::{BuiltInLineBreaker, HorizontalAlign, Layout, Section, Text, VerticalAlign};
@@ -21,8 +20,7 @@ use window::{Font, Window};
 use crate::pipelines::Pipelines;
 
 static GRADIENT_DRAWER: MainLock<UIGradientPipeline> = MainLock::new();
-static IMAGE_RECT_DRAWER: MainLock<UIImageRectPipepeline> = MainLock::new();
-// static UI_PATH_DRAWER: MainLock<UIPathPipeline> = MainLock::new();
+static IMAGE_RECT_DRAWER: MainLock<UIImageRectPipeline> = MainLock::new();
 
 pub struct UIDrawer;
 
@@ -165,16 +163,6 @@ impl UIDrawer {
             && !label.text.is_empty()
         {
             Self::draw_label(&frame, label, text_sections, scale);
-        } else if let Some(drawing_view) = view.as_any().downcast_ref::<DrawingView>() {
-            for _path in drawing_view.paths().iter().rev() {
-                // UI_PATH_DRAWER.get_mut().draw(
-                //     pass,
-                //     path.buffer(),
-                //     path.uniform_bind(),
-                //     path.vertex_range(),
-                //     drawing_view.z_position() -
-                // UIManager::additional_z_offset(), );
-            }
         }
 
         if debug_frames {

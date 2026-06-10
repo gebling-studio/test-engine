@@ -6,7 +6,7 @@ use wgpu::{
     VertexState,
     util::{BufferInitDescriptor, DeviceExt},
 };
-use window::{BufferUsages, PolygonMode, RGBA_TEXTURE_FORMAT};
+use window::{BufferUsages, PolygonMode, SURFACE_TEXTURE_FORMAT};
 
 use crate::to_bytes::ToBytes;
 
@@ -75,7 +75,7 @@ impl DeviceHelper for Device {
                 entry_point:         "f_main".into(),
                 compilation_options: PipelineCompilationOptions::default(),
                 targets:             &[ColorTargetState {
-                    format:     RGBA_TEXTURE_FORMAT,
+                    format:     SURFACE_TEXTURE_FORMAT,
                     blend:      BlendState::ALPHA_BLENDING.into(),
                     write_mask: ColorWrites::ALL,
                 }

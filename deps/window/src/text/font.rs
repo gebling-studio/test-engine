@@ -11,7 +11,7 @@ use refs::{
 use wgpu::{CompareFunction, DepthBiasState, DepthStencilState, StencilState, TextureFormat};
 use wgpu_text::{BrushBuilder, TextBrush, glyph_brush::ab_glyph::FontArc};
 
-use crate::{RGBA_TEXTURE_FORMAT, window::Window};
+use crate::{SURFACE_TEXTURE_FORMAT, window::Window};
 
 pub struct Font {
     pub name:  String,
@@ -34,7 +34,7 @@ impl Font {
             bias:                DepthBiasState::default(),
         }.into())
             /* .initial_cache_size((16_384, 16_384))) */ // use this to avoid resizing cache texture
-            .build(&window.device, render_size.width.lossy_convert(), render_size.height.lossy_convert(), RGBA_TEXTURE_FORMAT);
+            .build(&window.device, render_size.width.lossy_convert(), render_size.height.lossy_convert(), SURFACE_TEXTURE_FORMAT);
         Ok(Self {
             name: name.to_string(),
             brush,

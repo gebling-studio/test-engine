@@ -4,13 +4,13 @@ use refs::{
     manage::{DataManager, ExistsManaged},
 };
 use render::{
-    BackgroundPipeline, PolygonPipeline, SpriteBoxPipepeline, SpriteView, TexturedSpriteBoxPipeline,
+    BackgroundPipeline, PolygonPipeline, SpriteBoxPipeline, SpriteView, TexturedSpriteBoxPipeline,
     data::{SpriteInstance, TexturedSpriteInstance},
 };
 use ui::UIManager;
 use wgpu::RenderPass;
 
-static SPRITE_DRAWER: MainLock<SpriteBoxPipepeline> = MainLock::new();
+static SPRITE_DRAWER: MainLock<SpriteBoxPipeline> = MainLock::new();
 static TEXTURED_SPRITE_DRAWER: MainLock<TexturedSpriteBoxPipeline> = MainLock::new();
 static BACKGROUND: MainLock<BackgroundPipeline> = MainLock::new();
 static POLYGON: MainLock<PolygonPipeline> = MainLock::new();

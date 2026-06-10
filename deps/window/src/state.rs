@@ -22,9 +22,9 @@ use crate::{
 type ReadDisplayRequest = Sender<Screenshot>;
 
 #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
-pub const RGBA_TEXTURE_FORMAT: TextureFormat = TextureFormat::Bgra8UnormSrgb;
+pub const SURFACE_TEXTURE_FORMAT: TextureFormat = TextureFormat::Bgra8UnormSrgb;
 #[cfg(any(target_os = "android", target_arch = "wasm32"))]
-pub const RGBA_TEXTURE_FORMAT: TextureFormat = TextureFormat::Rgba8Unorm;
+pub const SURFACE_TEXTURE_FORMAT: TextureFormat = TextureFormat::Rgba8Unorm;
 
 pub struct State {
     pub(crate) clear_color: Color,
@@ -145,8 +145,21 @@ impl State {
         } else {
             match surface.presentable.get_current_texture() {
                 CurrentSurfaceTexture::Success(tex) => Some(tex),
-                CurrentSurfaceTexture::Occluded => return Ok(()),
-                _ => panic!("Failed to get texture"),
+                CurrentSurfaceTexture::Timeout | CurrentSurfaceTexture::Occluded => return Ok(()),
+                CurrentSurfaceTexture::Suboptimal(_) | CurrentSurfaceTexture::Outdated => {
+                    warn!("Surface is outdated, reconfiguring");
+                    Window::reconfigure_surface();
+                    return Ok(());
+                }
+                CurrentSurfaceTexture::Lost => {
+                    warn!("Surface is lost, recreating");
+                    Window::current().surface = None;
+                    Self::resize();
+                    return Ok(());
+                }
+                CurrentSurfaceTexture::Validation => {
+                    panic!("Validation error in get_current_texture")
+                }
             }
         };
 
@@ -222,15 +235,7 @@ impl State {
 
             hreads::spawn(async move {
                 let _ = receiver.recv().unwrap();
-                let (buff, size) = buffer;
-
-                let bytes: &[u8] = &buff.slice(..).get_mapped_range();
-                let data: Vec<gm::color::U8Color> = bytemuck::cast_slice(bytes)
-                    .iter()
-                    .map(|color: &gm::color::U8Color| color.bgra_to_rgba())
-                    .collect();
-
-                buffer_sender.send(Screenshot::new(data, size)).unwrap();
+                Self::deliver_screenshot(buffer, &buffer_sender);
             });
         }
 
@@ -261,10 +266,40 @@ impl State {
             mip_level_count: 1,
             sample_count:    1,
             dimension:       wgpu::TextureDimension::D2,
-            format:          RGBA_TEXTURE_FORMAT,
+            format:          SURFACE_TEXTURE_FORMAT,
             usage:           wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
             view_formats:    &[],
         }));
+    }
+
+    #[cfg(not_wasm)]
+    fn deliver_screenshot(buffer: (wgpu::Buffer, gm::flat::Size<u32>), sender: &ReadDisplayRequest) {
+        let (buff, size) = buffer;
+
+        if size.width == 0 || size.height == 0 {
+            sender.send(Screenshot::new(vec![], size)).unwrap();
+            return;
+        }
+
+        let width = usize::try_from(size.width).unwrap();
+        let height = usize::try_from(size.height).unwrap();
+        let real_row_bytes = width * std::mem::size_of::<gm::color::U8Color>();
+        let row_bytes =
+            real_row_bytes.next_multiple_of(usize::try_from(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT).unwrap());
+
+        let bytes: &[u8] = &buff.slice(..).get_mapped_range();
+
+        let mut data: Vec<gm::color::U8Color> = Vec::with_capacity(width * height);
+
+        for row in bytes.chunks_exact(row_bytes) {
+            data.extend(
+                bytemuck::cast_slice::<u8, gm::color::U8Color>(&row[..real_row_bytes])
+                    .iter()
+                    .map(|color| color.bgra_to_rgba()),
+            );
+        }
+
+        sender.send(Screenshot::new(data, size)).unwrap();
     }
 
     pub fn request_read_display(&self) -> Receiver<Screenshot> {
@@ -294,9 +329,7 @@ impl State {
 
         let screen_width_bytes: u64 = u64::from(texture.size().width) * std::mem::size_of::<u32>() as u64;
 
-        let number_of_align = screen_width_bytes / u64::from(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT) + 1;
-
-        let width_bytes = number_of_align * u64::from(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT);
+        let width_bytes = screen_width_bytes.next_multiple_of(u64::from(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT));
 
         let buffer = Window::device().create_buffer(&wgpu::BufferDescriptor {
             label:              Some("Read Screen Buffer"),
@@ -327,10 +360,7 @@ impl State {
             },
         );
 
-        let size: gm::flat::Size<u32> = gm::flat::Size::new(
-            u32::try_from(width_bytes / std::mem::size_of::<gm::color::U8Color>() as u64).unwrap(),
-            texture.size().height,
-        );
+        let size: gm::flat::Size<u32> = gm::flat::Size::new(texture.size().width, texture.size().height);
 
         (buffer, size)
     }

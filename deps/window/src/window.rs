@@ -22,7 +22,7 @@ use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 use crate::{
     Screenshot,
     app_handler::AppHandler,
-    state::{RGBA_TEXTURE_FORMAT, State},
+    state::{SURFACE_TEXTURE_FORMAT, State},
     surface::Surface,
 };
 
@@ -299,7 +299,7 @@ impl Window {
         RENDER_FRAME.fetch_add(1, Ordering::Relaxed);
     }
 
-    fn reconfigure_surface() {
+    pub(crate) fn reconfigure_surface() {
         let window = Self::current();
 
         if let Some(surface) = &window.surface {
@@ -324,7 +324,7 @@ pub(crate) fn surface_config_with_size(size: impl Into<Size<u32>>) -> SurfaceCon
         } else {
             TextureUsages::RENDER_ATTACHMENT
         },
-        format:       RGBA_TEXTURE_FORMAT,
+        format:       SURFACE_TEXTURE_FORMAT,
         width:        size.width,
         height:       size.height,
         present_mode: if VSYNC.load(Ordering::Relaxed) || Platform::MOBILE {

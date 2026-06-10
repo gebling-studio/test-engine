@@ -18,7 +18,7 @@ use crate::{
 
 pub struct RectPipeline<
     const TYPE: PipelineType,
-    const SHADER: &'static str,
+    const NAME: &'static str,
     const SHADER_CODE: &'static str,
     View,
     Instance,
@@ -96,11 +96,11 @@ impl<
 
 impl<
     const TYPE: PipelineType,
-    const SHADER: &'static str,
+    const NAME: &'static str,
     const SHADER_CODE: &'static str,
     View: Pod + PartialEq,
     Instance: Pod,
-> RectPipeline<TYPE, SHADER, SHADER_CODE, View, Instance>
+> RectPipeline<TYPE, NAME, SHADER_CODE, View, Instance>
 {
     pub fn add(&mut self, instance: Instance) {
         assert!(TYPE.color());

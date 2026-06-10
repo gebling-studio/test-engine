@@ -1,11 +1,11 @@
 use log::debug;
 use refs::main_lock::MainLock;
-use render::UIRectPipepeline;
+use render::UIRectPipeline;
 
 static PIPELINES: MainLock<Pipelines> = MainLock::new();
 
 pub(crate) struct Pipelines {
-    pub rect: UIRectPipepeline,
+    pub rect: UIRectPipeline,
 }
 
 impl Pipelines {
@@ -13,7 +13,7 @@ impl Pipelines {
         assert!(!PIPELINES.is_set(), "Double pipelines init");
 
         PIPELINES.set(Pipelines {
-            rect: UIRectPipepeline::default(),
+            rect: UIRectPipeline::default(),
         });
 
         debug!("pipelines ready");
@@ -23,7 +23,7 @@ impl Pipelines {
         PIPELINES.try_get_mut().expect("Pipelines not initialized yet")
     }
 
-    pub fn rect() -> &'static mut UIRectPipepeline {
+    pub fn rect() -> &'static mut UIRectPipeline {
         &mut Self::get().rect
     }
 }
