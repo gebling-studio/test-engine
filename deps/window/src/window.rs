@@ -1,6 +1,6 @@
 use std::sync::{
     Arc,
-    atomic::{AtomicBool, AtomicU32, Ordering},
+    atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering},
     mpsc::Receiver,
 };
 
@@ -29,6 +29,7 @@ use crate::{
 static VSYNC: AtomicBool = AtomicBool::new(true);
 static MAX_FRAME_LATENCY: AtomicU32 = AtomicU32::new(2);
 static HEADLESS: AtomicBool = AtomicBool::new(false);
+static RENDER_FRAME: AtomicU64 = AtomicU64::new(0);
 /// Doesn't work on some Androids and on Web
 pub(crate) const SUPPORT_SCREENSHOT: bool = !Platform::ANDROID && !Platform::WASM;
 
@@ -286,6 +287,16 @@ impl Window {
 
     pub fn headless() -> bool {
         HEADLESS.load(Ordering::Relaxed)
+    }
+
+    /// Index of the frame currently being rendered. Bumps once per rendered
+    /// frame, before any draw code runs.
+    pub fn render_frame() -> u64 {
+        RENDER_FRAME.load(Ordering::Relaxed)
+    }
+
+    pub(crate) fn next_render_frame() {
+        RENDER_FRAME.fetch_add(1, Ordering::Relaxed);
     }
 
     fn reconfigure_surface() {

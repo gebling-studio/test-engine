@@ -1,5 +1,10 @@
-use std::{env::temp_dir, fmt::Write, ops::Deref};
+use std::{
+    env::temp_dir,
+    fmt::{self, Write},
+    ops::Deref,
+};
 
+use anyhow::Result;
 use gm::flat::Rect;
 use hreads::{from_main, is_main_thread, wait_for_next_frame};
 use ui::{UIManager, View, ViewData, ViewFrame, ViewSubviews};
@@ -10,9 +15,9 @@ const MAX_CHILDREN: usize = 30;
 
 /// Everything an agent needs to debug a failed UI test: window info,
 /// a screenshot of the actual screen and the view tree with frames.
-pub fn failure_report() -> String {
+pub fn failure_report() -> Result<String> {
     if is_main_thread() {
-        return "No failure report: cannot collect it from the main thread.".to_string();
+        return Ok("No failure report: cannot collect it from the main thread.".to_string());
     }
 
     let test_name = TEST_NAME.lock().clone();
@@ -21,12 +26,12 @@ pub fn failure_report() -> String {
 
     let (resolution, scale) = from_main(|| (UIManager::window_resolution(), UIManager::scale()));
 
-    _ = writeln!(report, "Window resolution: {resolution:?}, scale: {scale}");
-    _ = writeln!(report, "{}", save_failure_screenshot(&test_name));
-    _ = writeln!(report, "View tree (label - frame - absolute frame):");
-    report.push_str(&from_main(dump_view_tree));
+    writeln!(report, "Window resolution: {resolution:?}, scale: {scale}")?;
+    writeln!(report, "{}", save_failure_screenshot(&test_name))?;
+    writeln!(report, "View tree (label - frame - absolute frame):")?;
+    report.push_str(&from_main(dump_view_tree)?);
 
-    report
+    Ok(report)
 }
 
 fn save_failure_screenshot(test_name: &str) -> String {
@@ -45,33 +50,35 @@ fn save_failure_screenshot(test_name: &str) -> String {
     }
 }
 
-fn dump_view_tree() -> String {
+fn dump_view_tree() -> Result<String> {
     let mut out = String::new();
-    dump_view(UIManager::root_view().deref(), 0, &mut out);
-    out
+    dump_view(UIManager::root_view().deref(), 0, &mut out)?;
+    Ok(out)
 }
 
-fn dump_view(view: &dyn View, depth: usize, out: &mut String) {
+fn dump_view(view: &dyn View, depth: usize, out: &mut String) -> fmt::Result {
     let indent = "  ".repeat(depth);
     let hidden = if view.is_hidden() { " [hidden]" } else { "" };
 
-    _ = writeln!(
+    writeln!(
         out,
         "{indent}{} - {} - {}{hidden}",
         view.label(),
         rect_str(view.frame()),
         rect_str(view.absolute_frame()),
-    );
+    )?;
 
     let subviews = view.subviews();
 
     for sub in subviews.iter().take(MAX_CHILDREN) {
-        dump_view(sub.deref(), depth + 1, out);
+        dump_view(sub.deref(), depth + 1, out)?;
     }
 
     if subviews.len() > MAX_CHILDREN {
-        _ = writeln!(out, "{indent}  ... and {} more", subviews.len() - MAX_CHILDREN);
+        writeln!(out, "{indent}  ... and {} more", subviews.len() - MAX_CHILDREN)?;
     }
+
+    Ok(())
 }
 
 fn rect_str(rect: &Rect) -> String {

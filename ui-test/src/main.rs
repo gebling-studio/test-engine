@@ -11,7 +11,7 @@ use std::{
     process::exit,
 };
 
-use anyhow::{Result, bail};
+use anyhow::{Result, anyhow, bail};
 use clap::Parser;
 use log::info;
 use test_engine::{
@@ -66,8 +66,12 @@ fn run(args: Args) -> Result<()> {
         let default_hook = take_hook();
         set_hook(Box::new(move |info| {
             default_hook(info);
-            if let Ok(report) = catch_unwind(test_engine::ui_test::failure_report) {
-                eprintln!("{report}");
+            let report = catch_unwind(test_engine::ui_test::failure_report)
+                .unwrap_or_else(|_| Err(anyhow!("report collection panicked")));
+
+            match report {
+                Ok(report) => eprintln!("{report}"),
+                Err(err) => eprintln!("Failed to collect failure report: {err}"),
             }
             exit(1);
         }));

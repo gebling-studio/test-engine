@@ -137,7 +137,7 @@ impl<
             }
 
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.set_vertex_buffer(1, instances.buffer().slice(..));
+            render_pass.set_vertex_buffer(1, instances.slice());
 
             render_pass.draw(TYPE.vertex_range(), 0..instances.len());
         }

@@ -137,6 +137,8 @@ impl State {
             return Ok(());
         }
 
+        Window::next_render_frame();
+
         let surface_texture = if Window::headless() {
             self.ensure_offscreen_texture();
             None

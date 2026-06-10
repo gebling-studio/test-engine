@@ -45,7 +45,7 @@ pub(super) fn check_pixel_color(screenshot: &Screenshot, pos: Point, color: U8Co
             pixel.r,
             pixel.g,
             pixel.b,
-            failure_report(),
+            failure_report()?,
         )
     }
 
