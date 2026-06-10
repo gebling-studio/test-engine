@@ -18,7 +18,7 @@ use test_engine::{
     AppRunner, Window,
     dispatch::from_main,
     ui::{Label, UIManager},
-    ui_test::UITest,
+    ui_test::{UITest, enable_fps_report},
 };
 
 use crate::inspect::test_inspect;
@@ -49,9 +49,16 @@ struct Args {
 
     #[arg(long)]
     stop_on_failure: bool,
+
+    #[arg(long)]
+    fps_report: bool,
 }
 
 fn run(args: Args) -> Result<()> {
+    if args.fps_report {
+        enable_fps_report();
+    }
+
     if args.stop_on_failure {
         let default_hook = take_hook();
         set_hook(Box::new(move |info| {

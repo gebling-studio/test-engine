@@ -1,4 +1,8 @@
-use std::{any::type_name, time::Instant};
+use std::{
+    any::type_name,
+    sync::atomic::{AtomicBool, Ordering},
+    time::Instant,
+};
 
 use hreads::{from_main, wait_for_next_frame};
 use log::{debug, trace};
@@ -17,10 +21,20 @@ struct FpsRecord {
     seconds: f32,
 }
 
+static FPS_REPORT: AtomicBool = AtomicBool::new(false);
 static FPS_RECORDS: Mutex<Vec<FpsRecord>> = Mutex::new(Vec::new());
 static FPS_SPAN: Mutex<Option<(String, u32, Instant)>> = Mutex::new(None);
 
+/// Record fps of every test and print a report at the end of the run.
+pub fn enable_fps_report() {
+    FPS_REPORT.store(true, Ordering::Relaxed);
+}
+
 fn record_test_boundary(new_test: Option<String>) {
+    if !FPS_REPORT.load(Ordering::Relaxed) {
+        return;
+    }
+
     let frames = from_main(|| Window::current().frame_drawn());
     let now = Instant::now();
 
