@@ -23,4 +23,4 @@ make lint                                                                    # c
 ```
 
 Without `--stop-on-failure` a failed UI test leaves the app window running. Always pass it.
-`--headless` skips presenting to the screen — tests run many times faster. Always pass it too.
+`--headless` runs without a window or a display — tests run many times faster. Always pass it too.

@@ -53,6 +53,36 @@ impl AppHandler {
 }
 
 impl AppHandler {
+    /// Run without a window, an event loop or a display. Frames render to an
+    /// offscreen texture in a plain loop until [`Window::close`] is called.
+    #[cfg(not_wasm)]
+    pub fn run_headless(app: impl WindowEvents + 'static, size: gm::flat::Size<u32>) {
+        let handler = APP_HANDLER.get_mut();
+
+        *handler = Some(Self {
+            state:            AppHandlerState::Init(None),
+            te_window_events: Box::new(app),
+            close:            AtomicBool::new(false),
+        });
+
+        let handler = handler.as_mut().expect("Failed to get handler");
+
+        let window = hreads::unasync(Window::create_headless(size));
+
+        handler.state = AppHandlerState::Ready(window);
+        handler.te_window_events.window_ready();
+
+        while !handler.close.load(Ordering::Relaxed) {
+            let window = Self::window();
+
+            window.state.update();
+
+            if let Err(e) = window.state.render() {
+                error!("Render error: {e:?}");
+            }
+        }
+    }
+
     pub(crate) fn close() {
         Self::current().close.store(true, Ordering::Relaxed);
     }
@@ -170,8 +200,10 @@ impl ApplicationHandler<Window> for AppHandler {
     }
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
-        if self.state.ready() {
-            Window::winit_window().request_redraw();
+        if self.state.ready()
+            && let Some(window) = Window::winit_window()
+        {
+            window.request_redraw();
         }
     }
 }

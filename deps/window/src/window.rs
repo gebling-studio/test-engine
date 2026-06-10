@@ -22,14 +22,17 @@ use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 use crate::{
     Screenshot,
     app_handler::AppHandler,
+    screen::Screen,
     state::{SURFACE_TEXTURE_FORMAT, State},
     surface::Surface,
 };
 
 static VSYNC: AtomicBool = AtomicBool::new(true);
 static MAX_FRAME_LATENCY: AtomicU32 = AtomicU32::new(2);
-static HEADLESS: AtomicBool = AtomicBool::new(false);
 static RENDER_FRAME: AtomicU64 = AtomicU64::new(0);
+/// Mirrors `Screen::Headless` so any thread can check it. Set once at
+/// startup, never changes.
+static HEADLESS: AtomicBool = AtomicBool::new(false);
 /// Doesn't work on some Androids and on Web
 pub(crate) const SUPPORT_SCREENSHOT: bool = !Platform::ANDROID && !Platform::WASM;
 
@@ -47,14 +50,12 @@ pub struct Window {
     pub(crate) device:   Device,
     pub(crate) queue:    Queue,
 
-    pub(crate) surface: Option<Surface>,
+    pub(crate) screen: Screen,
 
     pub(crate) title_set: bool,
 
     #[cfg(desktop)]
     pub(crate) is_resizing: bool,
-
-    pub(crate) winit_window: Arc<winit::window::Window>,
 }
 
 impl Window {
@@ -70,23 +71,39 @@ impl Window {
         &Self::current().queue
     }
 
+    /// Rendering goes to an offscreen texture, there is no window and no
+    /// display. Decided at startup. Callable from any thread.
+    pub fn headless() -> bool {
+        HEADLESS.load(Ordering::Relaxed)
+    }
+
     #[cfg(desktop)]
     pub fn is_resizing() -> bool {
         Self::current().is_resizing
     }
 
-    pub(crate) fn winit_window() -> &'static winit::window::Window {
-        &mut Self::current().winit_window
+    pub(crate) fn winit_window() -> Option<&'static winit::window::Window> {
+        Self::current().screen.winit_window()
     }
 
     pub fn inner_size() -> Size {
-        let size = Self::winit_window().inner_size();
-        (size.width, size.height).into()
+        match &Self::current().screen {
+            Screen::Windowed { winit_window, .. } => {
+                let size = winit_window.inner_size();
+                (size.width, size.height).into()
+            }
+            Screen::Headless { size } => (size.width, size.height).into(),
+        }
     }
 
     pub fn outer_size() -> Size {
-        let size = Self::winit_window().outer_size();
-        (size.width, size.height).into()
+        match &Self::current().screen {
+            Screen::Windowed { winit_window, .. } => {
+                let size = winit_window.outer_size();
+                (size.width, size.height).into()
+            }
+            Screen::Headless { size } => (size.width, size.height).into(),
+        }
     }
 
     pub fn render_size() -> Size {
@@ -98,17 +115,26 @@ impl Window {
     }
 
     pub fn inner_position() -> Point {
-        let pos = Self::winit_window().inner_position().unwrap_or_default();
+        let Some(window) = Self::winit_window() else {
+            return Point::default();
+        };
+        let pos = window.inner_position().unwrap_or_default();
         (pos.x, pos.y).into()
     }
 
     pub fn outer_position() -> Point {
-        let pos = Self::winit_window().outer_position().unwrap_or_default();
+        let Some(window) = Self::winit_window() else {
+            return Point::default();
+        };
+        let pos = window.outer_position().unwrap_or_default();
         (pos.x, pos.y).into()
     }
 
     pub fn screen_scale() -> f32 {
-        Self::winit_window().scale_factor().lossy_convert()
+        let Some(window) = Self::winit_window() else {
+            return 1.0;
+        };
+        window.scale_factor().lossy_convert()
     }
 
     pub fn set_clear_color(color: impl Into<Color>) {
@@ -119,29 +145,7 @@ impl Window {
         on_main(AppHandler::close);
     }
 
-    pub(crate) async fn start_internal(
-        size: PhysicalSize<u32>,
-        window: winit::window::Window,
-        proxy: EventLoopProxy<Window>,
-    ) {
-        let winit_window = Arc::new(window);
-
-        let instance = Instance::default();
-        let surface = instance.create_surface(winit_window.clone()).unwrap();
-        let adapter = instance
-            .request_adapter(&RequestAdapterOptions {
-                power_preference:       PowerPreference::HighPerformance,
-                force_fallback_adapter: false,
-
-                compatible_surface: Some(&surface),
-            })
-            .await
-            .expect("Could not get an adapter (GPU).");
-
-        let info = adapter.get_info();
-
-        info!("Backend: {}", &info.backend);
-
+    async fn request_device(adapter: &Adapter) -> (Device, Queue) {
         let mut required_limits = Limits::default();
 
         if Platform::IOS {
@@ -167,7 +171,7 @@ impl Window {
             required_limits.max_texture_dimension_2d = 8192;
         }
 
-        let (device, queue) = adapter
+        adapter
             .request_device(&DeviceDescriptor {
                 required_features: Features::empty(),
                 // Doesn't work on some Androids
@@ -179,9 +183,33 @@ impl Window {
                 experimental_features: ExperimentalFeatures::default(),
             })
             .await
-            .expect("Failed to request device");
+            .expect("Failed to request device")
+    }
 
-        let state = State::default();
+    pub(crate) async fn start_internal(
+        size: PhysicalSize<u32>,
+        window: winit::window::Window,
+        proxy: EventLoopProxy<Window>,
+    ) {
+        let winit_window = Arc::new(window);
+
+        let instance = Instance::default();
+        let surface = instance.create_surface(winit_window.clone()).unwrap();
+        let adapter = instance
+            .request_adapter(&RequestAdapterOptions {
+                power_preference:       PowerPreference::HighPerformance,
+                force_fallback_adapter: false,
+
+                compatible_surface: Some(&surface),
+            })
+            .await
+            .expect("Could not get an adapter (GPU).");
+
+        let info = adapter.get_info();
+
+        info!("Backend: {}", &info.backend);
+
+        let (device, queue) = Self::request_device(&adapter).await;
 
         let surface = if size.width != 0 && size.height != 0 {
             Surface::new(
@@ -198,16 +226,15 @@ impl Window {
         };
 
         let window = Self {
-            state,
+            state: State::default(),
             instance,
             adapter,
             device,
             queue,
-            surface,
+            screen: Screen::Windowed { winit_window, surface },
             #[cfg(desktop)]
             is_resizing: false,
             title_set: false,
-            winit_window,
         };
 
         if proxy.send_event(window).is_err() {
@@ -215,14 +242,50 @@ impl Window {
         }
     }
 
+    #[cfg(not_wasm)]
+    pub(crate) async fn create_headless(size: Size<u32>) -> Self {
+        let instance = Instance::default();
+        let adapter = instance
+            .request_adapter(&RequestAdapterOptions {
+                power_preference:       PowerPreference::HighPerformance,
+                force_fallback_adapter: false,
+
+                compatible_surface: None,
+            })
+            .await
+            .expect("Could not get an adapter (GPU).");
+
+        let info = adapter.get_info();
+
+        info!("Backend: {} (headless)", &info.backend);
+
+        HEADLESS.store(true, Ordering::Relaxed);
+
+        let (device, queue) = Self::request_device(&adapter).await;
+
+        Self {
+            state: State::default(),
+            instance,
+            adapter,
+            device,
+            queue,
+            screen: Screen::Headless { size },
+            #[cfg(desktop)]
+            is_resizing: false,
+            title_set: false,
+        }
+    }
+
     pub fn set_title(title: impl Into<String>) {
         let title = title.into();
         on_main(move || {
             Self::current().title_set = true;
-            if Platform::DESKTOP {
-                Self::winit_window().set_title(&title);
-            } else {
-                warn!("set_title is not supported on this platform");
+            if let Some(window) = Self::winit_window() {
+                if Platform::DESKTOP {
+                    window.set_title(&title);
+                } else {
+                    warn!("set_title is not supported on this platform");
+                }
             }
         });
     }
@@ -237,9 +300,16 @@ impl Window {
             return;
         }
 
-        self.is_resizing = true;
-
-        let _ = Self::winit_window().request_inner_size(PhysicalSize::new(size.width, size.height));
+        match &mut self.screen {
+            Screen::Windowed { winit_window, .. } => {
+                self.is_resizing = true;
+                let _ = winit_window.request_inner_size(PhysicalSize::new(size.width, size.height));
+            }
+            Screen::Headless { size: headless_size } => {
+                *headless_size = size;
+                State::resize();
+            }
+        }
     }
 
     pub fn request_screenshot(&self) -> Receiver<Screenshot> {
@@ -276,19 +346,6 @@ impl Window {
         });
     }
 
-    /// Render to an offscreen texture instead of the window surface. Nothing
-    /// is presented to the screen, so frames are not paced by the display or
-    /// the compositor. Screenshots still work. Takes effect on the next frame.
-    pub fn set_headless(enable: bool) {
-        on_main(move || {
-            HEADLESS.store(enable, Ordering::Relaxed);
-        });
-    }
-
-    pub fn headless() -> bool {
-        HEADLESS.load(Ordering::Relaxed)
-    }
-
     /// Index of the frame currently being rendered. Bumps once per rendered
     /// frame, before any draw code runs.
     pub fn render_frame() -> u64 {
@@ -302,14 +359,20 @@ impl Window {
     pub(crate) fn reconfigure_surface() {
         let window = Self::current();
 
-        if let Some(surface) = &window.surface {
+        if let Screen::Windowed {
+            surface: Some(surface), ..
+        } = &window.screen
+        {
             let size: Size<u32> = Self::render_size().lossy_convert();
             surface.presentable.configure(&window.device, &surface_config_with_size(size));
         }
     }
 
     pub fn display_refresh_rate() -> u32 {
-        Self::winit_window().current_monitor().map_or(60, |monitor| {
+        let Some(window) = Self::winit_window() else {
+            return 60;
+        };
+        window.current_monitor().map_or(60, |monitor| {
             monitor.refresh_rate_millihertz().unwrap_or(60_000) / 1000
         })
     }

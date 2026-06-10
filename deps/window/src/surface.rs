@@ -5,11 +5,8 @@ use log::info;
 use wgpu::{Adapter, Device, Instance, SurfaceConfiguration};
 use winit::window::Window;
 
-use crate::image::Texture;
-
 pub(crate) struct Surface {
-    pub presentable:   wgpu::Surface<'static>,
-    pub depth_texture: Texture,
+    pub presentable: wgpu::Surface<'static>,
 }
 
 impl Surface {
@@ -33,12 +30,6 @@ impl Surface {
 
         surface.configure(device, &config);
 
-        let depth_texture =
-            Texture::create_depth_texture(device, (config.width, config.height).into(), "depth_texture");
-
-        Ok(Self {
-            presentable: surface,
-            depth_texture,
-        })
+        Ok(Self { presentable: surface })
     }
 }

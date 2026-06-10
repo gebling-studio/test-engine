@@ -169,6 +169,25 @@ impl AppRunner {
     pub fn start_with_actor(
         actions: impl std::future::Future<Output = Result<()>> + Send + 'static,
     ) -> Result<()> {
+        Self::start_with_actor_impl(actions, false);
+        Ok(())
+    }
+
+    /// Run without a window or a display. Frames render to an offscreen
+    /// texture. Screenshots and `check_colors` still work.
+    #[cfg(not_wasm)]
+    pub fn start_headless_with_actor(
+        actions: impl std::future::Future<Output = Result<()>> + Send + 'static,
+    ) -> Result<()> {
+        Self::start_with_actor_impl(actions, true);
+        Ok(())
+    }
+
+    #[cfg(not_wasm)]
+    fn start_with_actor_impl(
+        actions: impl std::future::Future<Output = Result<()>> + Send + 'static,
+        headless: bool,
+    ) {
         use ui::Setup;
 
         #[derive(Default)]
@@ -184,9 +203,11 @@ impl AppRunner {
             hreads::unasync(actions).unwrap();
         });
 
-        crate::app_starter::test_engine_start_with_app(Box::new(ActorApp));
-
-        Ok(())
+        if headless {
+            crate::app_starter::test_engine_start_with_app_headless(Box::new(ActorApp));
+        } else {
+            crate::app_starter::test_engine_start_with_app(Box::new(ActorApp));
+        }
     }
 
     pub fn set_window_title(title: impl Into<String>) {

@@ -16,10 +16,16 @@ use wgpu::{CurrentSurfaceTexture, TextureFormat};
 
 use crate::{
     Font, Screenshot, Window, app_handler::AppHandler, frame_counter::FrameCounter, image::Texture,
-    surface::Surface, window::surface_config_with_size,
+    screen::Screen, surface::Surface, window::surface_config_with_size,
 };
 
 type ReadDisplayRequest = Sender<Screenshot>;
+
+enum RenderTarget {
+    Skip,
+    Offscreen,
+    Surface(wgpu::SurfaceTexture),
+}
 
 #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
 pub const SURFACE_TEXTURE_FORMAT: TextureFormat = TextureFormat::Bgra8UnormSrgb;
@@ -33,6 +39,7 @@ pub struct State {
     pub(crate) frame_counter: FrameCounter,
 
     offscreen_texture: Option<wgpu::Texture>,
+    depth_texture:     Option<Texture>,
 }
 
 impl Default for State {
@@ -42,6 +49,7 @@ impl Default for State {
             read_display_request: RefCell::default(),
             frame_counter:        FrameCounter::default(),
             offscreen_texture:    None,
+            depth_texture:        None,
         }
     }
 }
@@ -57,31 +65,32 @@ impl State {
 
         let window = Window::current();
 
-        if window.surface.is_none() {
-            window.surface = Surface::new(
-                &window.instance,
-                &window.adapter,
+        if let Screen::Windowed { winit_window, surface } = &mut window.screen {
+            if surface.is_none() {
+                *surface = Surface::new(
+                    &window.instance,
+                    &window.adapter,
+                    &window.device,
+                    surface_config_with_size((
+                        new_size.width.lossy_convert(),
+                        new_size.height.lossy_convert(),
+                    )),
+                    winit_window.clone(),
+                )
+                .expect("Failed to create surface")
+                .into();
+
+                info!("surface created");
+            }
+
+            surface.as_ref().unwrap().presentable.configure(
                 &window.device,
-                surface_config_with_size((new_size.width.lossy_convert(), new_size.height.lossy_convert())),
-                window.winit_window.clone(),
-            )
-            .expect("Failed to create surface")
-            .into();
-
-            info!("surface created");
+                &surface_config_with_size((
+                    new_size.width.lossy_convert(),
+                    new_size.height.lossy_convert(),
+                )),
+            );
         }
-
-        let surface = window.surface.as_mut().unwrap();
-
-        surface.depth_texture = Texture::create_depth_texture(
-            &window.device,
-            (new_size.width.lossy_convert(), new_size.height.lossy_convert()).into(),
-            "depth_texture",
-        );
-        surface.presentable.configure(
-            &window.device,
-            &surface_config_with_size((new_size.width.lossy_convert(), new_size.height.lossy_convert())),
-        );
 
         let queue = Window::queue();
 
@@ -120,48 +129,65 @@ impl State {
                 self.frame_counter.frame_time * 1000.0,
                 self.frame_counter.fps
             );
-            if Platform::DESKTOP {
+            if Platform::DESKTOP
+                && let Some(window) = Window::winit_window()
+            {
                 let size = Window::render_size();
-                Window::winit_window().set_title(&format!("{a} {} x {}", size.width, size.height));
+                window.set_title(&format!("{a} {} x {}", size.width, size.height));
             }
         }
     }
 
-    pub fn render(&mut self) -> Result<()> {
-        let Some(ref surface) = Window::current().surface else {
-            return Ok(());
-        };
+    /// Where the next frame goes. `Skip` means no frame can be rendered right
+    /// now - the surface is missing, occluded or being recovered.
+    fn acquire_render_target() -> RenderTarget {
+        match &Window::current().screen {
+            Screen::Headless { .. } => RenderTarget::Offscreen,
+            Screen::Windowed { surface: None, .. } => RenderTarget::Skip,
+            Screen::Windowed {
+                surface: Some(surface),
+                ..
+            } => match surface.presentable.get_current_texture() {
+                CurrentSurfaceTexture::Success(tex) => RenderTarget::Surface(tex),
+                CurrentSurfaceTexture::Timeout | CurrentSurfaceTexture::Occluded => RenderTarget::Skip,
+                CurrentSurfaceTexture::Suboptimal(_) | CurrentSurfaceTexture::Outdated => {
+                    warn!("Surface is outdated, reconfiguring");
+                    Window::reconfigure_surface();
+                    RenderTarget::Skip
+                }
+                CurrentSurfaceTexture::Lost => {
+                    warn!("Surface is lost, recreating");
+                    if let Screen::Windowed { surface, .. } = &mut Window::current().screen {
+                        *surface = None;
+                    }
+                    Self::resize();
+                    RenderTarget::Skip
+                }
+                CurrentSurfaceTexture::Validation => {
+                    panic!("Validation error in get_current_texture")
+                }
+            },
+        }
+    }
 
+    pub fn render(&mut self) -> Result<()> {
         #[cfg(desktop)]
         if Window::is_resizing() {
             return Ok(());
         }
 
+        let surface_texture = match Self::acquire_render_target() {
+            RenderTarget::Skip => return Ok(()),
+            RenderTarget::Offscreen => None,
+            RenderTarget::Surface(tex) => Some(tex),
+        };
+
         Window::next_render_frame();
 
-        let surface_texture = if Window::headless() {
+        if surface_texture.is_none() {
             self.ensure_offscreen_texture();
-            None
-        } else {
-            match surface.presentable.get_current_texture() {
-                CurrentSurfaceTexture::Success(tex) => Some(tex),
-                CurrentSurfaceTexture::Timeout | CurrentSurfaceTexture::Occluded => return Ok(()),
-                CurrentSurfaceTexture::Suboptimal(_) | CurrentSurfaceTexture::Outdated => {
-                    warn!("Surface is outdated, reconfiguring");
-                    Window::reconfigure_surface();
-                    return Ok(());
-                }
-                CurrentSurfaceTexture::Lost => {
-                    warn!("Surface is lost, recreating");
-                    Window::current().surface = None;
-                    Self::resize();
-                    return Ok(());
-                }
-                CurrentSurfaceTexture::Validation => {
-                    panic!("Validation error in get_current_texture")
-                }
-            }
-        };
+        }
+        self.ensure_depth_texture();
 
         let texture = match &surface_texture {
             Some(surface_texture) => &surface_texture.texture,
@@ -191,7 +217,7 @@ impl State {
                     },
                 })],
                 depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view:        &surface.depth_texture.view,
+                    view:        &self.depth_texture.as_ref().unwrap().view,
                     depth_ops:   Some(wgpu::Operations {
                         load:  wgpu::LoadOp::Clear(1.0),
                         store: wgpu::StoreOp::Store,
@@ -240,6 +266,22 @@ impl State {
         }
 
         Ok(())
+    }
+
+    fn ensure_depth_texture(&mut self) {
+        let size: gm::flat::Size<u32> = Window::render_size().lossy_convert();
+
+        let up_to_date = self.depth_texture.as_ref().is_some_and(|texture| texture.size == size);
+
+        if up_to_date {
+            return;
+        }
+
+        self.depth_texture = Some(Texture::create_depth_texture(
+            Window::device(),
+            size,
+            "depth_texture",
+        ));
     }
 
     fn ensure_offscreen_texture(&mut self) {

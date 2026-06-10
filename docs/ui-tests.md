@@ -48,11 +48,11 @@ one with `Started` and no `OK` — usually the last line of the log.
 The test app disables vsync and raises max frame latency at startup (`Window::set_vsync(false)`,
 `Window::set_max_frame_latency(3)`) so tests are not capped to the display refresh rate.
 
-`--headless` (`Window::set_headless(true)`) goes further: frames render to an offscreen
-texture and are never presented, so the display is out of the loop entirely and the full
-suite runs in a few seconds. Screenshots and `check_colors` still work. The window stays
-open but shows nothing, so run headed when you want to watch the UI. The network test
-(`RestRequest`) is skipped in headless mode.
+`--headless` goes further: the app starts with no window at all — no winit, no surface,
+no display. Frames render to an offscreen texture in a plain loop, so the full suite runs
+in a few seconds and works on machines without a display server (CI), given a GPU or a
+software Vulkan driver. Screenshots and `check_colors` still work. Run headed when you
+want to watch the UI. The network test (`RestRequest`) is skipped in headless mode.
 
 For profiling, pass `--fps-report` to print a report at the end of the run: frames, duration
 and average fps per test. Per-test fps varies a lot between runs — macOS sometimes paces frames

@@ -5,6 +5,7 @@ mod window_events;
 mod app_handler;
 mod frame_counter;
 pub mod image;
+mod screen;
 mod screenshot;
 pub mod state;
 mod surface;
