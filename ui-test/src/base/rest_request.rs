@@ -6,14 +6,14 @@ use test_engine::{
     dispatch::{from_main, on_main},
     net::{Request, RestAPI},
     refs::Weak,
-    ui::{Button, Label, Setup, Spinner, ViewFrame, async_link_button, view},
-    ui_test::{UITest, inject_touches},
+    ui::{Button, Label, Setup, Spinner, ViewFrame, ViewTest, async_link_button, view_test},
+    ui_test::inject_touches,
 };
 
 static REST_API: RestAPI = RestAPI::new("https://jsonplaceholder.typicode.com/");
 static NOT_REQUESTED: AtomicBool = AtomicBool::new(false);
 
-#[view]
+#[view_test]
 struct RestRequest {
     #[init]
     button: Button,
@@ -25,7 +25,7 @@ impl RestRequest {
         #[derive(Debug, Deserialize)]
         struct User {}
 
-        static REQUEST: Request<(), Vec<User>> = REST_API.request("users");
+        static REQUEST: Request<(), Vec<User>> = REST_API.get("users");
 
         let spin = Spinner::lock();
 
@@ -58,22 +58,26 @@ impl Setup for RestRequest {
     }
 }
 
+impl ViewTest for RestRequest {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        inject_touches(
+            "
+                111  63   b
+                111  63   e
+
+            ",
+        );
+
+        while NOT_REQUESTED.load(Ordering::Relaxed) {}
+
+        let value = from_main(move || view.label.text.clone());
+
+        assert_eq!(value, "10");
+
+        Ok(())
+    }
+}
+
 pub async fn test_rest_request() -> Result<()> {
-    let view = UITest::start::<RestRequest>();
-
-    inject_touches(
-        "
-            111  63   b
-            111  63   e
-
-        ",
-    );
-
-    while NOT_REQUESTED.load(Ordering::Relaxed) {}
-
-    let value = from_main(move || view.label.text.clone());
-
-    assert_eq!(value, "10");
-
-    Ok(())
+    run_ui_test()
 }
