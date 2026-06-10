@@ -13,11 +13,11 @@ use crate::{AppRunner, ui_test::TEST_NAME};
 
 const MAX_CHILDREN: usize = 30;
 
-/// Everything an agent needs to debug a failed UI test: window info,
-/// a screenshot of the actual screen and the view tree with frames.
 pub fn failure_report() -> Result<String> {
     if is_main_thread() {
-        return Ok("No failure report: cannot collect it from the main thread.".to_string());
+        return Ok(r"No failure report. Collecting it waits for the next frame,
+but frames only run when the main thread is free - calling this from the main thread would hang forever."
+            .to_string());
     }
 
     let test_name = TEST_NAME.lock().clone();
