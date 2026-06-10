@@ -1,5 +1,6 @@
 mod checks;
 pub mod helpers;
+mod report;
 pub mod state;
 mod ui_test;
 
@@ -16,6 +17,7 @@ use hreads::{from_main, is_main_thread, on_main, wait_for_next_frame};
 use log::{error, warn};
 use parking_lot::Mutex;
 use refs::Own;
+pub use report::failure_report;
 use serde::de::DeserializeOwned;
 pub use state::*;
 pub use ui_test::*;

@@ -99,6 +99,7 @@ pub fn view_impl(stream: TokenStream, test: bool) -> TokenStream {
                         "--",
                         "--test-name",
                         #name_str,
+                        "--stop-on-failure",
                     ])
                     .stdin(std::process::Stdio::inherit())
                     .stdout(std::process::Stdio::inherit())

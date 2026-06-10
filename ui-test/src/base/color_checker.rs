@@ -1,3 +1,5 @@
+use std::env::temp_dir;
+
 use anyhow::Result;
 use test_engine::{
     refs::Weak,
@@ -39,14 +41,19 @@ pub async fn test_color_checker() -> Result<()> {
     .unwrap()
     .to_string();
 
-    assert_eq!(
+    assert!(error.starts_with(
         r"
         Test: Test color checker has failed.
         Color diff is too big: 510. Max: 45. Position: Point { x: 90.0, y: 214.0 }.
         Expected: r: 0, g: 0, b: 255, a: 255, got: r: 0, g: 255, b: 0, a: 255.
-          90  214 -   0   0 255 ->   0 255   0",
-        error
-    );
+          90  214 -   0   0 255 ->   0 255   0"
+    ));
+
+    let screenshot_path = temp_dir().join("ui_test_Test_color_checker.png");
+
+    assert!(error.contains(&format!("Failure screenshot: {}", screenshot_path.display())));
+    assert!(error.contains("View tree"));
+    assert!(screenshot_path.exists());
 
     check_colors(
         r#"

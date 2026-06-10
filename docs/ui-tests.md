@@ -11,15 +11,30 @@ UI_TEST_CYCLES=5 cargo run -p ui-test         # more cycles
 cargo run -p ui-test -- --test-name RestRequest   # one test by view struct name
 ```
 
-Always tee the output to a temp file. The suite can get stuck, and with a plain
-pipe (`| tail`) you lose everything printed before the hang:
+By default a failed test leaves the app running so the window can be inspected.
+`--stop-on-failure` makes the process print the failure and exit with code 1 instead.
+Always pass it when running from a script or agent, and always tee the output to a temp
+file — with a plain pipe (`| tail`) you lose everything printed before a hang:
 
 ```bash
-cargo run -p ui-test 2>&1 | tee /tmp/ui-test.log | tail -12
+cargo run -p ui-test -- --stop-on-failure 2>&1 | tee /tmp/ui-test.log | tail -12
 ```
 
-The suite stops on the first failure. Headless environments (CI, linux without display) skip
-UI tests automatically.
+On failure a report is printed: window resolution and scale, a path to a screenshot of
+the actual screen, and the view tree with frames. For `check_colors` failures the failing
+pixel also gets a highlight marker, visible in the screenshot. Read the screenshot and
+the view tree first — they usually show the problem immediately.
+
+Never edit test expectations (`check_colors` data, asserted values) to make a failing
+test pass. The expectations are the spec: the UI must behave exactly like before. If a
+test fails after a code change, the code is wrong. Expectations change only when the new
+look or behavior is intended and explicitly approved.
+
+Temporary edits that are never committed are allowed — for example breaking one
+expectation on purpose to verify the failure machinery. Say what you are doing first,
+revert right after the run, and check that `git diff` is clean before committing.
+
+Headless environments (CI, linux without display) skip UI tests automatically.
 
 Every test prints `Name: Started` and `Name: OK`. On a hang or failure the broken test is the
 one with `Started` and no `OK` — usually the last line of the log.

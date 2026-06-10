@@ -4,7 +4,10 @@ use hreads::from_main;
 use ui::{HighlightView, Setup, UIManager, ViewFrame, ViewSubviews};
 use window::Screenshot;
 
-use crate::{AppRunner, ui_test::TEST_NAME};
+use crate::{
+    AppRunner,
+    ui_test::{TEST_NAME, failure_report},
+};
 
 pub(super) fn check_pixel_color(screenshot: &Screenshot, pos: Point, color: U8Color) -> Result<()> {
     let pixel: U8Color = screenshot.get_pixel(pos);
@@ -24,17 +27,16 @@ pub(super) fn check_pixel_color(screenshot: &Screenshot, pos: Point, color: U8Co
                 .unwrap()
                 .set(pos, color.into(), pixel.into());
         });
-    }
 
-    let test_name = TEST_NAME.lock().clone();
+        let test_name = TEST_NAME.lock().clone();
 
-    if diff > max_diff {
         bail!(
             r"
         Test: {test_name} has failed.
         Color diff is too big: {diff}. Max: {max_diff}. Position: {pos:?}.
         Expected: {color}, got: {pixel}.
-        {:>4} {:>4} - {:>3} {:>3} {:>3} -> {:>3} {:>3} {:>3}",
+        {:>4} {:>4} - {:>3} {:>3} {:>3} -> {:>3} {:>3} {:>3}
+        {}",
             pos.x,
             pos.y,
             color.r,
@@ -43,6 +45,7 @@ pub(super) fn check_pixel_color(screenshot: &Screenshot, pos: Point, color: U8Co
             pixel.r,
             pixel.g,
             pixel.b,
+            failure_report(),
         )
     }
 

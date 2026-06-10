@@ -16,8 +16,10 @@ Do not read these upfront. Read the matching file only when the task touches tha
 ## Commands
 
 ```bash
-cargo run -p ui-test                              # full UI test suite
-cargo run -p ui-test -- --test-name <ViewName>    # single test
-cargo run -p render-test                          # render tests
-make lint                                         # clippy, pedantic, zero warnings
+cargo run -p ui-test -- --stop-on-failure                         # full UI test suite
+cargo run -p ui-test -- --stop-on-failure --test-name <ViewName>  # single test
+cargo run -p render-test                                          # render tests
+make lint                                                         # clippy, pedantic, zero warnings
 ```
+
+Without `--stop-on-failure` a failed UI test leaves the app window running. Always pass it.

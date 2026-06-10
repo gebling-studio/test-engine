@@ -1,8 +1,12 @@
+use std::path::Path;
+
+use anyhow::Result;
 use gm::{
     LossyConvert,
     color::{Color, U8Color},
     flat::{Point, Size},
 };
+use image::{ColorType::Rgba8, save_buffer};
 
 #[derive(Debug, Default)]
 pub struct Screenshot {
@@ -27,5 +31,17 @@ impl Screenshot {
         };
 
         *color
+    }
+
+    pub fn save(&self, path: &Path) -> Result<()> {
+        let mut bytes = Vec::with_capacity(self.data.len() * 4);
+
+        for color in &self.data {
+            bytes.extend_from_slice(&[color.r, color.g, color.b, 255]);
+        }
+
+        save_buffer(path, &bytes, self.size.width, self.size.height, Rgba8)?;
+
+        Ok(())
     }
 }

@@ -4,7 +4,12 @@
 #![feature(specialization)]
 #![feature(arbitrary_self_types)]
 
-use std::{collections::BTreeMap, env::var};
+use std::{
+    collections::BTreeMap,
+    env::var,
+    panic::{catch_unwind, set_hook, take_hook},
+    process::exit,
+};
 
 use anyhow::{Result, bail};
 use clap::Parser;
@@ -41,9 +46,25 @@ test_engine::export_ui_tests!();
 struct Args {
     #[arg(long, short)]
     test_name: Option<String>,
+
+    #[arg(long)]
+    stop_on_failure: bool,
 }
 
-fn run(test_name: Option<String>) -> Result<()> {
+fn run(args: Args) -> Result<()> {
+    if args.stop_on_failure {
+        let default_hook = take_hook();
+        set_hook(Box::new(move |info| {
+            default_hook(info);
+            if let Ok(report) = catch_unwind(test_engine::ui_test::failure_report) {
+                eprintln!("{report}");
+            }
+            exit(1);
+        }));
+    }
+
+    let test_name = args.test_name;
+
     AppRunner::start_with_actor(async {
         Label::set_default_text_size(32);
         UIManager::set_display_touches(false);
@@ -101,8 +122,7 @@ fn run(test_name: Option<String>) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    run(Args::parse().test_name)
-    // run(Some("TableView2Test".to_string()))
+    run(Args::parse())
 }
 
 async fn test() -> Result<()> {

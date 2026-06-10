@@ -122,6 +122,11 @@ impl Placer {
         self
     }
 
+    pub fn center_y_offset(&self, offset: impl ToF32) -> &Self {
+        self.rules().push(LayoutRule::make(Anchor::CenterY, offset));
+        self
+    }
+
     pub fn back(&self) -> &Self {
         self.rules().push(Tiling::Background.into());
         self

@@ -37,7 +37,7 @@ impl Placer {
                     anchor_layout(&mut new_frame, *side, *offset, *view, has_left, has_top);
                 }
                 Placement::Relative { side, ratio, view } => {
-                    self.relative_layout(&mut new_frame, *side, *ratio, *view);
+                    relative_layout(&mut new_frame, *side, *ratio, *view);
                 }
                 Placement::Same { side, view } => same_layout(&mut new_frame, *side, *view),
                 Placement::Between { a, b } => between_2_layout(&mut new_frame, *a, *b),
@@ -100,7 +100,7 @@ impl Placer {
             Anchor::Width => frame.size.width = offset,
             Anchor::Height => frame.size.height = offset,
             Anchor::CenterX => frame.origin.x = s_content.width / 2.0 - frame.width() / 2.0,
-            Anchor::CenterY => frame.origin.y = s_content.height / 2.0 - frame.height() / 2.0,
+            Anchor::CenterY => frame.origin.y = s_content.height / 2.0 - frame.height() / 2.0 + offset,
             Anchor::Center => {
                 frame.origin.x = s_content.width / 2.0 - frame.width() / 2.0;
                 frame.origin.y = s_content.height / 2.0 - frame.height() / 2.0;
@@ -128,24 +128,6 @@ impl Placer {
             Anchor::X | Anchor::Y | Anchor::None => {
                 unimplemented!("Simple layout for {side:?} is not supported")
             }
-        }
-    }
-
-    fn relative_layout(&mut self, frame: RMut, side: Anchor, ratio: f32, view: WeakView) {
-        let a_frame = view.frame();
-
-        match side {
-            Anchor::Width => frame.size.width = a_frame.size.width * ratio,
-            Anchor::Height => frame.size.height = a_frame.size.height * ratio,
-            Anchor::X => frame.origin.x = a_frame.width() * ratio,
-            Anchor::Y => frame.origin.y = a_frame.height() * ratio,
-            Anchor::CenterY => {
-                let s_content = self.s_content.deref();
-                let mut center = s_content.center();
-                center.y += ratio;
-                frame.set_center(center);
-            }
-            _ => unimplemented!("Relative layout for {side:?} is not supported"),
         }
     }
 
@@ -243,6 +225,18 @@ fn distribute_with_ratio(size: Size, views: Vec<WeakView>, ratios: &[f32]) {
         let is_first = i == 0;
         let x_pos = if is_first { 0.0 } else { views[i - 1].max_x() };
         views[i].set_frame((x_pos, 0, ratios[i] * size.width * total_ratio, size.height));
+    }
+}
+
+fn relative_layout(frame: RMut, side: Anchor, ratio: f32, view: WeakView) {
+    let a_frame = view.frame();
+
+    match side {
+        Anchor::Width => frame.size.width = a_frame.size.width * ratio,
+        Anchor::Height => frame.size.height = a_frame.size.height * ratio,
+        Anchor::X => frame.origin.x = a_frame.width() * ratio,
+        Anchor::Y => frame.origin.y = a_frame.height() * ratio,
+        _ => unimplemented!("Relative layout for {side:?} is not supported"),
     }
 }
 
