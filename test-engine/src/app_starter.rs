@@ -26,7 +26,6 @@ pub extern "C" fn test_engine_start_app() -> std::ffi::c_int {
 
 pub(crate) fn test_engine_start_with_app(app: Box<dyn App>) -> std::ffi::c_int {
     fn start(app: Box<dyn App>) {
-        #[cfg(mobile)]
         hreads::set_current_thread_as_main();
 
         let event_loop = EventLoop::<Window>::with_user_event().build().unwrap();
