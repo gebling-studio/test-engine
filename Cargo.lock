@@ -6421,7 +6421,6 @@ dependencies = [
  "rust_decimal",
  "serde",
  "ui-proc",
- "utils",
  "vents",
  "window",
 ]

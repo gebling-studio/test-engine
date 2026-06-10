@@ -69,7 +69,10 @@ fn print_fps_report() {
     for r in records.iter() {
         let frames: f32 = r.frames.lossy_convert();
         let fps = if r.seconds > 0.0 { frames / r.seconds } else { 0.0 };
-        println!("{:<width$}  {:>6}  {:>7.2}  {:>5.1}", r.name, r.frames, r.seconds, fps);
+        println!(
+            "{:<width$}  {:>6}  {:>7.2}  {:>5.1}",
+            r.name, r.frames, r.seconds, fps
+        );
     }
 }
 

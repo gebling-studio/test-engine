@@ -1,3 +1,5 @@
+use test_engine::Window;
+
 use crate::base::{color_checker::test_color_checker, rest_request::test_rest_request};
 use crate::base::{
     // async_calls::test_async_calls,
@@ -54,7 +56,11 @@ pub async fn test_base_ui() -> anyhow::Result<()> {
     test_text_occlusion().await?;
     test_corner_radius().await?;
     test_color_checker().await?;
-    test_rest_request().await?;
+
+    if !Window::headless() {
+        test_rest_request().await?;
+    }
+
     test_transparency().await?;
     test_scale().await?;
     test_root_view().await?;

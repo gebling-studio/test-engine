@@ -30,7 +30,6 @@ vents = { workspace = true }
 gm = { workspace = true }
 render = { workspace = true }
 ui-proc = { workspace = true }
-utils = { workspace = true }
 window = { workspace = true }
 
 [build-dependencies]

@@ -253,8 +253,7 @@ impl Placer {
         view_a: impl Deref<Target = impl View> + Copy,
         view_b: impl Deref<Target = impl View> + Copy,
     ) -> &Self {
-        self.rules()
-            .push(LayoutRule::between(view_a.weak_view(), view_b.weak_view()));
+        self.rules().push(LayoutRule::between(view_a.weak_view(), view_b.weak_view()));
         self
     }
 

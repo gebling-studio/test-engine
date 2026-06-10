@@ -52,6 +52,9 @@ struct Args {
 
     #[arg(long)]
     fps_report: bool,
+
+    #[arg(long)]
+    headless: bool,
 }
 
 fn run(args: Args) -> Result<()> {
@@ -71,15 +74,17 @@ fn run(args: Args) -> Result<()> {
     }
 
     let test_name = args.test_name;
+    let headless = args.headless;
 
-    AppRunner::start_with_actor(async {
+    AppRunner::start_with_actor(async move {
         Label::set_default_text_size(32);
         UIManager::set_display_touches(false);
 
-        from_main(|| {
+        from_main(move || {
             UIManager::override_scale(1.0);
             Window::set_vsync(false);
             Window::set_max_frame_latency(3);
+            Window::set_headless(headless);
         });
 
         let mut my_tests: BTreeMap<_, _> = crate::UI_TESTS.lock().clone();

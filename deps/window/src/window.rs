@@ -28,6 +28,7 @@ use crate::{
 
 static VSYNC: AtomicBool = AtomicBool::new(true);
 static MAX_FRAME_LATENCY: AtomicU32 = AtomicU32::new(2);
+static HEADLESS: AtomicBool = AtomicBool::new(false);
 /// Doesn't work on some Androids and on Web
 pub(crate) const SUPPORT_SCREENSHOT: bool = !Platform::ANDROID && !Platform::WASM;
 
@@ -272,6 +273,19 @@ impl Window {
             MAX_FRAME_LATENCY.store(latency, Ordering::Relaxed);
             Self::reconfigure_surface();
         });
+    }
+
+    /// Render to an offscreen texture instead of the window surface. Nothing
+    /// is presented to the screen, so frames are not paced by the display or
+    /// the compositor. Screenshots still work. Takes effect on the next frame.
+    pub fn set_headless(enable: bool) {
+        on_main(move || {
+            HEADLESS.store(enable, Ordering::Relaxed);
+        });
+    }
+
+    pub fn headless() -> bool {
+        HEADLESS.load(Ordering::Relaxed)
     }
 
     fn reconfigure_surface() {

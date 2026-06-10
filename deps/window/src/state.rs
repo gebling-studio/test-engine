@@ -31,6 +31,8 @@ pub struct State {
 
     read_display_request:     RefCell<Option<ReadDisplayRequest>>,
     pub(crate) frame_counter: FrameCounter,
+
+    offscreen_texture: Option<wgpu::Texture>,
 }
 
 impl Default for State {
@@ -39,6 +41,7 @@ impl Default for State {
             clear_color:          GRAY_BLUE,
             read_display_request: RefCell::default(),
             frame_counter:        FrameCounter::default(),
+            offscreen_texture:    None,
         }
     }
 }
@@ -134,13 +137,23 @@ impl State {
             return Ok(());
         }
 
-        let surface_texture = match surface.presentable.get_current_texture() {
-            CurrentSurfaceTexture::Success(tex) => tex,
-            CurrentSurfaceTexture::Occluded => return Ok(()),
-            _ => panic!("Failed to get texture"),
+        let surface_texture = if Window::headless() {
+            self.ensure_offscreen_texture();
+            None
+        } else {
+            match surface.presentable.get_current_texture() {
+                CurrentSurfaceTexture::Success(tex) => Some(tex),
+                CurrentSurfaceTexture::Occluded => return Ok(()),
+                _ => panic!("Failed to get texture"),
+            }
         };
 
-        let view = surface_texture.texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let texture = match &surface_texture {
+            Some(surface_texture) => &surface_texture.texture,
+            None => self.offscreen_texture.as_ref().unwrap(),
+        };
+
+        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
         let mut encoder = Window::device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("Render Encoder"),
         });
@@ -180,13 +193,16 @@ impl State {
 
         #[cfg(not_wasm)]
         let buffer = if self.read_display_request.borrow().is_some() {
-            Some(Self::read_screen(&mut encoder, &surface_texture.texture))
+            Some(Self::read_screen(&mut encoder, texture))
         } else {
             None
         };
 
         Window::queue().submit(std::iter::once(encoder.finish()));
-        surface_texture.present();
+
+        if let Some(surface_texture) = surface_texture {
+            surface_texture.present();
+        }
 
         #[cfg(not_wasm)]
         if let Some(buffer_sender) = self.read_display_request.take() {
@@ -217,6 +233,36 @@ impl State {
         }
 
         Ok(())
+    }
+
+    fn ensure_offscreen_texture(&mut self) {
+        let size = Window::render_size();
+        let width: u32 = size.width.lossy_convert();
+        let height: u32 = size.height.lossy_convert();
+
+        let up_to_date = self
+            .offscreen_texture
+            .as_ref()
+            .is_some_and(|texture| texture.size().width == width && texture.size().height == height);
+
+        if up_to_date {
+            return;
+        }
+
+        self.offscreen_texture = Some(Window::device().create_texture(&wgpu::TextureDescriptor {
+            label:           Some("Offscreen Render Texture"),
+            size:            wgpu::Extent3d {
+                width,
+                height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count:    1,
+            dimension:       wgpu::TextureDimension::D2,
+            format:          RGBA_TEXTURE_FORMAT,
+            usage:           wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            view_formats:    &[],
+        }));
     }
 
     pub fn request_read_display(&self) -> Receiver<Screenshot> {

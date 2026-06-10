@@ -9,15 +9,17 @@ state. Live in `ui-test/`, plus some in `test-engine` and `test-game`.
 cargo run -p ui-test                          # full suite, all tests, 2 cycles
 UI_TEST_CYCLES=5 cargo run -p ui-test         # more cycles
 cargo run -p ui-test -- --test-name RestRequest   # one test by view struct name
+cargo run -p ui-test -- --headless            # offscreen, much faster, for CI and agents
 ```
 
 By default a failed test leaves the app running so the window can be inspected.
 `--stop-on-failure` makes the process print the failure and exit with code 1 instead.
-Always pass it when running from a script or agent, and always tee the output to a temp
-file — with a plain pipe (`| tail`) you lose everything printed before a hang:
+Always pass it when running from a script or agent, together with `--headless`, and always
+tee the output to a temp file — with a plain pipe (`| tail`) you lose everything printed
+before a hang:
 
 ```bash
-cargo run -p ui-test -- --stop-on-failure 2>&1 | tee /tmp/ui-test.log | tail -12
+cargo run -p ui-test -- --stop-on-failure --headless 2>&1 | tee /tmp/ui-test.log | tail -12
 ```
 
 On failure a report is printed: window resolution and scale, a path to a screenshot of
@@ -41,6 +43,12 @@ one with `Started` and no `OK` — usually the last line of the log.
 
 The test app disables vsync and raises max frame latency at startup (`Window::set_vsync(false)`,
 `Window::set_max_frame_latency(3)`) so tests are not capped to the display refresh rate.
+
+`--headless` (`Window::set_headless(true)`) goes further: frames render to an offscreen
+texture and are never presented, so the display is out of the loop entirely and the full
+suite runs in a few seconds. Screenshots and `check_colors` still work. The window stays
+open but shows nothing, so run headed when you want to watch the UI. The network test
+(`RestRequest`) is skipped in headless mode.
 
 For profiling, pass `--fps-report` to print a report at the end of the run: frames, duration
 and average fps per test. Per-test fps varies a lot between runs — macOS sometimes paces frames
