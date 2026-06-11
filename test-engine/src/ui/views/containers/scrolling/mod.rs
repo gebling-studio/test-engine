@@ -1,3 +1,4 @@
+mod drag_cancel_test;
 mod scroll_content;
 mod scroll_test;
 mod scroll_view;

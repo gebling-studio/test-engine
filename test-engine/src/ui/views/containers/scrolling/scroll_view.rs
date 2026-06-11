@@ -13,10 +13,16 @@ use vents::Event;
 
 use crate::{self as test_engine, ui::views::containers::scrolling::ScrollContent};
 
+/// A captured touch becomes a drag only after moving this far. Until then
+/// taps on views inside the scroll work; after, the drag claims the touch.
+const DRAG_SLOP: f32 = 10.0;
+
 #[view]
 pub struct ScrollView {
     inertia:            f32,
+    began_touch:        Point,
     previous_touch:     Point,
+    dragging:           bool,
     pub on_scroll:      Event<f32>,
     pub bottom_reached: UIEvent,
 
@@ -100,6 +106,7 @@ impl Scrollable for ScrollView {
             }
 
             self.__view_base.__touch_id = NO_TOUCH_ID;
+            self.dragging = false;
             return false;
         }
 
@@ -112,11 +119,24 @@ impl Scrollable for ScrollView {
 
         if touch.is_began() && target_frame.contains(touch.position) {
             self.__view_base.__touch_id = touch.id;
+            self.began_touch = touch.position;
             self.previous_touch = touch.position;
             return true;
         }
 
         if touch.is_moved() && self.__view_base.__touch_id == touch.id {
+            if !self.dragging {
+                if (touch.position.y - self.began_touch.y).abs() < DRAG_SLOP {
+                    return true;
+                }
+                self.dragging = true;
+                self.previous_touch = self.began_touch;
+                TouchStack::cancel_touch(touch.id);
+                // cancel_touch clears every capture, including this scroll's
+                // if it is also a touch listener
+                self.__view_base.__touch_id = touch.id;
+            }
+
             let delta = -(self.previous_touch.y - touch.position.y);
             self.previous_touch = touch.position;
 

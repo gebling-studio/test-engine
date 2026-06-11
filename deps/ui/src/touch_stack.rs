@@ -6,7 +6,7 @@ use parking_lot::{Mutex, MutexGuard};
 use refs::Weak;
 
 use crate::{
-    UIManager, View, WeakView,
+    NO_TOUCH_ID, UIManager, View, WeakView,
     touch_layer::{Scrollable, TouchLayer},
     view::{ViewData, ViewSubviews},
 };
@@ -93,6 +93,16 @@ impl TouchStack {
 
     pub fn root_name() -> String {
         Self::get().stack.last().root_name().to_string()
+    }
+
+    /// A scroll drag claimed the touch: views that captured it on began
+    /// must let it go so the release doesn't end as a tap.
+    pub fn cancel_touch(id: usize) {
+        for view in Self::touch_views() {
+            if view.is_ok() && view.__base_view().__touch_id == id {
+                view.__base_view().__touch_id = NO_TOUCH_ID;
+            }
+        }
     }
 
     pub fn clear_freed(&mut self) {
