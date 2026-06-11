@@ -115,7 +115,8 @@ impl UITest {
             crate::AppRunner::set_window_size((width, height));
         }
         wait_for_next_frame();
-        let view = from_main(move || {
+
+        from_main(move || {
             let weak = view.weak();
             let mut root = UIManager::root_view();
             root.clear_root();
@@ -123,10 +124,7 @@ impl UITest {
             view.place().back();
             trace!("{width} - {height}");
             weak
-        });
-        wait_for_next_frame();
-
-        view
+        })
     }
 
     pub fn finish() {

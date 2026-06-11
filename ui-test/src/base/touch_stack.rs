@@ -1,7 +1,7 @@
 use anyhow::Result;
 use log::debug;
 use test_engine::{
-    dispatch::{from_main, wait_for_next_frame},
+    dispatch::from_main,
     ui::{Alert, Button, TouchStack, ViewData, ViewSubviews, ViewTouch, view},
     ui_test::{UITest, inject_touches},
 };
@@ -33,8 +33,6 @@ pub async fn test_touch_stack() -> Result<()> {
 
     from_main(move || button.remove_from_superview());
 
-    wait_for_next_frame();
-
     assert_eq!(TouchStack::dump(), vec![vec!["Layer: Root view".to_string()]]);
 
     view.button.on_tap(|| {});
@@ -62,7 +60,6 @@ pub async fn test_touch_stack() -> Result<()> {
 
     Alert::show("Hello");
 
-    wait_for_next_frame();
 
     assert_eq!(
         TouchStack::dump(),

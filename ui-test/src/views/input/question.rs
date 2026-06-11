@@ -2,7 +2,7 @@
 //
 // use anyhow::Result;
 // use test_engine::{
-//     dispatch::{from_main, wait_for_next_frame},
+//     dispatch::from_main,
 //     ui::{Question, UI, view},
 //     ui_test::inject_touches,
 // };
@@ -43,8 +43,6 @@
 //     })
 //     .await;
 //
-//     wait_for_next_frame();
-//     wait_for_next_frame();
 //
 //     inject_touches(
 //         "
@@ -61,10 +59,7 @@
 //         let val = Question::ask("Hello?").options("left", "right").await;
 //         assert_eq!(val, false);
 //     });
-//
-//     wait_for_next_frame();
-//     wait_for_next_frame();
-//
+
 //     inject_touches(
 //         "
 //             220  388  b
@@ -74,9 +69,7 @@
 //     .await;
 //
 //     a.await?;
-//
-//     wait_for_next_frame();
-//
+////
 //     let a = spawn(async {
 //         let val = Question::ask("Hello?").options("left", "right").await;
 //         assert_eq!(val, true);

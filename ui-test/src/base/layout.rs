@@ -1,7 +1,6 @@
 use anyhow::Result;
 use test_engine::{
     AppRunner,
-    dispatch::wait_for_next_frame,
     refs::Weak,
     ui::{
         Anchor, Button, GREEN, ORANGE, Setup, ViewData, ViewSubviews,
@@ -106,7 +105,6 @@ pub async fn test_layout() -> Result<()> {
 
     AppRunner::set_window_size((240, 240));
 
-    wait_for_next_frame();
 
     inject_touches(
         r"
@@ -168,8 +166,6 @@ pub async fn test_layout() -> Result<()> {
             118  18   e
             ",
     );
-
-    wait_for_next_frame();
 
     assert_eq!(
         get_state::<String>(),

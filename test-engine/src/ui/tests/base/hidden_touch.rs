@@ -1,6 +1,6 @@
 use anyhow::Result;
 use gm::color::{BLUE, RED};
-use hreads::{from_main, wait_for_next_frame};
+use hreads::from_main;
 use refs::Weak;
 use ui::{Container, Setup, ViewData, ViewTest, ViewTouch, view_test};
 
@@ -50,13 +50,11 @@ impl ViewTest for HiddenTouch {
         from_main(move || {
             view.a.set_hidden(true);
         });
-        wait_for_next_frame();
         inject_touches("100 100 e");
 
         from_main(move || {
             view.a.set_hidden(false);
         });
-        wait_for_next_frame();
 
         // A hover move must not trigger the old captor.
         inject_touches("100 100 m");

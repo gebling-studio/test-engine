@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use anyhow::Result;
 use gm::color::GRAY;
-use hreads::{from_main, wait_for_next_frame};
+use hreads::from_main;
 use refs::Weak;
 use ui::{Container, Label, Setup, View, ViewData, ViewSubviews, ViewTest, view_test};
 
@@ -66,9 +66,6 @@ impl ViewTest for LongTableTest {
             crate::AppRunner::set_window_size((1000, 1000));
         }
 
-        wait_for_next_frame();
-        wait_for_next_frame();
-        wait_for_next_frame();
 
         inject_touches(
             "

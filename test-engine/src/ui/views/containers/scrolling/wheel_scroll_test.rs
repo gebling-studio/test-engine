@@ -2,7 +2,7 @@
 
 use ::ui::view_test;
 use anyhow::Result;
-use hreads::{from_main, wait_for_next_frame};
+use hreads::from_main;
 use refs::Weak;
 use ui::{Alert, Setup, ViewData, ViewSubviews, ViewTest};
 
@@ -60,7 +60,6 @@ impl ViewTest for WheelScrollTest {
 
         // A modal layer blocks wheel scrolling under it.
         from_main(|| Alert::show("wheel"));
-        wait_for_next_frame();
         inject_scroll(-100);
         assert_eq!(offsets(), (0.0, -100.0, -100.0));
 
@@ -71,7 +70,6 @@ impl ViewTest for WheelScrollTest {
             320 383 e
         ",
         );
-        wait_for_next_frame();
         inject_scroll(-100);
         assert_eq!(offsets(), (0.0, -200.0, -100.0));
 
@@ -80,7 +78,6 @@ impl ViewTest for WheelScrollTest {
         from_main(move || {
             view.outer.set_hidden(true);
         });
-        wait_for_next_frame();
         inject_touches("450 400 m");
         inject_scroll(-100);
         assert_eq!(offsets(), (-100.0, -200.0, -100.0));
@@ -96,7 +93,6 @@ impl ViewTest for WheelScrollTest {
             view.outer.set_hidden(false);
             view.under.set_hidden(true);
         });
-        wait_for_next_frame();
         inject_touches(
             "
             450 400 b

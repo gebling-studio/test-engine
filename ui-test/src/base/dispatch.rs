@@ -114,9 +114,7 @@
 //         ",
 //     )
 //     .await;
-//
-//     wait_for_next_frame();
-//
+////
 //     assert_eq!("tapped arg: 555", DATA.lock().await.as_str());
 //
 //     Ok(())

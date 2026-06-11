@@ -219,7 +219,6 @@ impl AppRunner {
         from_main(|| {
             Window::current().set_size(size);
         });
-        hreads::wait_for_next_frame();
     }
 
     pub fn take_screenshot() -> Result<Screenshot> {

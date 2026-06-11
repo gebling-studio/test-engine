@@ -1,7 +1,6 @@
 use anyhow::Result;
 use test_engine::{
     OnceEvent,
-    dispatch::wait_for_next_frame,
     refs::Weak,
     ui::{
         Color, Container, Label, ModalView, Setup, Size, ViewData, ViewFrame, ViewSubviews, WHITE, WeakView,
@@ -64,7 +63,6 @@ pub async fn test_modal() -> Result<()> {
 
     Modal::show_modally_with_input((), |()| {});
 
-    wait_for_next_frame();
 
     check_colors(
         r#"
