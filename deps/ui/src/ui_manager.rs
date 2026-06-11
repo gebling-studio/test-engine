@@ -19,7 +19,7 @@ use refs::{Own, Weak};
 use window::Window;
 
 use crate::{
-    Keymap, RootView, Setup, TouchStack, UIAnimation, UIEvent, UIEvents, View, ViewData, ViewFrame, WeakView,
+    Keymap, RootView, Setup, TouchStack, UIAnimation, UIEvent, View, ViewData, WeakView,
 };
 
 pub(crate) static DELETED_VIEWS: Mutex<Vec<Own<dyn View>>> = Mutex::new(Vec::new());
@@ -311,23 +311,6 @@ impl UIManager {
 }
 
 impl UIManager {
-    pub fn on_scroll<T: View + ?Sized + 'static>(
-        subscriber: Weak<T>,
-        mut action: impl FnMut(Point) + Send + 'static,
-    ) {
-        UIEvents::on_scroll().val(subscriber, move |delta| {
-            if subscriber.is_null() {
-                return;
-            }
-            let mut target_frame = *subscriber.absolute_frame();
-            target_frame.origin.y -= subscriber.content_offset();
-
-            if target_frame.contains(UIManager::cursor_position()) {
-                action(delta);
-            }
-        });
-    }
-
     pub fn trigger_drop_file(file: PathBuf) {
         Self::get().on_drop_file.trigger(file);
     }

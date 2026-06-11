@@ -1,3 +1,4 @@
+use gm::flat::Point;
 use refs::{
     Weak,
     vec::{WeakVec, WeakVecHelper},
@@ -7,6 +8,7 @@ use crate::{Touch, View, ViewData, WeakView};
 
 pub trait Scrollable: View {
     fn __process_scroll_touch(&mut self, touch: Touch) -> bool;
+    fn __process_wheel_scroll(&mut self, delta: Point);
 }
 
 pub(crate) struct TouchLayer {

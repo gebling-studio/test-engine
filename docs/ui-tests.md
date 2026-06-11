@@ -92,3 +92,5 @@ impl ViewTest for MyTest {
 
 Test helpers: `inject_touches`, `inject_scroll`, `check_colors` (asserts pixel colors at
 coordinates). To read UI state from test code use `from_main` (see [dispatch.md](dispatch.md)).
+
+One `#[view_test]` per file. Put each test in its own file.

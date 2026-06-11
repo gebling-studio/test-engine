@@ -6,8 +6,8 @@ use gm::{
 };
 use refs::{Own, Weak, weak_from_ref};
 use ui::{
-    NO_TOUCH_ID, Scrollable, Setup, Touch, TouchStack, UIAnimation, UIEvent, UIManager, View, ViewData,
-    ViewFrame, ViewSubviews, view,
+    NO_TOUCH_ID, Scrollable, Setup, Touch, TouchStack, UIAnimation, UIEvent, View, ViewData, ViewFrame,
+    ViewSubviews, view,
 };
 use vents::Event;
 
@@ -74,10 +74,6 @@ impl Setup for ScrollView {
         self.content.__base_view().dont_hide_off_screen = true;
         self.content.place().back();
 
-        UIManager::on_scroll(self, move |scroll| {
-            self.on_scroll(scroll.y);
-        });
-
         self.size_changed().sub(move || {
             self.on_scroll(0.0);
         });
@@ -107,6 +103,10 @@ impl Scrollable for ScrollView {
             return false;
         }
 
+        if self.is_hidden_in_tree() {
+            return false;
+        }
+
         let mut target_frame = self.content.__base_view().__absolute_frame;
         target_frame.origin.y -= self.content.__base_view().__content_offset;
 
@@ -130,6 +130,10 @@ impl Scrollable for ScrollView {
         }
 
         false
+    }
+
+    fn __process_wheel_scroll(&mut self, delta: Point) {
+        self.on_scroll(delta.y);
     }
 }
 

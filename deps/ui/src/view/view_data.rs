@@ -32,6 +32,7 @@ pub trait ViewData {
     fn set_corner_radius(&self, radius: impl ToF32) -> &Self;
 
     fn is_hidden(&self) -> bool;
+    fn is_hidden_in_tree(&self) -> bool;
     fn set_hidden(&self, is_hidden: bool) -> &Self;
 
     fn place(&self) -> &Placer;
@@ -118,6 +119,23 @@ impl<T: ?Sized + View> ViewData for T {
     }
     fn is_hidden(&self) -> bool {
         self.__base_view().is_hidden
+    }
+
+    fn is_hidden_in_tree(&self) -> bool {
+        if self.__base_view().is_hidden {
+            return true;
+        }
+
+        let mut superview = self.__base_view().superview;
+
+        while superview.is_ok() {
+            if superview.__base_view().is_hidden {
+                return true;
+            }
+            superview = superview.__base_view().superview;
+        }
+
+        false
     }
 
     fn set_hidden(&self, is_hidden: bool) -> &Self {

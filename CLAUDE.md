@@ -1,6 +1,7 @@
 # TestEngine
 
 Cross platform game engine and UI framework in Rust. Rendering on WGPU.
+Supports: Windows Linux Mac iOS and Android.
 
 ## Docs
 
@@ -12,6 +13,8 @@ Do not read these upfront. Read the matching file only when the task touches tha
   Read before touching threading, async, or dispatch code.
 - [docs/ui-tests.md](docs/ui-tests.md) — how UI tests work and how to run a single one.
   Read before writing or debugging UI tests.
+
+Docs should be concise.
 
 ## Commands
 

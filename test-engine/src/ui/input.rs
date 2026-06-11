@@ -1,7 +1,11 @@
 use gm::{color::Color, flat::Point};
 use level::LevelManager;
 use log::warn;
-use ui::{Container, Setup, Touch, TouchStack, UIEvents, UIManager, ViewData, ViewFrame, check_touch};
+use refs::Weak;
+use ui::{
+    Container, Scrollable, Setup, Touch, TouchStack, UIEvents, UIManager, ViewData, ViewFrame,
+    ViewSubviews, WeakView, check_touch,
+};
 pub use winit::keyboard::NamedKey;
 
 const LOG_TOUCHES: bool = false;
@@ -21,6 +25,7 @@ impl Input {
 
     pub fn on_scroll(offset: Point) {
         UIEvents::on_scroll().trigger(offset);
+        Self::check_wheel_scroll(offset);
     }
 
     pub fn process_touch_event(mut touch: Touch) -> bool {
@@ -73,4 +78,43 @@ impl Input {
             }
         }
     }
+
+    /// Wheel scroll goes to a single scroll view of the top touch layer:
+    /// the deepest visible one under the cursor.
+    fn check_wheel_scroll(delta: Point) {
+        let cursor = UIManager::cursor_position();
+
+        let mut deepest: Option<(usize, Weak<dyn Scrollable>)> = None;
+
+        for scroll in TouchStack::scrolls() {
+            if scroll.is_null()
+                || scroll.is_hidden_in_tree()
+                || !scroll.absolute_frame().contains(cursor)
+            {
+                continue;
+            }
+
+            let depth = view_depth(scroll.weak_view());
+
+            if deepest.as_ref().is_none_or(|(deepest_depth, _)| depth >= *deepest_depth) {
+                deepest = Some((depth, scroll));
+            }
+        }
+
+        if let Some((_, mut scroll)) = deepest {
+            scroll.__process_wheel_scroll(delta);
+        }
+    }
+}
+
+fn view_depth(view: WeakView) -> usize {
+    let mut depth = 0;
+    let mut superview = *view.superview();
+
+    while superview.is_ok() {
+        depth += 1;
+        superview = *superview.superview();
+    }
+
+    depth
 }
