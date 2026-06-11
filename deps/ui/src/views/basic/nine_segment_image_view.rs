@@ -7,14 +7,7 @@ use window::image::Image;
 
 use crate::{ImageView, Setup, ViewCallbacks, ViewFrame};
 
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate as ui;
-}
-
-#[view]
+#[view(crate = crate::__macro_root)]
 pub struct NineSegmentImageView {
     _corner: Weak<Image>,
     _side:   Weak<Image>,

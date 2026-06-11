@@ -9,17 +9,10 @@ use vents::OnceEvent;
 
 // use vents::OnceEvent;
 use crate::{Button, Label, ModalView, Setup, view::ViewData};
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate as ui;
-}
-
 #[allow(clippy::type_complexity)]
 static LABEL_SETUP: Mutex<Option<Box<dyn FnOnce(Weak<Label>) + Send>>> = Mutex::new(None);
 
-#[view]
+#[view(crate = crate::__macro_root)]
 pub struct Alert {
     event:     OnceEvent,
     #[init]

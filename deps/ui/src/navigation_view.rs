@@ -5,18 +5,12 @@ use ui_proc::view;
 
 use crate::{Touch, WeakView};
 
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate as ui;
-}
 use crate::{
     Setup, TouchStack, UIAnimation, View, ViewData,
     view::{ViewFrame, ViewSubviews},
 };
 
-#[view]
+#[view(crate = crate::__macro_root)]
 pub struct NavigationView {
     first_view: Option<Own<dyn View>>,
 }

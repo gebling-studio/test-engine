@@ -6,14 +6,7 @@ use ui_proc::view;
 
 use crate::inspect::views::AnchorView;
 
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate::ui;
-}
-
-#[view]
+#[view(crate = crate)]
 pub struct LayoutRuleCell {
     pub editing_ended: UIEvent,
 

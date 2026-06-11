@@ -15,16 +15,9 @@ use vents::OnceEvent;
 
 // use vents::OnceEvent;
 use crate::{ModalView, Setup, view::ViewData};
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate as ui;
-}
-
 use crate::{Anchor::Width, Button, Label, ViewSubviews};
 
-#[view]
+#[view(crate = crate::__macro_root)]
 pub struct Question {
     question: String,
 

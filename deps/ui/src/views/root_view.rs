@@ -11,14 +11,7 @@ use crate::{
     Container, ImageMode, ImageView, View, ViewData, ViewFrame, ViewSubviews, WeakView, view::Setup,
 };
 
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate as ui;
-}
-
-#[view]
+#[view(crate = crate::__macro_root)]
 pub struct RootView {
     inner_pos: Point,
     outer_pos: Point,

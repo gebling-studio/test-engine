@@ -47,4 +47,13 @@ pub use with_header::*;
 extern crate core;
 pub extern crate ui_proc;
 
+/// Macro root for views defined inside this crate: `#[view(crate = crate::__macro_root)]`.
+#[doc(hidden)]
+pub mod __macro_root {
+    pub use educe;
+    pub use refs;
+
+    pub use crate as ui;
+}
+
 pub const ALL_VIEWS: &[&str] = &all_views!();

@@ -7,17 +7,10 @@ use vents::Event;
 
 use crate::{Button, Container, Setup, Style, ToLabel, UIImages, view::ViewData};
 
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate as ui;
-}
-
 use ui_proc::view;
 use window::image::NoImage;
 
-#[view]
+#[view(crate = crate::__macro_root)]
 pub struct NumberView {
     #[educe(Default = 1.0)]
     value:    f32,

@@ -9,14 +9,7 @@ use window::Window;
 
 use crate::{ViewCallbacks, view::ViewFrame};
 
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate as ui;
-}
-
-#[view]
+#[view(crate = crate::__macro_root)]
 pub struct DrawingView {
     prev_size:   Size,
     pub rescale: bool,

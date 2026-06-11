@@ -5,8 +5,8 @@ use proc_macro::{Span, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::{
     __private::TokenStream2,
-    Attribute, Data, DeriveInput, Field, Fields, FieldsNamed, GenericParam, Ident, Meta, Type,
-    parse::Parser,
+    Attribute, Data, DeriveInput, Field, Fields, FieldsNamed, GenericParam, Ident, Meta, Path, Token, Type,
+    parse::{Parse, ParseStream, Parser},
     parse_macro_input, parse_quote,
     spanned::Spanned,
     token::{Bracket, Pound},
@@ -15,8 +15,30 @@ use syn::{
 pub(crate) static VIEWS: Mutex<Vec<String>> = Mutex::new(Vec::new());
 pub(crate) static VIEW_TESTS: Mutex<Vec<String>> = Mutex::new(Vec::new());
 
+/// `#[view(crate = some::path)]` - the path providing `ui`, `refs` and
+/// `educe`. Defaults to `test_engine`.
+struct ViewArgs {
+    root: Path,
+}
+
+impl Parse for ViewArgs {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        if input.is_empty() {
+            return Ok(Self {
+                root: parse_quote!(test_engine),
+            });
+        }
+
+        input.parse::<Token![crate]>()?;
+        input.parse::<Token![=]>()?;
+
+        Ok(Self { root: input.parse()? })
+    }
+}
+
 #[allow(clippy::too_many_lines)]
-pub fn view_impl(stream: TokenStream, test: bool) -> TokenStream {
+pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStream {
+    let root = parse_macro_input!(attr as ViewArgs).root;
     let mut stream = parse_macro_input!(stream as DeriveInput);
 
     let Data::Struct(data) = &mut stream.data else {
@@ -54,18 +76,18 @@ pub fn view_impl(stream: TokenStream, test: bool) -> TokenStream {
         panic!("No named fields");
     };
 
-    let inits = add_inits(name, fields);
+    let inits = add_inits(name, fields, &root);
 
     fields.named.insert(
         0,
         Field::parse_named
-            .parse2(quote! { __view_base: test_engine::ui::ViewBase })
-            .expect("parse2(quote! { __view_base: test_engine::ui::ViewBase })"),
+            .parse2(quote! { __view_base: #root::ui::ViewBase })
+            .expect("parse2(quote! { __view_base: #root::ui::ViewBase })"),
     );
 
     let ui_test_related_stuff = if test {
         quote! {
-            #[test_engine::__internal_macro_deps::ctor::ctor(crate_path = test_engine::__internal_macro_deps::ctor)]
+            #[#root::__internal_macro_deps::ctor::ctor(crate_path = #root::__internal_macro_deps::ctor)]
             fn store_test() {
                 crate::UI_TESTS
                     .lock()
@@ -116,8 +138,8 @@ pub fn view_impl(stream: TokenStream, test: bool) -> TokenStream {
             }
 
             pub fn run_ui_test() -> anyhow::Result<()> {
-                use test_engine::ui::ViewTest;
-                #name::perform_test(test_engine::ui_test::UITest::start::<#name>())
+                use #root::ui::ViewTest;
+                #name::perform_test(#root::ui_test::UITest::start::<#name>())
             }
         }
     } else {
@@ -127,28 +149,28 @@ pub fn view_impl(stream: TokenStream, test: bool) -> TokenStream {
     quote! {
 
 
-        #[derive(test_engine::educe::Educe)]
+        #[derive(#root::educe::Educe)]
         #[educe(Default)]
         #stream
 
-        impl #generics test_engine::ui::View for #name <#type_params> {
-            fn weak_view(&self) -> test_engine::refs::Weak<dyn test_engine::ui::View> {
-                test_engine::refs::weak_from_ref(self as &dyn test_engine::ui::View)
+        impl #generics #root::ui::View for #name <#type_params> {
+            fn weak_view(&self) -> #root::refs::Weak<dyn #root::ui::View> {
+                #root::refs::weak_from_ref(self as &dyn #root::ui::View)
             }
-            fn __base_view(&self) -> &mut test_engine::ui::ViewBase {
+            fn __base_view(&self) -> &mut #root::ui::ViewBase {
                 #![allow(clippy::transmute_ptr_to_ptr)]
                 unsafe { std::mem::transmute(&self.__view_base) }
             }
             fn __init_views(&mut self) {
-                use test_engine::ui::ViewSubviews;
+                use #root::ui::ViewSubviews;
                 #inits
             }
-            fn as_cell(&mut self) -> &mut dyn test_engine::ui::CellCallbacks {
-                self as &mut dyn test_engine::ui::CellCallbacks
+            fn as_cell(&mut self) -> &mut dyn #root::ui::CellCallbacks {
+                self as &mut dyn #root::ui::CellCallbacks
             }
         }
 
-        impl #generics test_engine::refs::AsAny for #name <#type_params> {
+        impl #generics #root::refs::AsAny for #name <#type_params> {
             fn as_any(&self) -> &dyn std::any::Any {
                self
             }
@@ -162,41 +184,41 @@ pub fn view_impl(stream: TokenStream, test: bool) -> TokenStream {
             }
         }
 
-        impl #generics test_engine::ui::__ViewInternalSetup for #name <#type_params>  {
+        impl #generics #root::ui::__ViewInternalSetup for #name <#type_params>  {
             fn __internal_before_setup(&mut self) {
-                use test_engine::ui::Setup;
-                let mut weak = test_engine::refs::weak_from_ref(self);
+                use #root::ui::Setup;
+                let mut weak = #root::refs::weak_from_ref(self);
                 weak.before_setup();
             }
 
             fn __internal_setup(&mut self) {
-                use test_engine::ui::Setup;
-                use test_engine::ui::WithHeader;
-                use test_engine::ui::ViewData;
+                use #root::ui::Setup;
+                use #root::ui::WithHeader;
+                use #root::ui::ViewData;
                 self.__view_base.view_label = #name_str.to_string();
                 self.layout_header();
-                let mut weak = test_engine::refs::weak_from_ref(self);
+                let mut weak = #root::refs::weak_from_ref(self);
                 weak.setup();
                 self.__view_base.events.setup.trigger(());
             }
 
             fn __internal_inspect(&mut self) {
-                use test_engine::ui::Setup;
-                let mut weak = test_engine::refs::weak_from_ref(self);
+                use #root::ui::Setup;
+                let mut weak = #root::refs::weak_from_ref(self);
                 weak.inspect();
             }
 
             fn __internal_on_selection_changed(&mut self, selected: bool) {
-                use test_engine::ui::Setup;
-                let mut weak = test_engine::refs::weak_from_ref(self);
+                use #root::ui::Setup;
+                let mut weak = #root::refs::weak_from_ref(self);
                 weak.on_selection_changed(selected);
             }
         }
 
-        impl #generics test_engine::ui::__ViewIntoUnsizedOwn for #name <#type_params> {
-            unsafe fn __into_unsized_own<V: ?Sized + test_engine::ui::View + 'static>(own: test_engine::refs::Own<V>) -> test_engine::refs::Own<dyn test_engine::ui::View> {
-                use test_engine::refs::Own;
-                use test_engine::ui::View;
+        impl #generics #root::ui::__ViewIntoUnsizedOwn for #name <#type_params> {
+            unsafe fn __into_unsized_own<V: ?Sized + #root::ui::View + 'static>(own: #root::refs::Own<V>) -> #root::refs::Own<dyn #root::ui::View> {
+                use #root::refs::Own;
+                use #root::ui::View;
 
                 assert!(own.sized());
                 assert_eq!(size_of::<Own<Self>>(), size_of::<Own<V>>());
@@ -213,7 +235,7 @@ pub fn view_impl(stream: TokenStream, test: bool) -> TokenStream {
     .into()
 }
 
-fn add_inits(root_name: &Ident, fields: &mut FieldsNamed) -> TokenStream2 {
+fn add_inits(root_name: &Ident, fields: &mut FieldsNamed, root: &Path) -> TokenStream2 {
     let mut res = quote!();
 
     let init_attr = Attribute {
@@ -240,7 +262,7 @@ fn add_inits(root_name: &Ident, fields: &mut FieldsNamed) -> TokenStream2 {
         let ty = &field.ty;
 
         let weak_wrapped_type = Type::without_plus
-            .parse2(quote! { test_engine::refs::Weak<#ty> })
+            .parse2(quote! { #root::refs::Weak<#ty> })
             .expect("Type::without_plus.parse2(quote! { Weak<#ty> })");
 
         field.ty = weak_wrapped_type;

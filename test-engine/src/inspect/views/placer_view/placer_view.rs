@@ -8,14 +8,7 @@ use crate::{
     ui::{CellRegistry, TableData, TableView},
 };
 
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate::ui;
-}
-
-#[view]
+#[view(crate = crate)]
 pub struct PlacerView {
     pub rule_changed: UIEvent,
 

@@ -1,17 +1,10 @@
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate as ui;
-}
-
 use gm::{color::BLACK, flat::Point};
 use refs::Weak;
 use ui_proc::view;
 
 use crate::{Container, Label, Setup, UIEvent, ViewData, ViewFrame, ViewTouch};
 
-#[view]
+#[view(crate = crate::__macro_root)]
 pub struct PositionView {
     began_pos: Point,
 

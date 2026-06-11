@@ -14,13 +14,6 @@ use crate::{
     view::{ViewData, ViewSubviews},
 };
 
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate as ui;
-}
-
 static DEFAULT_TEXT_SIZE: AtomicF32 = AtomicF32::new(16.0);
 
 #[derive(Debug, Default)]
@@ -37,7 +30,7 @@ impl TextAlignment {
     }
 }
 
-#[view]
+#[view(crate = crate::__macro_root)]
 pub struct Label {
     pub alignment: TextAlignment,
 

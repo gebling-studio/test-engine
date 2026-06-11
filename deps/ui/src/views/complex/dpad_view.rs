@@ -7,16 +7,9 @@ use crate::{
     Setup, ViewCallbacks,
     view::{ViewData, ViewFrame},
 };
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate as ui;
-}
-
 use crate::{Button, UIImages};
 
-#[view]
+#[view(crate = crate::__macro_root)]
 pub struct DPadView {
     pub on_press: Event<Direction>,
 

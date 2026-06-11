@@ -7,13 +7,6 @@ use window::image::{Image, ToImage};
 
 use crate::{NineSegmentImageView, ViewCallbacks, ViewData, ViewFrame, ViewSubviews};
 
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate as ui;
-}
-
 #[derive(Default)]
 pub enum ImageMode {
     #[default]
@@ -22,7 +15,7 @@ pub enum ImageMode {
     AspectFill,
 }
 
-#[view]
+#[view(crate = crate::__macro_root)]
 pub struct ImageView {
     image: Weak<Image>,
 

@@ -5,13 +5,7 @@
 use ui::Button;
 use ui_proc::view;
 
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-    pub(crate) use ui;
-}
-
-#[view]
+#[view(crate = ui::__macro_root)]
 struct _ProcView {
     _button:      Button,
     #[init]

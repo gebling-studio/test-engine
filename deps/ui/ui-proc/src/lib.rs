@@ -15,13 +15,13 @@ use crate::{
 };
 
 #[proc_macro_attribute]
-pub fn view(_: TokenStream, stream: TokenStream) -> TokenStream {
-    view_impl(stream, false)
+pub fn view(attr: TokenStream, stream: TokenStream) -> TokenStream {
+    view_impl(attr, stream, false)
 }
 
 #[proc_macro_attribute]
-pub fn view_test(_: TokenStream, stream: TokenStream) -> TokenStream {
-    view_impl(stream, true)
+pub fn view_test(attr: TokenStream, stream: TokenStream) -> TokenStream {
+    view_impl(attr, stream, true)
 }
 
 #[proc_macro]
