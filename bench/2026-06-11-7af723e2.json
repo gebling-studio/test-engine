@@ -1,0 +1,143 @@
+{
+  "commit": "7af723e2",
+  "date": "2026-06-11",
+  "host": "macos aarch64",
+  "modes": {
+    "debug": {
+      "median_views": 13680,
+      "runs": [
+        {
+          "cpu_temp": 43.17,
+          "cpu_usage": 1.15,
+          "load_per_core": 0.41,
+          "ms": 16.01,
+          "panels": 342,
+          "views": 13680
+        },
+        {
+          "cpu_temp": 43.01,
+          "cpu_usage": 5.7,
+          "load_per_core": 0.39,
+          "ms": 16.06,
+          "panels": 342,
+          "views": 13680
+        },
+        {
+          "cpu_temp": 43.01,
+          "cpu_usage": 6.37,
+          "load_per_core": 0.39,
+          "ms": 16.05,
+          "panels": 344,
+          "views": 13760
+        },
+        {
+          "cpu_temp": 43.01,
+          "cpu_usage": 6.57,
+          "load_per_core": 0.36,
+          "ms": 16.09,
+          "panels": 342,
+          "views": 13680
+        },
+        {
+          "cpu_temp": 42.93,
+          "cpu_usage": 5.68,
+          "load_per_core": 0.36,
+          "ms": 16.02,
+          "panels": 342,
+          "views": 13680
+        }
+      ]
+    },
+    "headless": {
+      "median_views": 94680,
+      "runs": [
+        {
+          "cpu_temp": 44.29,
+          "cpu_usage": 5.38,
+          "load_per_core": 0.31,
+          "ms": 16.13,
+          "panels": 2329,
+          "views": 93160
+        },
+        {
+          "cpu_temp": 44.53,
+          "cpu_usage": 9.86,
+          "load_per_core": 0.3,
+          "ms": 16.01,
+          "panels": 2437,
+          "views": 97480
+        },
+        {
+          "cpu_temp": 43.97,
+          "cpu_usage": 3.29,
+          "load_per_core": 0.28,
+          "ms": 16.03,
+          "panels": 2444,
+          "views": 97760
+        },
+        {
+          "cpu_temp": 44.21,
+          "cpu_usage": 4.07,
+          "load_per_core": 0.26,
+          "ms": 16.02,
+          "panels": 2366,
+          "views": 94640
+        },
+        {
+          "cpu_temp": 44.93,
+          "cpu_usage": 3.27,
+          "load_per_core": 0.24,
+          "ms": 16.02,
+          "panels": 2367,
+          "views": 94680
+        }
+      ]
+    },
+    "release": {
+      "median_views": 103200,
+      "runs": [
+        {
+          "cpu_temp": 42.93,
+          "cpu_usage": 5.18,
+          "load_per_core": 0.52,
+          "ms": 16.0,
+          "panels": 2580,
+          "views": 103200
+        },
+        {
+          "cpu_temp": 42.77,
+          "cpu_usage": 6.53,
+          "load_per_core": 0.47,
+          "ms": 16.0,
+          "panels": 2578,
+          "views": 103120
+        },
+        {
+          "cpu_temp": 43.57,
+          "cpu_usage": 5.22,
+          "load_per_core": 0.38,
+          "ms": 16.07,
+          "panels": 2534,
+          "views": 101360
+        },
+        {
+          "cpu_temp": 43.65,
+          "cpu_usage": 5.44,
+          "load_per_core": 0.36,
+          "ms": 16.05,
+          "panels": 2594,
+          "views": 103760
+        },
+        {
+          "cpu_temp": 44.21,
+          "cpu_usage": 5.53,
+          "load_per_core": 0.33,
+          "ms": 16.01,
+          "panels": 2589,
+          "views": 103560
+        }
+      ]
+    }
+  },
+  "runs_per_mode": 5
+}

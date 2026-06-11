@@ -34,13 +34,23 @@ A running browser is rejected outright regardless of load — browsers do bursty
 background work even when idle. The suite fails immediately on rejection and names
 the heavy processes — close them and rerun.
 
-The strictness is deliberate. No performance change gets merged on vibes: it must show a
-clear before/after delta here, ideally with non-overlapping run ranges. Real optimizations
-move the result by 3-10%, and a single background process or a throttling chip shifts it
-by more than that — numbers collected on a loaded machine are worthless as evidence and
-worse than no numbers. Measure both sides in one session, on an idle machine, or don't
-bother. Known saboteurs caught by the guard: Docker's VM, Spotlight indexing fresh build
-artifacts, the chip still hot from a cargo build.
+The strictness is deliberate. Real optimizations move the result by 3-10%, and a single
+background process or a throttling chip shifts it by more than that — numbers collected
+on a loaded machine are worthless as evidence and worse than no numbers. Known saboteurs
+caught by the guard: Docker's VM, a browser, Spotlight indexing fresh build artifacts,
+the chip still hot from a cargo build.
+
+## Acceptance criteria
+
+A performance change is accepted only with an A/B proof:
+
+- both sides (with and without the change) measured in one session, on an idle machine,
+  5+ runs per mode
+- every run with the change beats every run without it — the ranges must not overlap
+- the delta is reported per mode (debug, release, headless)
+
+A median improvement with overlapping ranges, a single-run comparison, or numbers from
+different sessions prove nothing. No A/B — no merge.
 
 ## History
 
