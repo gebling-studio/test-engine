@@ -1,6 +1,7 @@
 mod checks;
 pub mod helpers;
 mod report;
+mod runner;
 pub mod state;
 mod ui_test;
 
@@ -18,6 +19,7 @@ use log::{error, warn};
 use parking_lot::Mutex;
 use refs::Own;
 pub use report::failure_report;
+pub use runner::run_test_app;
 use serde::de::DeserializeOwned;
 pub use state::*;
 pub use ui_test::*;

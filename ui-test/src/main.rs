@@ -89,8 +89,7 @@ fn run(args: Args) -> Result<()> {
             Window::set_max_frame_latency(3);
         });
 
-        let mut my_tests: BTreeMap<_, _> = crate::UI_TESTS.lock().clone();
-        my_tests.append(&mut crate::UI_TESTS.lock().clone());
+        let my_tests: BTreeMap<_, _> = crate::UI_TESTS.lock().clone();
 
         let mut te_tests: BTreeMap<_, _> = test_game::UI_TESTS.lock().clone();
         te_tests.append(&mut test_engine::UI_TESTS.lock().clone());

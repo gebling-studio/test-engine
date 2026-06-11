@@ -41,7 +41,8 @@ Temporary edits that are never committed are allowed — for example breaking on
 expectation on purpose to verify the failure machinery. Say what you are doing first,
 revert right after the run, and check that `git diff` is clean before committing.
 
-Headless environments (CI, linux without display) skip UI tests automatically.
+In environments without a display (CI, linux without display) the `#[view_test]`-generated
+`cargo test` tests run headless instead of opening a window.
 
 Every test prints `Name: Started` and `Name: OK`. On a hang or failure the broken test is the
 one with `Started` and no `OK` — usually the last line of the log.
@@ -94,4 +95,5 @@ impl ViewTest for MyTest {
 Test helpers: `inject_touches`, `inject_scroll`, `check_colors` (asserts pixel colors at
 coordinates). To read UI state from test code use `from_main` (see [dispatch.md](dispatch.md)).
 
-One `#[view_test]` per file. Put each test in its own file.
+One `#[view_test]` per file. Deliberate decision to keep files small — do not "fix" the macro
+to allow more.

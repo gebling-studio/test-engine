@@ -1,11 +1,9 @@
-use std::str::FromStr;
-
 use parking_lot::Mutex;
 use proc_macro::{Span, TokenStream};
 use quote::quote;
 use syn::{
     __private::TokenStream2,
-    Attribute, Data, DeriveInput, Field, Fields, FieldsNamed, Ident, Meta, Path, Token, Type,
+    Attribute, Data, DeriveInput, Field, Fields, FieldsNamed, Ident, LitStr, Meta, Path, Token, Type,
     parse::{Parse, ParseStream, Parser},
     parse_macro_input, parse_quote,
     token::{Bracket, Pound},
@@ -48,8 +46,7 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
 
     let name = &stream.ident;
 
-    let name_str =
-        TokenStream2::from_str(&format!("\"{name}\"")).expect("Failed to extract view struct name");
+    let name_str = LitStr::new(&name.to_string(), name.span());
 
     VIEWS.lock().push(name.to_string());
 
@@ -88,45 +85,7 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
 
             #[test]
             fn ui_test() -> anyhow::Result<()> {
-                fn is_headless() -> bool {
-                    let is_ci = std::env::var("GITHUB_ACTIONS").is_ok() || std::env::var("CI").is_ok();
-
-                    let is_headless_linux = cfg!(target_os = "linux")
-                        && std::env::var("DISPLAY").is_err()
-                        && std::env::var("WAYLAND_DISPLAY").is_err();
-
-                    is_ci || is_headless_linux
-                }
-
-                if is_headless() {
-                    eprintln!("CI/GitHub Action detected. Skipping UI test.");
-                    return Ok(());
-                }
-
-                let mut child = std::process::Command::new("cargo")
-                    .args([
-                        "run",
-                        "-p",
-                        "ui-test",
-                        "--target-dir",
-                        "../target/ui_tests",
-                        "--",
-                        "--test-name",
-                        #name_str,
-                        "--stop-on-failure",
-                    ])
-                    .stdin(std::process::Stdio::inherit())
-                    .stdout(std::process::Stdio::inherit())
-                    .stderr(std::process::Stdio::inherit())
-                    .spawn()?;
-
-                let status = child.wait()?;
-
-                if !status.success() {
-                    panic!("Failed to run UI test: {}", status);
-                }
-
-                Ok(())
+                #root::ui_test::run_test_app(env!("CARGO_MANIFEST_DIR"), #name_str)
             }
 
             pub fn run_ui_test() -> anyhow::Result<()> {
@@ -259,8 +218,7 @@ fn add_inits(root_name: &Ident, fields: &mut FieldsNamed, root: &Path) -> TokenS
 
         field.ty = weak_wrapped_type;
 
-        let label = TokenStream2::from_str(&format!("\"{root_name}.{name}\""))
-            .expect("let label = TokenStream2::from_str()");
+        let label = LitStr::new(&format!("{root_name}.{name}"), name.span());
 
         res = quote! {
             #res
