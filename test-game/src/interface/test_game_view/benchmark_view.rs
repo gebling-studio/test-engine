@@ -213,12 +213,21 @@ static PANEL_INDEX: AtomicUsize = AtomicUsize::new(0);
 
 const TEXTS: &[&str] = &["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf"];
 
+/// Random-looking but a pure function of the input - panel N has the same
+/// color in every run. splitmix64 finalizer.
 fn shade(i: usize, salt: usize) -> Color {
-    let channel = |m: usize| -> f32 {
-        let v: f32 = ((i * m + salt * 31) % 100).lossy_convert();
-        0.15 + 0.7 * (v / 100.0)
+    let mut x = (i as u64).wrapping_add((salt as u64) << 32);
+    x ^= x >> 30;
+    x = x.wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    x ^= x >> 27;
+    x = x.wrapping_mul(0x94D0_49BB_1331_11EB);
+    x ^= x >> 31;
+
+    let channel = |byte: u64| -> f32 {
+        let v: f32 = ((x >> (byte * 8)) & 0xFF).lossy_convert();
+        0.15 + 0.7 * (v / 255.0)
     };
-    Color::rgb(channel(37), channel(53), channel(71))
+    Color::rgb(channel(0), channel(1), channel(2))
 }
 
 /// Rounding must happen in f64: rounded f32 values still print with long
@@ -453,31 +462,44 @@ impl Setup for BenchPanel {
 
         self.title
             .set_text(TEXTS[i % TEXTS.len()])
+            .set_text_color(shade(i, 13))
             .set_text_size(9)
             .set_alignment(TextAlignment::Left);
+        self.title.set_color(shade(i, 14));
         self.title.place().lrt(2).h(14).max_width(400).min_height(10);
 
-        self.body.set_text("multi\nline\ntext").set_multiline(true).set_text_size(8);
+        self.body
+            .set_text("multi\nline\ntext")
+            .set_text_color(shade(i, 15))
+            .set_multiline(true)
+            .set_text_size(8);
+        self.body.set_color(shade(i, 16));
         self.body.place().same([Width, X], self.title).anchor(Top, self.title, 2).h(30);
 
-        self.button.set_text("tap").set_text_size(8);
+        self.button.set_text("tap").set_text_color(shade(i, 17)).set_text_size(8);
+        self.button.set_color(shade(i, 18));
         self.button.place().bl(2).size(46, 14);
 
         self.image.set_image("round.png");
+        self.image.set_color(shade(i, 19)).set_border_color(shade(i, 20));
         self.image.place().br(2).size(18, 18);
 
+        self.switch.set_off_color(shade(i, 21));
         self.switch.place().tr(2).size(34, 16);
         if i.is_multiple_of(2) {
             self.switch.set_on(true);
         }
 
+        self.check.set_color(shade(i, 22)).set_border_color(shade(i, 23));
         self.check.place().same([Width, X], self.switch).anchor(Top, self.switch, 2).h(16);
         if i.is_multiple_of(3) {
             self.check.set_on(true);
         }
 
+        self.slider.set_color(shade(i, 24));
         self.slider.place().r(2).center_y().size(12, 44);
 
+        self.progress.set_color(shade(i, 25));
         self.progress.place().lr(2).b(18).h(4);
         let progress: f32 = (i % 10).lossy_convert();
         self.progress.set_progress(progress / 10.0);
@@ -486,6 +508,7 @@ impl Setup for BenchPanel {
         self.circle.set_color(shade(i, 3));
         self.circle.place().between(self.button, self.image);
 
+        self.number.set_color(shade(i, 26));
         self.number.place().center().size(24, 28);
         let value: f32 = (i % 50).lossy_convert();
         self.number.set_value(value);
@@ -499,6 +522,7 @@ impl Setup for BenchPanel {
         self.rel_box.set_color(shade(i, 6));
         self.rel_box.place().bl(20).relative(Width, self.title, 0.4).h(6);
 
+        self.halves.set_color(shade(i, 27));
         self.halves.place().lr(2).t(16).h(8);
         let left = self.halves.add_view::<Container>();
         left.set_color(shade(i, 7));
@@ -507,6 +531,7 @@ impl Setup for BenchPanel {
         right.set_color(shade(i, 8));
         right.place().right_half();
 
+        self.footer.set_color(shade(i, 28));
         self.footer.place().lr(2).b(8).h(8).distribute_ratio([1.0, 2.0, 3.0]);
         for salt in 9..12 {
             self.footer.add_view::<Container>().set_color(shade(i, salt));
@@ -516,10 +541,12 @@ impl Setup for BenchPanel {
         let width: f32 = (10 + (i * 7) % 20).lossy_convert();
         self.custom_box.place().custom(move |rect| *rect = (2.0, 30.0, width, 6.0).into());
 
+        self.scroll.set_color(shade(i, 29));
         self.scroll.place().t(2).r(40).size(30, 40);
         self.scroll.set_content_size((30, 120));
         let scroll_label = self.scroll.add_view::<Label>();
-        scroll_label.set_text("scroll").set_text_size(8);
+        scroll_label.set_text("scroll").set_text_color(shade(i, 30)).set_text_size(8);
+        scroll_label.set_color(shade(i, 31));
         scroll_label.place().tl(1).size(28, 20);
     }
 }
