@@ -18,14 +18,12 @@ all:
 	make ui
 	make render
 
-ui3:
-	cargo run -p ui-benchmark --profile=r3
-
 fix:
 	cargo fix --allow-dirty --allow-staged --all
 
+.PHONY: bench
 bench:
-	cargo run -p ui-benchmark --release
+	python3 bench/run.py
 
 mobile:
 	cargo install test-mobile

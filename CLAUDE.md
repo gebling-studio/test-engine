@@ -23,7 +23,13 @@ cargo run -p ui-test -- --stop-on-failure --headless                         # f
 cargo run -p ui-test -- --stop-on-failure --headless --test-name <ViewName>  # single test
 cargo run -p render-test                                                     # render tests
 make lint                                                                    # clippy, pedantic, zero warnings
+make bench                                                                   # UI benchmark suite, saves bench/<date>-<commit>.json
+UI_BENCHMARK=1 cargo run -p test-game --release                              # single benchmark run, prints and exits
 ```
+
+`TE_HEADLESS=1` runs any app without a window. The benchmark adds views until frame work
+time (`Window::frame_work_time`, not capped by vsync) hits 16 ms, then reports views count.
+Results in `bench/` are committed for performance history. `BENCH_RUNS=N` overrides 10.
 
 Without `--stop-on-failure` a failed UI test leaves the app window running. Always pass it.
 `--headless` runs without a window or a display — tests run many times faster. Always pass it too.

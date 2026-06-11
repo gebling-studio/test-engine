@@ -324,6 +324,12 @@ impl Window {
         self.state.frame_counter.frame_time
     }
 
+    /// CPU time of the last frame's update and render encoding. Not capped by
+    /// vsync or the compositor - use for performance measurements.
+    pub fn frame_work_time(&self) -> f32 {
+        self.state.frame_work_time
+    }
+
     pub fn frame_drawn(&self) -> u32 {
         self.state.frame_counter.frame_count
     }

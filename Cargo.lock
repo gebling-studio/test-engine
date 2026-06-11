@@ -5984,6 +5984,7 @@ dependencies = [
  "parking_lot",
  "plat 0.9.0",
  "serde",
+ "serde_json",
  "test-engine",
  "tokio",
 ]

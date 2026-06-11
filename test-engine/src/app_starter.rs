@@ -57,6 +57,8 @@ fn start_with_app(app: Box<dyn App>, headless: bool) -> std::ffi::c_int {
         run_app(event_loop, app);
     }
 
+    let headless = headless || std::env::var("TE_HEADLESS").is_ok();
+
     #[cfg(not_wasm)]
     AppRunner::setup_log();
 

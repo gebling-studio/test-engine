@@ -1,0 +1,173 @@
+{
+  "date": "2026-06-11",
+  "commit": "d6c66468",
+  "host": "Darwin arm64",
+  "runs_per_mode": 10,
+  "modes": {
+    "debug": {
+      "median_views": 10140,
+      "runs": [
+        {
+          "panels": 253,
+          "views": 10120,
+          "ms": 16.03
+        },
+        {
+          "panels": 262,
+          "views": 10480,
+          "ms": 16.05
+        },
+        {
+          "panels": 256,
+          "views": 10240,
+          "ms": 16.07
+        },
+        {
+          "panels": 247,
+          "views": 9880,
+          "ms": 16.02
+        },
+        {
+          "panels": 254,
+          "views": 10160,
+          "ms": 16.09
+        },
+        {
+          "panels": 252,
+          "views": 10080,
+          "ms": 16.0
+        },
+        {
+          "panels": 255,
+          "views": 10200,
+          "ms": 16.06
+        },
+        {
+          "panels": 255,
+          "views": 10200,
+          "ms": 16.01
+        },
+        {
+          "panels": 251,
+          "views": 10040,
+          "ms": 16.03
+        },
+        {
+          "panels": 253,
+          "views": 10120,
+          "ms": 16.03
+        }
+      ]
+    },
+    "release": {
+      "median_views": 78620,
+      "runs": [
+        {
+          "panels": 2059,
+          "views": 82360,
+          "ms": 16.01
+        },
+        {
+          "panels": 2067,
+          "views": 82680,
+          "ms": 16.02
+        },
+        {
+          "panels": 1941,
+          "views": 77640,
+          "ms": 16.01
+        },
+        {
+          "panels": 2052,
+          "views": 82080,
+          "ms": 16.0
+        },
+        {
+          "panels": 1946,
+          "views": 77840,
+          "ms": 16.01
+        },
+        {
+          "panels": 2039,
+          "views": 81560,
+          "ms": 16.04
+        },
+        {
+          "panels": 1980,
+          "views": 79200,
+          "ms": 16.07
+        },
+        {
+          "panels": 1862,
+          "views": 74480,
+          "ms": 16.07
+        },
+        {
+          "panels": 1951,
+          "views": 78040,
+          "ms": 16.04
+        },
+        {
+          "panels": 1864,
+          "views": 74560,
+          "ms": 16.19
+        }
+      ]
+    },
+    "headless": {
+      "median_views": 70040,
+      "runs": [
+        {
+          "panels": 1821,
+          "views": 72840,
+          "ms": 16.04
+        },
+        {
+          "panels": 1858,
+          "views": 74320,
+          "ms": 16.02
+        },
+        {
+          "panels": 1688,
+          "views": 67520,
+          "ms": 16.07
+        },
+        {
+          "panels": 1738,
+          "views": 69520,
+          "ms": 16.08
+        },
+        {
+          "panels": 1802,
+          "views": 72080,
+          "ms": 16.05
+        },
+        {
+          "panels": 751,
+          "views": 30040,
+          "ms": 19.14
+        },
+        {
+          "panels": 1365,
+          "views": 54600,
+          "ms": 16.15
+        },
+        {
+          "panels": 1764,
+          "views": 70560,
+          "ms": 16.06
+        },
+        {
+          "panels": 1729,
+          "views": 69160,
+          "ms": 16.05
+        },
+        {
+          "panels": 1799,
+          "views": 71960,
+          "ms": 16.03
+        }
+      ]
+    }
+  }
+}

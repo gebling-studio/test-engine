@@ -4,6 +4,8 @@ use std::{
     sync::mpsc::{Receiver, Sender, channel},
 };
 
+use web_time::Instant;
+
 use anyhow::Result;
 use gm::{
     LossyConvert,
@@ -40,6 +42,13 @@ pub struct State {
 
     offscreen_texture: Option<wgpu::Texture>,
     depth_texture:     Option<Texture>,
+
+    update_work: f32,
+
+    /// CPU time of the last frame's update and render encoding, excluding the
+    /// wait for a drawable and present. Unlike `frame_time` it is not capped
+    /// by vsync or the compositor.
+    pub(crate) frame_work_time: f32,
 }
 
 impl Default for State {
@@ -50,6 +59,8 @@ impl Default for State {
             frame_counter:        FrameCounter::default(),
             offscreen_texture:    None,
             depth_texture:        None,
+            update_work:          0.0,
+            frame_work_time:      0.0,
         }
     }
 }
@@ -117,7 +128,9 @@ impl State {
             return;
         }
 
+        let work_started = Instant::now();
         AppHandler::current().te_window_events.update();
+        self.update_work = work_started.elapsed().as_secs_f32();
 
         if Window::current().title_set {
             return;
@@ -184,6 +197,8 @@ impl State {
 
         Window::next_render_frame();
 
+        let work_started = Instant::now();
+
         if surface_texture.is_none() {
             self.ensure_offscreen_texture();
         }
@@ -240,6 +255,8 @@ impl State {
         };
 
         Window::queue().submit(std::iter::once(encoder.finish()));
+
+        self.frame_work_time = self.update_work + work_started.elapsed().as_secs_f32();
 
         if let Some(surface_texture) = surface_texture {
             surface_texture.present();
