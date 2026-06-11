@@ -8,6 +8,9 @@ ui:
 	cargo run -p ui-test
 	cargo run -p ui-test --release
 
+uui:
+	cargo run -p ui-test --release -- --stop-on-failure --headless
+
 all:
 	order
 	make wasm

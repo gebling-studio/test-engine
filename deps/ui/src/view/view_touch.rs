@@ -42,12 +42,19 @@ impl<T: ?Sized + View> ViewTouch for T {
 }
 
 pub fn check_touch(mut view: WeakView, touch: &mut Touch) -> bool {
-    if view.is_null() || view.is_hidden() {
+    if view.is_null() {
         return false;
     }
 
     let view = view.deref_mut();
     let base_view = view.__base_view();
+
+    if view.is_hidden() {
+        // A view hidden during an active touch must not keep the capture.
+        // A stale capture eats hover moves and steals other views' ends.
+        base_view.__touch_id = NO_TOUCH_ID;
+        return false;
+    }
 
     if touch.is_moved() && base_view.__touch_id == touch.id {
         touch.position -= view.absolute_frame().origin;

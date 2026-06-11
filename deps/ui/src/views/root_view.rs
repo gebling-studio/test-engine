@@ -49,7 +49,7 @@ impl RootView {
     }
 
     pub fn set_color(self: Weak<Self>, color: impl Into<Color>) -> Weak<Self> {
-        self.background.set_color(dbg!(color.into()));
+        self.background.set_color(color.into());
         self
     }
 

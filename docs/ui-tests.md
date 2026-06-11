@@ -10,6 +10,7 @@ cargo run -p ui-test                          # full suite, all tests, 2 cycles
 UI_TEST_CYCLES=5 cargo run -p ui-test         # more cycles
 cargo run -p ui-test -- --test-name RestRequest   # one test by view struct name
 cargo run -p ui-test -- --headless            # offscreen, much faster, for CI and agents
+make uui                                      # full suite, headless, release mode
 ```
 
 By default a failed test leaves the app running so the window can be inspected.
