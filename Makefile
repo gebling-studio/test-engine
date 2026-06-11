@@ -23,7 +23,7 @@ fix:
 
 .PHONY: bench
 bench:
-	python3 bench/run.py
+	cargo run -p bench --release
 
 mobile:
 	cargo install test-mobile

@@ -5,11 +5,11 @@ use gm::{
     axis::Axis,
     flat::{Rect, Size},
 };
-use refs::ToRglica;
+use refs::{Own, ToRglica};
 
 use super::Placer;
 use crate::{
-    ViewSubviews, WeakView,
+    View, ViewSubviews, WeakView,
     layout::{Anchor, Tiling, layout_rule::Placement},
     view::ViewFrame,
 };
@@ -136,13 +136,13 @@ impl Placer {
 
         match tiling {
             Tiling::Background => *frame = s_content.into(),
-            Tiling::Horizontally => place_horizontally(self.view.subviews_weak(), *self.all_margin.borrow()),
-            Tiling::Vertically => place_vertically(self.view.subviews_weak(), *self.all_margin.borrow()),
+            Tiling::Horizontally => place_horizontally(self.view.subviews(), *self.all_margin.borrow()),
+            Tiling::Vertically => place_vertically(self.view.subviews(), *self.all_margin.borrow()),
             Tiling::LeftHalf => *frame = (0, 0, s_content.width / 2.0, s_content.height).into(),
             Tiling::RightHalf => {
                 *frame = (s_content.width / 2.0, 0, s_content.width / 2.0, s_content.height).into();
             }
-            Tiling::Distribute(ratio) => distribute_with_ratio(frame.size, self.view.subviews_weak(), ratio),
+            Tiling::Distribute(ratio) => distribute_with_ratio(frame.size, self.view.subviews(), ratio),
         }
     }
 
@@ -174,16 +174,16 @@ impl Placer {
     }
 }
 
-fn place_vertically(views: Vec<WeakView>, margin: f32) {
+fn place_vertically(views: &[Own<dyn View>], margin: f32) {
     distribute::<{ Axis::Y }>(views, margin);
 }
 
-fn place_horizontally(views: Vec<WeakView>, margin: f32) {
+fn place_horizontally(views: &[Own<dyn View>], margin: f32) {
     distribute::<{ Axis::X }>(views, margin);
 }
 
-fn distribute<const AXIS: Axis>(mut views: Vec<WeakView>, margin: f32) {
-    let Some(last) = views.last_mut().map(|v| v.weak_view()) else {
+fn distribute<const AXIS: Axis>(views: &[Own<dyn View>], margin: f32) {
+    let Some(last) = views.last() else {
         return;
     };
 
@@ -204,7 +204,7 @@ fn distribute<const AXIS: Axis>(mut views: Vec<WeakView>, margin: f32) {
 
     let mut last_pos: f32 = 0.0;
 
-    for view in &mut views {
+    for view in views {
         let mut frame = *view.frame();
 
         frame.set_position::<AXIS>(last_pos);
@@ -218,7 +218,7 @@ fn distribute<const AXIS: Axis>(mut views: Vec<WeakView>, margin: f32) {
     }
 }
 
-fn distribute_with_ratio(size: Size, views: Vec<WeakView>, ratios: &[f32]) {
+fn distribute_with_ratio(size: Size, views: &[Own<dyn View>], ratios: &[f32]) {
     let total_ratio = 1.0 / ratios.iter().sum::<f32>();
 
     for i in 0..ratios.len() {

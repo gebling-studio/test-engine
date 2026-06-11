@@ -1,0 +1,9 @@
+[package]
+edition.workspace = true
+name = "bench"
+version.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+chrono = { workspace = true }
+serde_json = { workspace = true }

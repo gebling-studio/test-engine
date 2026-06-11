@@ -50,6 +50,7 @@ impl App for TestGameApp {
 
     fn make_root_view(&self) -> Own<dyn View> {
         if std::env::var("UI_BENCHMARK").is_ok() {
+            crate::interface::test_game_view::reject_benchmark_if_system_busy();
             UIBenchmarkView::new()
         } else {
             LoadingView::new()

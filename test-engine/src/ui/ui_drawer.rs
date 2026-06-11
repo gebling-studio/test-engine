@@ -79,8 +79,15 @@ impl UIDrawer {
         view.calculate_absolute_frame();
         view.update();
         view.trigger_events();
-        for mut view in view.subviews_weak() {
-            Self::update_view(view.deref_mut());
+
+        // A child's update() may add views to this list, reallocating it.
+        // Indexing re-borrows the list on every step, so only the Weak is
+        // held while child code runs. An iterator would dangle.
+        let mut i = 0;
+        while i < view.subviews().len() {
+            let mut child = view.subviews()[i].weak();
+            Self::update_view(child.deref_mut());
+            i += 1;
         }
     }
 

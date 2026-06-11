@@ -13,6 +13,8 @@ Do not read these upfront. Read the matching file only when the task touches tha
   Read before touching threading, async, or dispatch code.
 - [docs/ui-tests.md](docs/ui-tests.md) — how UI tests work and how to run a single one.
   Read before writing or debugging UI tests.
+- [docs/benchmark.md](docs/benchmark.md) — the UI benchmark, its consistency guard, and the
+  results history in `bench/`. Read before touching the benchmark or measuring performance.
 
 Docs should be concise.
 
@@ -27,9 +29,7 @@ make bench                                                                   # U
 UI_BENCHMARK=1 cargo run -p test-game --release                              # single benchmark run, prints and exits
 ```
 
-`TE_HEADLESS=1` runs any app without a window. The benchmark adds views until frame work
-time (`Window::frame_work_time`, not capped by vsync) hits 16 ms, then reports views count.
-Results in `bench/` are committed for performance history. `BENCH_RUNS=N` overrides 10.
+`TE_HEADLESS=1` runs any app without a window.
 
 Without `--stop-on-failure` a failed UI test leaves the app window running. Always pass it.
 `--headless` runs without a window or a display — tests run many times faster. Always pass it too.

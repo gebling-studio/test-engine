@@ -1,7 +1,14 @@
 use std::{
     ops::Deref,
-    sync::atomic::{AtomicUsize, Ordering},
+    process::exit,
+    sync::{
+        OnceLock,
+        atomic::{AtomicUsize, Ordering},
+    },
+    thread::sleep,
 };
+
+use sysinfo::{Component, Components, MINIMUM_CPU_UPDATE_INTERVAL, ProcessesToUpdate, System};
 
 use test_engine::{
     Window,
@@ -28,6 +35,123 @@ const ROLLING_WINDOW: usize = 10;
 /// Safety bound so the run always terminates.
 const MAX_PANELS: usize = 10_000;
 
+/// A loaded or thermally throttled machine skews results - scripted runs are
+/// rejected with this exit code and bench/run.py waits and retries.
+pub const BENCH_REJECTED_EXIT_CODE: i32 = 75;
+
+const MAX_CPU_USAGE: f32 = 15.0;
+const MAX_LOAD_PER_CORE: f32 = 0.6;
+const MAX_CPU_TEMP: f32 = 55.0;
+
+static SYSTEM_AT_START: OnceLock<SystemLoad> = OnceLock::new();
+
+struct SystemLoad {
+    cpu_usage:     f32,
+    load_per_core: f32,
+    cpu_temp:      Option<f32>,
+}
+
+fn measure_system() -> SystemLoad {
+    let mut system = System::new();
+    system.refresh_cpu_usage();
+
+    // The minimum over a window ignores transient spikes (our own process
+    // startup, the previous run's decay) but a steady hog keeps every sample
+    // high. A single sample rejects falsely right after another run exits.
+    let mut cpu_usage = f32::MAX;
+    for _ in 0..3 {
+        sleep(MINIMUM_CPU_UPDATE_INTERVAL);
+        system.refresh_cpu_usage();
+        cpu_usage = cpu_usage.min(system.global_cpu_usage());
+    }
+
+    let cores: f32 = system.cpus().len().max(1).lossy_convert();
+    let load_one: f32 = System::load_average().one.lossy_convert();
+
+    let components = Components::new_with_refreshed_list();
+    let cpu_temp = components
+        .iter()
+        .filter(|component| {
+            let label = component.label().to_lowercase();
+            label.contains("cpu") || label.contains("tdie") || label.contains("soc")
+        })
+        .filter_map(Component::temperature)
+        .reduce(f32::max);
+
+    SystemLoad {
+        cpu_usage,
+        load_per_core: load_one / cores,
+        cpu_temp,
+    }
+}
+
+pub fn reject_benchmark_if_system_busy() {
+    let load = measure_system();
+    let mut reasons = vec![];
+
+    if load.cpu_usage > MAX_CPU_USAGE {
+        reasons.push(format!("cpu usage {:.0}% > {MAX_CPU_USAGE}%", load.cpu_usage));
+    }
+
+    if load.load_per_core > MAX_LOAD_PER_CORE {
+        reasons.push(format!(
+            "load average {:.2} per core > {MAX_LOAD_PER_CORE}",
+            load.load_per_core
+        ));
+    }
+
+    if let Some(temp) = load.cpu_temp
+        && temp > MAX_CPU_TEMP
+    {
+        reasons.push(format!("cpu temperature {temp:.0} C > {MAX_CPU_TEMP} C"));
+    }
+
+    SYSTEM_AT_START.set(load).unwrap_or_else(|_| panic!("system load measured twice"));
+
+    if reasons.is_empty() {
+        return;
+    }
+
+    eprintln!("Benchmark rejected, system is busy or hot:");
+    for reason in &reasons {
+        eprintln!("  {reason}");
+    }
+
+    let to_kill = processes_to_kill();
+    if to_kill.is_empty() {
+        eprintln!("  no heavy processes found, the machine is likely still cooling down");
+    } else {
+        eprintln!("  consider killing: {to_kill}");
+    }
+
+    exit(BENCH_REJECTED_EXIT_CODE);
+}
+
+/// 100% here is one core, unlike the normalized total in the rejection reason.
+fn processes_to_kill() -> String {
+    let mut system = System::new();
+    system.refresh_processes(ProcessesToUpdate::All, true);
+    sleep(MINIMUM_CPU_UPDATE_INTERVAL);
+    system.refresh_processes(ProcessesToUpdate::All, true);
+
+    let own_pid = sysinfo::get_current_pid().ok();
+
+    let mut processes: Vec<_> = system
+        .processes()
+        .values()
+        .filter(|p| Some(p.pid()) != own_pid && p.cpu_usage() > 25.0)
+        .collect();
+
+    processes.sort_by(|a, b| b.cpu_usage().total_cmp(&a.cpu_usage()));
+
+    processes
+        .iter()
+        .take(3)
+        .map(|p| format!("{} {:.0}%", p.name().to_string_lossy(), p.cpu_usage()))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
 /// Step between rows in the final report. Every frame is recorded, printing
 /// all of them would flood the console.
 const REPORT_EVERY: usize = 50;
@@ -44,6 +168,12 @@ fn shade(i: usize, salt: usize) -> Color {
     Color::rgb(channel(37), channel(53), channel(71))
 }
 
+/// Rounding must happen in f64: rounded f32 values still print with long
+/// garbage tails in JSON.
+fn round2(value: f32) -> f64 {
+    (f64::from(value) * 100.0).round() / 100.0
+}
+
 fn count_views(view: &dyn View) -> usize {
     1 + view.subviews().iter().map(|sub| count_views(sub.deref())).sum::<usize>()
 }
@@ -56,10 +186,12 @@ struct StepResult {
 
 #[view]
 pub struct UIBenchmarkView {
-    panels:          usize,
-    views_per_panel: usize,
-    reported:        bool,
-    results:         Vec<StepResult>,
+    panels:            usize,
+    views_per_panel:   usize,
+    reported:          bool,
+    last_render_frame: u64,
+    skip_frames:       u32,
+    results:           Vec<StepResult>,
 }
 
 impl Setup for UIBenchmarkView {
@@ -75,28 +207,67 @@ impl ViewCallbacks for UIBenchmarkView {
             return;
         }
 
-        self.add_panel();
+        // An occluded window skips rendering and frame_work_time goes stale.
+        // Counting such frames would inflate the result with unmeasured panels.
+        let render_frame = Window::render_frame();
+        if render_frame == self.last_render_frame {
+            return;
+        }
+        self.last_render_frame = render_frame;
+
+        // The frame right after adding panels contains their creation cost.
+        // Only clean render-only frames are recorded, so the metric measures
+        // rendering, not view construction.
+        if self.skip_frames > 0 {
+            self.skip_frames -= 1;
+            return;
+        }
+
+        if self.panels > 0 {
+            self.results.push(StepResult {
+                panels: self.panels,
+                views:  self.panels * self.views_per_panel,
+                avg_ms: Window::current().frame_work_time() * 1000.0,
+            });
+
+            if (self.rolling_ms() >= LAG_THRESHOLD_MS && self.results.len() >= ROLLING_WINDOW)
+                || self.panels >= MAX_PANELS
+            {
+                self.reported = true;
+                self.report();
+                return;
+            }
+        }
+
+        for _ in 0..self.step_size() {
+            self.add_panel();
+        }
 
         if self.views_per_panel == 0 {
-            self.views_per_panel = count_views(self) - 1;
+            self.views_per_panel = (count_views(self) - 1) / self.panels;
         }
 
-        self.results.push(StepResult {
-            panels: self.panels,
-            views:  self.panels * self.views_per_panel,
-            avg_ms: Window::current().frame_work_time() * 1000.0,
-        });
-
-        if (self.rolling_ms() >= LAG_THRESHOLD_MS && self.results.len() >= ROLLING_WINDOW)
-            || self.panels >= MAX_PANELS
-        {
-            self.reported = true;
-            self.report();
-        }
+        self.skip_frames = 1;
     }
 }
 
 impl UIBenchmarkView {
+    /// Far from the lag threshold whole batches are added per frame to keep
+    /// the run short. Near it one panel per frame, so the stop point keeps
+    /// single-panel precision.
+    fn step_size(&self) -> usize {
+        let ratio = self.rolling_ms() / LAG_THRESHOLD_MS;
+        if ratio < 0.5 {
+            32
+        } else if ratio < 0.8 {
+            8
+        } else if ratio < 0.95 {
+            4
+        } else {
+            1
+        }
+    }
+
     fn rolling_ms(&self) -> f32 {
         let window = self.results.len().min(ROLLING_WINDOW);
         if window == 0 {
@@ -177,11 +348,15 @@ impl UIBenchmarkView {
         };
 
         let last = self.results.last().expect("benchmark finished with no results");
+        let system = SYSTEM_AT_START.get();
 
         let json = serde_json::json!({
             "panels": last.panels,
             "views": last.views,
-            "ms": (self.rolling_ms() * 100.0).round() / 100.0,
+            "ms": round2(self.rolling_ms()),
+            "cpu_usage": system.map(|s| round2(s.cpu_usage)),
+            "load_per_core": system.map(|s| round2(s.load_per_core)),
+            "cpu_temp": system.and_then(|s| s.cpu_temp).map(round2),
         });
 
         let json = serde_json::to_string_pretty(&json).expect("failed to serialize benchmark results");

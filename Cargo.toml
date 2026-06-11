@@ -3,6 +3,7 @@
 
 default-members = ["test-game"]
 members = [
+  "bench",
   "deps/ui/ui-proc-test",
   "example-app",
   "fuzz",
@@ -65,6 +66,7 @@ rust_decimal = "1.41"
 sentry = { version = "0.47", default-features = false, features = ["reqwest", "rustls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+sysinfo = "0.39"
 syn = { version = "2.0", features = ["extra-traits", "full"] }
 tiny-skia = "0.12"
 tokio = { version = "1.50", features = ["full"] }
