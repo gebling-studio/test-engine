@@ -3,6 +3,10 @@
 Cross platform game engine and UI framework in Rust. Rendering on WGPU.
 Supports: Windows Linux Mac iOS and Android.
 
+No proof, no merge. A performance claim needs an A/B per [docs/benchmark.md](docs/benchmark.md)
+acceptance criteria, a correctness claim needs a reproduced failure. Unproved ideas go to
+[docs/guesses.md](docs/guesses.md), not into the code.
+
 ## Docs
 
 Do not read these upfront. Read the matching file only when the task touches that area:
