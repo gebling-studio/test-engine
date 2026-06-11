@@ -4819,15 +4819,16 @@ dependencies = [
 
 [[package]]
 name = "refs"
-version = "0.52.0"
+version = "0.52.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c6d0563853fa83650c43bd5a6a2115b246101540f7fde8ba3e573bf79ed2215"
+checksum = "19110228ca5a1526b2a92874bd29692a4d4cc845e7d5781724beaa114134ade0"
 dependencies = [
  "anyhow",
  "hreads",
  "log",
  "parking_lot",
  "reqwest 0.13.4",
+ "rustc-hash 2.1.2",
  "serde",
 ]
 
