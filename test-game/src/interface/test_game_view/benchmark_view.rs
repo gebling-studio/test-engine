@@ -85,9 +85,58 @@ fn measure_system() -> SystemLoad {
     }
 }
 
+/// Browsers do bursty background work even when idle - JS timers, media,
+/// rendering of animated pages. They must be closed, not just quiet.
+const BROWSERS: &[&str] = &[
+    "google chrome",
+    "chrome",
+    "chromium",
+    "safari",
+    "firefox",
+    "microsoft edge",
+    "brave browser",
+    "brave",
+    "opera",
+    "vivaldi",
+    "arc",
+    "zen",
+    "yandex",
+];
+
+fn running_browsers() -> Vec<&'static str> {
+    let mut system = System::new();
+    system.refresh_processes(ProcessesToUpdate::All, true);
+
+    // Match only at a word boundary: plain `contains` flags system daemons
+    // like searchpartyd ("arc") and siriknowledged ("edge").
+    let is_browser = |name: &str| {
+        BROWSERS
+            .iter()
+            .find(|browser| {
+                name == **browser || name.strip_prefix(*browser).is_some_and(|rest| rest.starts_with(' '))
+            })
+            .copied()
+    };
+
+    let mut found: Vec<&str> = system
+        .processes()
+        .values()
+        .filter_map(|process| is_browser(&process.name().to_string_lossy().to_lowercase()))
+        .collect();
+
+    found.sort_unstable();
+    found.dedup();
+    found
+}
+
 pub fn reject_benchmark_if_system_busy() {
     let load = measure_system();
     let mut reasons = vec![];
+
+    let browsers = running_browsers();
+    if !browsers.is_empty() {
+        reasons.push(format!("browser running, close it: {}", browsers.join(", ")));
+    }
 
     if load.cpu_usage > MAX_CPU_USAGE {
         reasons.push(format!("cpu usage {:.0}% > {MAX_CPU_USAGE}%", load.cpu_usage));
@@ -106,6 +155,8 @@ pub fn reject_benchmark_if_system_busy() {
         reasons.push(format!("cpu temperature {temp:.0} C > {MAX_CPU_TEMP} C"));
     }
 
+    let busy = load.cpu_usage > MAX_CPU_USAGE || load.load_per_core > MAX_LOAD_PER_CORE;
+
     SYSTEM_AT_START.set(load).unwrap_or_else(|_| panic!("system load measured twice"));
 
     if reasons.is_empty() {
@@ -117,11 +168,13 @@ pub fn reject_benchmark_if_system_busy() {
         eprintln!("  {reason}");
     }
 
-    let to_kill = processes_to_kill();
-    if to_kill.is_empty() {
-        eprintln!("  no heavy processes found, the machine is likely still cooling down");
-    } else {
-        eprintln!("  consider killing: {to_kill}");
+    if busy {
+        let to_kill = processes_to_kill();
+        if to_kill.is_empty() {
+            eprintln!("  no heavy processes found, the machine is likely still cooling down");
+        } else {
+            eprintln!("  consider killing: {to_kill}");
+        }
     }
 
     exit(BENCH_REJECTED_EXIT_CODE);

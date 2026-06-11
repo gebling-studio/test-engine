@@ -30,8 +30,9 @@ average over 10 frames crosses 16 ms and reports panels, views and ms.
 
 A run refuses to start (exit code 75) when the system is busy or hot. Thresholds in
 `benchmark_view.rs`: cpu usage 15%, load average 0.6 per core, cpu temperature 55 C.
-The suite fails immediately on rejection and names the heavy processes — close them
-and rerun.
+A running browser is rejected outright regardless of load — browsers do bursty
+background work even when idle. The suite fails immediately on rejection and names
+the heavy processes — close them and rerun.
 
 The strictness is deliberate. No performance change gets merged on vibes: it must show a
 clear before/after delta here, ideally with non-overlapping run ranges. Real optimizations
