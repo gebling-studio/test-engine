@@ -2,13 +2,12 @@ use std::str::FromStr;
 
 use parking_lot::Mutex;
 use proc_macro::{Span, TokenStream};
-use quote::{quote, quote_spanned};
+use quote::quote;
 use syn::{
     __private::TokenStream2,
-    Attribute, Data, DeriveInput, Field, Fields, FieldsNamed, GenericParam, Ident, Meta, Path, Token, Type,
+    Attribute, Data, DeriveInput, Field, Fields, FieldsNamed, Ident, Meta, Path, Token, Type,
     parse::{Parse, ParseStream, Parser},
     parse_macro_input, parse_quote,
-    spanned::Spanned,
     token::{Bracket, Pound},
 };
 
@@ -42,7 +41,9 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
     let mut stream = parse_macro_input!(stream as DeriveInput);
 
     let Data::Struct(data) = &mut stream.data else {
-        panic!("`view` macro has to be used with structs")
+        return syn::Error::new(stream.ident.span(), "`view` macro can only be used on structs")
+            .to_compile_error()
+            .into();
     };
 
     let name = &stream.ident;
@@ -56,24 +57,15 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
         VIEW_TESTS.lock().push(format!("{} {:#?}", name, Span::call_site().file()));
     }
 
-    let generics = &stream.generics;
-
-    let type_param_names: Vec<_> = generics
-        .params
-        .iter()
-        .filter_map(|param| match param {
-            GenericParam::Type(type_param) => Some(type_param.ident.clone()),
-            GenericParam::Const(const_param) => Some(const_param.ident.clone()),
-            GenericParam::Lifetime(_) => None,
-        })
-        .collect();
-
-    let type_params = quote_spanned! {stream.generics.span()=>
-        #(#type_param_names),*
-    };
+    let (impl_generics, ty_generics, where_clause) = stream.generics.split_for_impl();
 
     let Fields::Named(fields) = &mut data.fields else {
-        panic!("No named fields");
+        return syn::Error::new(
+            stream.ident.span(),
+            "`view` struct must have named fields: `struct Name { ... }`",
+        )
+        .to_compile_error()
+        .into();
     };
 
     let inits = add_inits(name, fields, &root);
@@ -153,7 +145,7 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
         #[educe(Default)]
         #stream
 
-        impl #generics #root::ui::View for #name <#type_params> {
+        impl #impl_generics #root::ui::View for #name #ty_generics #where_clause {
             fn weak_view(&self) -> #root::refs::Weak<dyn #root::ui::View> {
                 #root::refs::weak_from_ref(self as &dyn #root::ui::View)
             }
@@ -170,7 +162,7 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
             }
         }
 
-        impl #generics #root::refs::AsAny for #name <#type_params> {
+        impl #impl_generics #root::refs::AsAny for #name #ty_generics #where_clause {
             fn as_any(&self) -> &dyn std::any::Any {
                self
             }
@@ -184,7 +176,7 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
             }
         }
 
-        impl #generics #root::ui::__ViewInternalSetup for #name <#type_params>  {
+        impl #impl_generics #root::ui::__ViewInternalSetup for #name #ty_generics #where_clause {
             fn __internal_before_setup(&mut self) {
                 use #root::ui::Setup;
                 let mut weak = #root::refs::weak_from_ref(self);
@@ -215,7 +207,7 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
             }
         }
 
-        impl #generics #root::ui::__ViewIntoUnsizedOwn for #name <#type_params> {
+        impl #impl_generics #root::ui::__ViewIntoUnsizedOwn for #name #ty_generics #where_clause {
             unsafe fn __into_unsized_own<V: ?Sized + #root::ui::View + 'static>(own: #root::refs::Own<V>) -> #root::refs::Own<dyn #root::ui::View> {
                 use #root::refs::Own;
                 use #root::ui::View;

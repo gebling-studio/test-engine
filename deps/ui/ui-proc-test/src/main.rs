@@ -12,4 +12,12 @@ struct _ProcView {
     _weak_button: Button,
 }
 
+// Pins where-clause support: the macro must carry it into generated impls.
+#[view(crate = ui::__macro_root)]
+struct _GenericView<T>
+where T: Default + 'static
+{
+    _value: T,
+}
+
 fn main() {}
