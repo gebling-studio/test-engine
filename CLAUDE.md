@@ -15,6 +15,8 @@ Do not read these upfront. Read the matching file only when the task touches tha
   Read before writing or debugging UI tests.
 - [docs/benchmark.md](docs/benchmark.md) — the UI benchmark, its consistency guard, and the
   results history in `bench/`. Read before touching the benchmark or measuring performance.
+- [docs/guesses.md](docs/guesses.md) — parked changes that lacked proof. Read before
+  proposing an optimization or a speculative fix; add new unproved ideas there, not to code.
 
 Docs should be concise.
 
