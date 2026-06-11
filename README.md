@@ -64,6 +64,9 @@ fn main() {
 
 ```
 
+All fields after `#[init]` must be views. They are created and managed by the engine —
+just declare and use them.
+
 
 
 

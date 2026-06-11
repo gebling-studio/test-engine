@@ -101,11 +101,11 @@ impl ViewSubviews for ScrollView {
 impl Scrollable for ScrollView {
     fn __process_scroll_touch(&mut self, touch: Touch) -> bool {
         if touch.is_ended() {
-            if touch.id == self.__view_base.__touch_id {
+            if touch.id == self.__base_view().__touch_id {
                 self.add_inertia_animation();
             }
 
-            self.__view_base.__touch_id = NO_TOUCH_ID;
+            self.__base_view().__touch_id = NO_TOUCH_ID;
             self.dragging = false;
             return false;
         }
@@ -118,13 +118,13 @@ impl Scrollable for ScrollView {
         target_frame.origin.y -= self.content.__base_view().__content_offset;
 
         if touch.is_began() && target_frame.contains(touch.position) {
-            self.__view_base.__touch_id = touch.id;
+            self.__base_view().__touch_id = touch.id;
             self.began_touch = touch.position;
             self.previous_touch = touch.position;
             return true;
         }
 
-        if touch.is_moved() && self.__view_base.__touch_id == touch.id {
+        if touch.is_moved() && self.__base_view().__touch_id == touch.id {
             if !self.dragging {
                 if (touch.position.y - self.began_touch.y).abs() < DRAG_SLOP {
                     return true;
@@ -134,7 +134,7 @@ impl Scrollable for ScrollView {
                 TouchStack::cancel_touch(touch.id);
                 // cancel_touch clears every capture, including this scroll's
                 // if it is also a touch listener
-                self.__view_base.__touch_id = touch.id;
+                self.__base_view().__touch_id = touch.id;
             }
 
             let delta = -(self.previous_touch.y - touch.position.y);

@@ -70,8 +70,8 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
     fields.named.insert(
         0,
         Field::parse_named
-            .parse2(quote! { __view_base: #root::ui::ViewBase })
-            .expect("parse2(quote! { __view_base: #root::ui::ViewBase })"),
+            .parse2(quote! { __view_base: std::cell::UnsafeCell<#root::ui::ViewBase> })
+            .expect("parse2(quote! { __view_base: std::cell::UnsafeCell<ViewBase> })"),
     );
 
     let ui_test_related_stuff = if test {
@@ -109,8 +109,9 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
                 #root::refs::weak_from_ref(self as &dyn #root::ui::View)
             }
             fn __base_view(&self) -> &mut #root::ui::ViewBase {
-                #![allow(clippy::transmute_ptr_to_ptr)]
-                unsafe { std::mem::transmute(&self.__view_base) }
+                // SAFETY: views are mutated only on the main thread,
+                // which guarantees the &mut is unique.
+                unsafe { &mut *self.__view_base.get() }
             }
             fn __init_views(&mut self) {
                 use #root::ui::ViewSubviews;
@@ -144,13 +145,14 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
 
             fn __internal_setup(&mut self) {
                 use #root::ui::Setup;
+                use #root::ui::View;
                 use #root::ui::WithHeader;
                 use #root::ui::ViewData;
-                self.__view_base.view_label = #name_str.to_string();
+                self.__base_view().view_label = #name_str.to_string();
                 self.layout_header();
                 let mut weak = #root::refs::weak_from_ref(self);
                 weak.setup();
-                self.__view_base.events.setup.trigger(());
+                self.__base_view().events.setup.trigger(());
             }
 
             fn __internal_inspect(&mut self) {

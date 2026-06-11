@@ -1,5 +1,5 @@
 use gm::flat::Size;
-use ui::{ViewCallbacks, view};
+use ui::{View, ViewCallbacks, view};
 
 use crate::{self as test_engine};
 
@@ -10,7 +10,7 @@ pub(crate) struct ScrollContent {
 
 impl ScrollContent {
     pub(super) fn content_offset_mut(&mut self) -> &mut f32 {
-        &mut self.__view_base.__content_offset
+        &mut self.__base_view().__content_offset
     }
 }
 
