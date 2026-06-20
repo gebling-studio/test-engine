@@ -29,6 +29,21 @@ enum RenderTarget {
     Surface(wgpu::SurfaceTexture),
 }
 
+/// Start and end timestamp of the render pass.
+#[cfg(feature = "bench")]
+const GPU_TIMESTAMPS: u32 = 2;
+#[cfg(feature = "bench")]
+const GPU_TIMESTAMP_BYTES: u64 = GPU_TIMESTAMPS as u64 * 8;
+
+/// GPU-side resources for one render pass timestamp pair. Created lazily on the
+/// first benchmarked frame and reused after.
+#[cfg(feature = "bench")]
+struct GpuTimer {
+    query_set: wgpu::QuerySet,
+    resolve:   wgpu::Buffer,
+    readback:  wgpu::Buffer,
+}
+
 #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
 pub const SURFACE_TEXTURE_FORMAT: TextureFormat = TextureFormat::Bgra8UnormSrgb;
 #[cfg(any(target_os = "android", target_arch = "wasm32"))]
@@ -49,6 +64,13 @@ pub struct State {
     /// wait for a drawable and present. Unlike `frame_time` it is not capped
     /// by vsync or the compositor.
     pub(crate) frame_work_time: f32,
+
+    /// GPU execution time of the last frame's render pass, in seconds.
+    #[cfg(feature = "bench")]
+    pub(crate) frame_gpu_time: f32,
+
+    #[cfg(feature = "bench")]
+    gpu_timer: Option<GpuTimer>,
 }
 
 impl Default for State {
@@ -61,6 +83,10 @@ impl Default for State {
             depth_texture:        None,
             update_work:          0.0,
             frame_work_time:      0.0,
+            #[cfg(feature = "bench")]
+            frame_gpu_time:       0.0,
+            #[cfg(feature = "bench")]
+            gpu_timer:            None,
         }
     }
 }
@@ -204,6 +230,9 @@ impl State {
         }
         self.ensure_depth_texture();
 
+        #[cfg(feature = "bench")]
+        self.ensure_gpu_timer();
+
         let texture = match &surface_texture {
             Some(surface_texture) => &surface_texture.texture,
             None => self.offscreen_texture.as_ref().unwrap(),
@@ -213,6 +242,15 @@ impl State {
         let mut encoder = Window::device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("Render Encoder"),
         });
+
+        #[cfg(feature = "bench")]
+        let timestamp_writes = Some(wgpu::RenderPassTimestampWrites {
+            query_set:                     &self.gpu_timer.as_ref().expect("gpu timer ensured").query_set,
+            beginning_of_pass_write_index: Some(0),
+            end_of_pass_write_index:       Some(1),
+        });
+        #[cfg(not(feature = "bench"))]
+        let timestamp_writes = None;
 
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -240,7 +278,7 @@ impl State {
                     stencil_ops: None,
                 }),
                 occlusion_query_set:      None,
-                timestamp_writes:         None,
+                timestamp_writes,
                 multiview_mask:           None,
             });
 
@@ -262,6 +300,11 @@ impl State {
             surface_texture.present();
         }
 
+        // After the work timer closes and the frame is presented, so resolving
+        // and the blocking readback never inflate the CPU measurement.
+        #[cfg(feature = "bench")]
+        self.read_gpu_time()?;
+
         #[cfg(not_wasm)]
         if let Some(buffer_sender) = self.read_display_request.take() {
             let (sender, receiver) = channel();
@@ -282,6 +325,76 @@ impl State {
             });
         }
 
+        Ok(())
+    }
+
+    #[cfg(feature = "bench")]
+    fn ensure_gpu_timer(&mut self) {
+        if self.gpu_timer.is_some() {
+            return;
+        }
+
+        let device = Window::device();
+        self.gpu_timer = Some(GpuTimer {
+            query_set: device.create_query_set(&wgpu::QuerySetDescriptor {
+                label: Some("bench timestamps"),
+                ty:    wgpu::QueryType::Timestamp,
+                count: GPU_TIMESTAMPS,
+            }),
+            resolve:   device.create_buffer(&wgpu::BufferDescriptor {
+                label:              Some("bench timestamp resolve"),
+                size:               wgpu::QUERY_RESOLVE_BUFFER_ALIGNMENT,
+                usage:              wgpu::BufferUsages::QUERY_RESOLVE | wgpu::BufferUsages::COPY_SRC,
+                mapped_at_creation: false,
+            }),
+            readback:  device.create_buffer(&wgpu::BufferDescriptor {
+                label:              Some("bench timestamp readback"),
+                size:               GPU_TIMESTAMP_BYTES,
+                usage:              wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+                mapped_at_creation: false,
+            }),
+        });
+    }
+
+    /// Reads back the render pass timestamps resolved during `render` and blocks
+    /// until the GPU reports them. The blocking poll runs after the work timer
+    /// has closed, so it costs only wall-clock throughput, not `frame_work_time`.
+    #[cfg(feature = "bench")]
+    fn read_gpu_time(&mut self) -> Result<()> {
+        let gpu_seconds = {
+            let Some(timer) = self.gpu_timer.as_ref() else {
+                return Ok(());
+            };
+
+            // Wait for the render submission to finish so Metal commits the
+            // end-of-pass timestamp to the query set before we resolve it.
+            Window::device().poll(wgpu::PollType::wait_indefinitely())?;
+
+            let mut encoder = Window::device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("bench timestamp resolve"),
+            });
+            encoder.resolve_query_set(&timer.query_set, 0..GPU_TIMESTAMPS, &timer.resolve, 0);
+            encoder.copy_buffer_to_buffer(&timer.resolve, 0, &timer.readback, 0, GPU_TIMESTAMP_BYTES);
+            Window::queue().submit(std::iter::once(encoder.finish()));
+
+            let slice = timer.readback.slice(..);
+            slice.map_async(wgpu::MapMode::Read, |result| {
+                result.expect("bench timestamp readback map failed");
+            });
+            Window::device().poll(wgpu::PollType::wait_indefinitely())?;
+
+            let period = Window::queue().get_timestamp_period();
+            let stamps: [u64; 2] = {
+                let data = slice.get_mapped_range();
+                bytemuck::pod_read_unaligned(&data[..])
+            };
+            timer.readback.unmap();
+
+            let ticks: f32 = stamps[1].saturating_sub(stamps[0]).lossy_convert();
+            ticks * period / 1.0e9
+        };
+
+        self.frame_gpu_time = gpu_seconds;
         Ok(())
     }
 

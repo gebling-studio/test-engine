@@ -8,6 +8,11 @@ version.workspace = true
 crate-type = ["rlib", "staticlib"]
 name = "window"
 
+[features]
+# GPU timestamp measurement for the UI benchmark. Off in normal builds so the
+# render loop and the device feature request stay untouched.
+bench = []
+
 [dependencies]
 anyhow = { workspace = true }
 bytemuck = { workspace = true }

@@ -171,9 +171,20 @@ impl Window {
             required_limits.max_texture_dimension_2d = 8192;
         }
 
+        #[cfg(feature = "bench")]
+        let required_features = {
+            assert!(
+                adapter.features().contains(Features::TIMESTAMP_QUERY),
+                "bench feature needs GPU TIMESTAMP_QUERY support, this adapter lacks it"
+            );
+            Features::TIMESTAMP_QUERY
+        };
+        #[cfg(not(feature = "bench"))]
+        let required_features = Features::empty();
+
         adapter
             .request_device(&DeviceDescriptor {
-                required_features: Features::empty(),
+                required_features,
                 // Doesn't work on some Androids
                 // required_features: Features::POLYGON_MODE_LINE, // | Features::POLYGON_MODE_POINT,
                 required_limits,
@@ -328,6 +339,14 @@ impl Window {
     /// vsync or the compositor - use for performance measurements.
     pub fn frame_work_time(&self) -> f32 {
         self.state.frame_work_time
+    }
+
+    /// GPU execution time of the last frame's render pass, from timestamp
+    /// queries. Advisory: it carries clock and thermal noise the benchmark
+    /// guard cannot catch.
+    #[cfg(feature = "bench")]
+    pub fn frame_gpu_time(&self) -> f32 {
+        self.state.frame_gpu_time
     }
 
     pub fn frame_drawn(&self) -> u32 {

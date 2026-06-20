@@ -32,7 +32,7 @@ cargo run -p ui-test -- --stop-on-failure --headless --test-name <ViewName>  # s
 cargo run -p render-test                                                     # render tests
 make lint                                                                    # clippy, pedantic, zero warnings
 make bench                                                                   # UI benchmark suite, saves bench/<date>-<commit>.json
-UI_BENCHMARK=1 cargo run -p test-game --release                              # single benchmark run, prints and exits
+UI_BENCHMARK=1 cargo run -p test-game --release --features bench             # single benchmark run, prints and exits
 ```
 
 `TE_HEADLESS=1` runs any app without a window.

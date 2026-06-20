@@ -6,10 +6,9 @@ use test_engine::{
     ui::{Button, Label, Setup, Size, View},
 };
 
-use crate::interface::{
-    loading_view::LoadingView,
-    test_game_view::{BUTTON, UIBenchmarkView},
-};
+use crate::interface::{loading_view::LoadingView, test_game_view::BUTTON};
+#[cfg(feature = "bench")]
+use crate::interface::test_game_view::UIBenchmarkView;
 
 #[cfg(not_wasm)]
 async fn secrets() -> anyhow::Result<&'static test_engine::net::SecretsManager> {
@@ -49,12 +48,13 @@ impl App for TestGameApp {
     }
 
     fn make_root_view(&self) -> Own<dyn View> {
+        #[cfg(feature = "bench")]
         if std::env::var("UI_BENCHMARK").is_ok() {
-            crate::interface::test_game_view::reject_benchmark_if_system_busy();
-            UIBenchmarkView::new()
-        } else {
-            LoadingView::new()
+            let force = std::env::args().any(|arg| arg == "--no-guard");
+            crate::interface::test_game_view::guard_benchmark(force);
+            return UIBenchmarkView::new();
         }
+        LoadingView::new()
     }
 
     fn initial_size(&self) -> Size {

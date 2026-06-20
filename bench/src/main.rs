@@ -43,11 +43,12 @@ fn main() -> Result<()> {
         for i in 0..runs_per_mode {
             let run = run_once(binary, envs, &result_path)?;
             println!(
-                "{name} {}/{runs_per_mode}: {} panels, {} views, {} ms",
+                "{name} {}/{runs_per_mode}: {} panels, {} views, {} ms cpu, {} ms gpu",
                 i + 1,
                 run["panels"],
                 run["views"],
                 run["ms"],
+                run["gpu_ms"],
             );
             runs.push(run);
         }
@@ -93,7 +94,10 @@ fn git_commit() -> Result<String> {
 }
 
 fn build(args: &[&str]) -> Result<()> {
-    let status = Command::new("cargo").args(["build", "-p", "test-game"]).args(args).status()?;
+    let status = Command::new("cargo")
+        .args(["build", "-p", "test-game", "--features", "bench"])
+        .args(args)
+        .status()?;
     if !status.success() {
         bail!("cargo build failed");
     }

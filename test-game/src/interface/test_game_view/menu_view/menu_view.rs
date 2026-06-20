@@ -29,11 +29,13 @@ use crate::{
         polygon_view::PolygonView,
         render_view::RenderView,
         root_layout_view::RootLayoutView,
-        test_game_view::{MenuEntry, Node, NodeCell, ScaleCell, TestGameView, UIBenchmarkView},
+        test_game_view::{MenuEntry, Node, NodeCell, ScaleCell, TestGameView},
     },
     levels::{BenchmarkLevel, TestLevel},
     no_physics::NoPhysicsView,
 };
+#[cfg(feature = "bench")]
+use crate::interface::test_game_view::UIBenchmarkView;
 
 #[view]
 pub struct MenuView {
@@ -112,6 +114,7 @@ impl Setup for MenuView {
                 Node::new(
                     MenuEntry::new("UI"),
                     vec![
+                        #[cfg(feature = "bench")]
                         MenuEntry::new("ui bench")
                             .action(|| {
                                 LevelManager::stop_level();

@@ -36,7 +36,8 @@ const ROLLING_WINDOW: usize = 10;
 const MAX_PANELS: usize = 10_000;
 
 /// A loaded or thermally throttled machine skews results - scripted runs are
-/// rejected with this exit code and bench/run.py waits and retries.
+/// rejected with this exit code and the bench harness fails immediately.
+/// Pass `--no-guard` to run anyway (the load is still recorded).
 pub const BENCH_REJECTED_EXIT_CODE: i32 = 75;
 
 const MAX_CPU_USAGE: f32 = 15.0;
@@ -129,7 +130,10 @@ fn running_browsers() -> Vec<&'static str> {
     found
 }
 
-pub fn reject_benchmark_if_system_busy() {
+/// Measures the system load (always recorded for the results JSON) and rejects
+/// the run when it is busy or hot. `force` (the `--no-guard` flag) downgrades
+/// the rejection to a warning so a knowingly-loaded machine can still run.
+pub fn guard_benchmark(force: bool) {
     let load = measure_system();
     let mut reasons = vec![];
 
@@ -163,9 +167,14 @@ pub fn reject_benchmark_if_system_busy() {
         return;
     }
 
-    eprintln!("Benchmark rejected, system is busy or hot:");
+    eprintln!("System is busy or hot:");
     for reason in &reasons {
         eprintln!("  {reason}");
+    }
+
+    if force {
+        eprintln!("  --no-guard set, running anyway - these numbers are not evidence");
+        return;
     }
 
     if busy {
@@ -244,6 +253,7 @@ struct StepResult {
     panels: usize,
     views:  usize,
     avg_ms: f32,
+    gpu_ms: f32,
 }
 
 #[view]
@@ -290,6 +300,7 @@ impl ViewCallbacks for UIBenchmarkView {
                 panels: self.panels,
                 views:  self.panels * self.views_per_panel,
                 avg_ms: Window::current().frame_work_time() * 1000.0,
+                gpu_ms: Window::current().frame_gpu_time() * 1000.0,
             });
 
             if (self.rolling_ms() >= LAG_THRESHOLD_MS && self.results.len() >= ROLLING_WINDOW)
@@ -331,11 +342,19 @@ impl UIBenchmarkView {
     }
 
     fn rolling_ms(&self) -> f32 {
+        self.rolling_avg(|r| r.avg_ms)
+    }
+
+    fn rolling_gpu_ms(&self) -> f32 {
+        self.rolling_avg(|r| r.gpu_ms)
+    }
+
+    fn rolling_avg(&self, field: impl Fn(&StepResult) -> f32) -> f32 {
         let window = self.results.len().min(ROLLING_WINDOW);
         if window == 0 {
             return 0.0;
         }
-        let sum: f32 = self.results[self.results.len() - window..].iter().map(|r| r.avg_ms).sum();
+        let sum: f32 = self.results[self.results.len() - window..].iter().map(field).sum();
         let len: f32 = window.lossy_convert();
         sum / len
     }
@@ -376,13 +395,13 @@ impl UIBenchmarkView {
     fn report(&self) {
         println!();
         println!("UI benchmark:");
-        println!("{:<7} {:>7} {:>8} {:>9}", "panels", "views", "ms", "fps");
+        println!("{:<7} {:>7} {:>8} {:>8} {:>9}", "panels", "views", "cpu_ms", "gpu_ms", "fps");
 
         for result in self.sampled() {
             let fps = if result.avg_ms > 0.0 { 1000.0 / result.avg_ms } else { 0.0 };
             println!(
-                "{:<7} {:>7} {:>8.3} {:>9.1}",
-                result.panels, result.views, result.avg_ms, fps
+                "{:<7} {:>7} {:>8.3} {:>8.3} {:>9.1}",
+                result.panels, result.views, result.avg_ms, result.gpu_ms, fps
             );
         }
 
@@ -391,9 +410,10 @@ impl UIBenchmarkView {
         let last = self.results.last().expect("benchmark finished with no results");
         let rolling = self.rolling_ms();
         Alert::show(format!(
-            "{} panels, {} views: {rolling:.2} ms per frame ({:.0} fps)",
+            "{} panels, {} views: {rolling:.2} ms cpu, {:.2} ms gpu ({:.0} fps)",
             last.panels,
             last.views,
+            self.rolling_gpu_ms(),
             if rolling > 0.0 { 1000.0 / rolling } else { 0.0 }
         ));
 
@@ -416,6 +436,7 @@ impl UIBenchmarkView {
             "panels": last.panels,
             "views": last.views,
             "ms": round2(self.rolling_ms()),
+            "gpu_ms": round2(self.rolling_gpu_ms()),
             "cpu_usage": system.map(|s| round2(s.cpu_usage)),
             "load_per_core": system.map(|s| round2(s.load_per_core)),
             "cpu_temp": system.and_then(|s| s.cpu_temp).map(round2),

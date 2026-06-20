@@ -11,6 +11,7 @@ name = "test_engine"
 [features]
 default = []
 webgl = ["wgpu/webgl"]
+bench = ["window/bench"]
 
 [dependencies]
 anyhow = { workspace = true }
