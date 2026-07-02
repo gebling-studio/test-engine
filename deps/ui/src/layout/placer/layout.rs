@@ -14,7 +14,7 @@ use crate::{
         Anchor, Tiling,
         layout_rule::{LayoutRule, Placement},
     },
-    view::ViewFrame,
+    view::{ViewData, ViewFrame, ViewLayout},
 };
 
 type RMut<'a> = &'a mut Rect;
@@ -185,7 +185,50 @@ impl Placer {
                 *frame = (s_content.width / 2.0, 0, s_content.width / 2.0, s_content.height).into();
             }
             Tiling::Distribute(ratio) => distribute_with_ratio(frame.size, self.view.subviews(), ratio),
+            Tiling::Wrap => self.wrap_layout(frame),
         }
+    }
+
+    /// Rows of subviews in declaration order. A child keeps its own size,
+    /// only its origin is set. Wraps before a child that would cross the
+    /// container width, each row is as tall as its tallest child. Hidden
+    /// children take no space. Sets the container height to the content.
+    fn wrap_layout(&mut self, frame: RMut) {
+        let margin = *self.all_margin.borrow();
+        let width = frame.width();
+
+        let mut x = 0.0;
+        let mut y = 0.0;
+        let mut row_height: f32 = 0.0;
+
+        for view in self.view.subviews() {
+            let mut view = view.weak();
+
+            if view.is_hidden() {
+                continue;
+            }
+
+            // The parent lays out before its children, so the child's size
+            // rules have not run yet this frame. Running its layout here
+            // lets the wrap see the current size instead of the last frame.
+            // The traversal runs it again later, which is a no-op.
+            view.layout();
+
+            let size = view.frame().size;
+
+            if x > 0.0 && x + size.width > width {
+                x = 0.0;
+                y += row_height + margin;
+                row_height = 0.0;
+            }
+
+            view.set_position((x, y));
+
+            x += size.width + margin;
+            row_height = row_height.max(size.height);
+        }
+
+        frame.size.height = y + row_height;
     }
 
     fn between_super_layout(&mut self, frame: RMut, side: Anchor, view: WeakView) {

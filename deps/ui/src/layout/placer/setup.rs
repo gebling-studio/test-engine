@@ -172,6 +172,15 @@ impl Placer {
         self
     }
 
+    /// Subviews flow left to right in declaration order and wrap to the
+    /// next row when the width runs out. Children keep their own sizes,
+    /// the container height is set to fit all rows.
+    pub fn all_wrap(&self) -> &Self {
+        self.has().height = true;
+        self.all_tiling_rules().push(Tiling::Wrap.into());
+        self
+    }
+
     pub fn distribute_ratio<const LEN: usize>(&self, ratios: [impl ToF32; LEN]) -> &Self {
         self.all_tiling_rules()
             .push(Tiling::Distribute(ratios.iter().map(|f| f.to_f32()).collect()).into());

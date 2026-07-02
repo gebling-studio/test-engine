@@ -20,26 +20,13 @@ Landed from this list already, each with UI tests: font wiring, an app-wide defa
 enter and friends via `NamedKey`, and label content measurement, `Label::content_size`
 and `size_for_width` on top of `Font::measure`, with fit-to-text placer rules
 `fit_text_width`, `fit_text_height` and `fit_text` that compose with anchors and
-min and max clamps.
+min and max clamps. Flow-wrap layout landed as the `all_wrap` placer tiling rule.
+Subviews flow left to right in declaration order and wrap into rows, children keep
+their own sizes including fit-to-text, hidden children take no space, and the
+container height follows the content. Row and item gaps come from `all(margin)`.
+This unblocked the skaityk reader word grid.
 
-## 1. Flow-wrap layout container
-
-The largest gap. The core interaction of the driver app sits on it.
-
-- Current: the placer has side, anchor, center and tiling rules,
-  `deps/ui/src/layout/placer/setup.rs`. Tiling knows Background, LeftHalf, RightHalf,
-  Vertically, Horizontally, Distribute. Nothing wraps. `TableView` is the only
-  content-driven container and it is vertical only.
-- Needed: a container that lays out subviews left to right in row order, wraps to the
-  next row when the width is exceeded, sizes rows by the tallest child, and re-wraps on
-  resize. Children need intrinsic sizes, which labels now have via `content_size` and
-  the fit-to-text placer rules.
-- Blocks: the skaityk reader word grid. One sentence renders as a wrapping row of
-  tappable word views. Tapping a word shows its translation in a mini label above the
-  word at half font size. A second panel shows a gray slot per word, sized by word
-  length, that reveals the translated word. None of this can be laid out today.
-
-## 2. Runtime theming
+## 1. Runtime theming
 
 - Current: `Style` applies once, at view setup, `deps/ui/src/style.rs`.
   `apply_globally` affects only views created after the call. No re-style of a live view
@@ -49,20 +36,20 @@ The largest gap. The core interaction of the driver app sits on it.
   event, so the platform part is mostly plumbing.
 - Blocks: dark mode. The original app follows the system theme live.
 
-## 3. Hover events
+## 2. Hover events
 
 - Current: the input pipeline is touch only, `deps/ui/src/view/view_touch.rs`. No per-view
   hover tracking from mouse moves.
 - Needed: hover enter and exit events on the view under the cursor, desktop only.
 - Blocks: desktop polish, card lift on hover, button hover colors.
 
-## 4. Drop shadows
+## 3. Drop shadows
 
 - Current: the rect pipeline draws fill, border and corner radius. No shadow.
 - Needed: shadow rendering under rounded rects plus shadow parameters on `ViewData`.
 - Blocks: card elevation, the original uses a small resting shadow and a larger hover one.
 
-## 5. Text stack rework
+## 4. Text stack rework
 
 Found by the FontZoo emoji page. Parked until a real need, the items above come first.
 
@@ -77,7 +64,7 @@ Found by the FontZoo emoji page. Parked until a real need, the items above come 
   tests.
 - Blocks: colorful emoji, complex scripts. Nothing in the driver app today.
 
-## 6. Small niceties
+## 5. Small niceties
 
 - `TableView` cell spacing. Worked around in skaityk-te with a transparent cell and an
   inset card subview.
@@ -88,7 +75,7 @@ Found by the FontZoo emoji page. Parked until a real need, the items above come 
 
 ## Suggested order
 
-Flow-wrap, then theming, then hover and shadows, then the niceties. Flow-wrap unlocks
-the reader, which is the whole point of the driver app, and its text sizing side is
-already covered by label measurement. The text stack rework waits for a real need for
+Theming, then hover and shadows, then the niceties. With flow-wrap and label
+measurement in place the reader layout is unblocked, so the remaining gaps are
+app-wide look and desktop polish. The text stack rework waits for a real need for
 color emoji or complex scripts.

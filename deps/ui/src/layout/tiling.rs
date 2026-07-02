@@ -11,4 +11,6 @@ pub enum Tiling {
     RightHalf,
 
     Distribute(Vec<f32>),
+
+    Wrap,
 }
