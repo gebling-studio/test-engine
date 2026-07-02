@@ -18,7 +18,7 @@ use test_engine::{
     AppRunner, Window,
     dispatch::from_main,
     ui::{Label, UIManager},
-    ui_test::{UITest, enable_fps_report},
+    ui_test::{UITest, enable_color_recording, enable_fps_report, enable_human_mode},
 };
 
 #[cfg(debug_assertions)]
@@ -57,11 +57,31 @@ struct Args {
 
     #[arg(long)]
     headless: bool,
+
+    /// Watchable run: slows injections, shows touches, holds after
+    /// each test until space is pressed.
+    #[arg(long)]
+    human: bool,
+
+    /// Print ready to paste check_colors blocks instead of asserting them.
+    #[arg(long)]
+    record_colors: bool,
 }
 
 fn run(args: Args) -> Result<()> {
     if args.fps_report {
         enable_fps_report();
+    }
+
+    if args.human {
+        if args.headless {
+            bail!("--human requires a window, remove --headless");
+        }
+        enable_human_mode();
+    }
+
+    if args.record_colors {
+        enable_color_recording();
     }
 
     if args.stop_on_failure {
@@ -80,15 +100,19 @@ fn run(args: Args) -> Result<()> {
     }
 
     let test_name = args.test_name;
+    let human = args.human;
 
     let actor = async move {
         Label::set_default_text_size(32);
-        UIManager::set_display_touches(false);
+        UIManager::set_display_touches(human);
 
-        from_main(|| {
+        from_main(move || {
             UIManager::override_scale(1.0);
-            Window::set_vsync(false);
-            Window::set_max_frame_latency(3);
+
+            if !human {
+                Window::set_vsync(false);
+                Window::set_max_frame_latency(3);
+            }
         });
 
         let my_tests: BTreeMap<_, _> = crate::UI_TESTS.lock().clone();

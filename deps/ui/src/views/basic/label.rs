@@ -7,7 +7,7 @@ use gm::{
 };
 use refs::{Weak, weak_from_ref};
 use ui_proc::view;
-use window::image::ToImage;
+use window::{Font, image::ToImage};
 
 use crate::{
     ImageView, Setup, Style, ToLabel, View, ViewFrame,
@@ -46,6 +46,8 @@ pub struct Label {
 
     #[educe(Default = DEFAULT_TEXT_SIZE.load(Ordering::Relaxed))]
     text_size: f32,
+
+    font: Weak<Font>,
 }
 
 impl Label {
@@ -73,6 +75,19 @@ impl Label {
 
     pub fn set_text_size(&self, size: impl ToF32) -> &Self {
         weak_from_ref(self).text_size = size.to_f32();
+        self
+    }
+
+    pub fn font(&self) -> Weak<Font> {
+        if self.font.is_ok() {
+            self.font
+        } else {
+            Font::default()
+        }
+    }
+
+    pub fn set_font(&self, font: Weak<Font>) -> &Self {
+        weak_from_ref(self).font = font;
         self
     }
 }

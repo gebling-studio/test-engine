@@ -4,7 +4,6 @@ use anyhow::bail;
 use gm::flat::Size;
 use refs::Own;
 use ui::View;
-use window::Font;
 
 use crate::app_starter::test_engine_start_with_app;
 
@@ -25,12 +24,6 @@ pub trait App {
 
     fn sentry_url(&self) -> PinnedFuture<String> {
         Box::pin(async { bail!("Not implemented") })
-    }
-
-    fn default_font(&self) -> Font {
-        //Font::helvetica()
-        //
-        todo!()
     }
 }
 

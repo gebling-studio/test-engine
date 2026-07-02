@@ -11,7 +11,10 @@ use refs::{Own, Weak};
 use ui::{Setup, UIManager, View, ViewData, ViewTest};
 use window::Window;
 
-use crate::{gm::LossyConvert, ui_test::clear_state};
+use crate::{
+    gm::LossyConvert,
+    ui_test::{clear_state, hold_for_human, human_mode, reset_record_probe_count},
+};
 
 pub static TEST_NAME: Mutex<String> = Mutex::new(String::new());
 
@@ -99,9 +102,16 @@ impl UITest {
 
             if !test_name.is_empty() {
                 debug!("{test_name}: OK");
+                hold_for_human();
             }
 
             debug!("{new_test_name}: Started");
+
+            reset_record_probe_count();
+
+            if human_mode() {
+                Window::set_title(new_test_name.clone());
+            }
 
             record_test_boundary(Some(new_test_name.clone()));
         }
@@ -132,6 +142,7 @@ impl UITest {
 
         if !test_name.is_empty() {
             debug!("{test_name}: OK");
+            hold_for_human();
         }
 
         TEST_NAME.lock().clear();

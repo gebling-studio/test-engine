@@ -21,7 +21,7 @@ use crate::{
     App,
     level_drawer::LevelDrawer,
     pipelines::Pipelines,
-    ui::{Input, UIDrawer},
+    ui::{Input, UIDrawer, ui_test::human_pause},
 };
 
 #[cfg(not_wasm)]
@@ -234,6 +234,8 @@ impl AppRunner {
     }
 
     pub fn take_screenshot() -> Result<Screenshot> {
+        human_pause();
+
         let recv = from_main(|| Window::current().request_screenshot());
         let screenshot = recv.recv()?;
         Ok(screenshot)

@@ -5,7 +5,7 @@ use gm::{
     color::{CLEAR, TURQUOISE},
     flat::{Rect, Size},
 };
-use refs::main_lock::MainLock;
+use refs::{Weak, main_lock::MainLock};
 use render::{
     UIGradientPipeline, UIImageRectPipeline,
     data::{RectView, UIGradientInstance, UIImageInstance, UIRectInstance},
@@ -19,6 +19,8 @@ use crate::pipelines::Pipelines;
 
 static GRADIENT_DRAWER: MainLock<UIGradientPipeline> = MainLock::new();
 static IMAGE_RECT_DRAWER: MainLock<UIImageRectPipeline> = MainLock::new();
+
+type TextSections<'a> = Vec<(Weak<Font>, Vec<Section<'a>>)>;
 
 pub struct UIDrawer;
 
@@ -39,7 +41,7 @@ impl UIDrawer {
         let debug_frames = UIManager::should_draw_debug_frames();
         let scale = UIManager::scale();
 
-        let mut text_sections: Vec<Section> = vec![];
+        let mut text_sections: TextSections = vec![];
 
         Self::draw_view(
             pass,
@@ -53,9 +55,10 @@ impl UIDrawer {
         Self::flush_pipelines(pass, resolution);
         scissor(pass, display_rect);
 
-        let mut font = Font::default();
-        font.brush.queue(Window::device(), Window::queue(), text_sections).unwrap();
-        font.brush.draw(pass);
+        for (mut font, sections) in text_sections {
+            font.brush.queue(Window::device(), Window::queue(), sections).unwrap();
+            font.brush.draw(pass);
+        }
     }
 
     fn flush_pipelines(pass: &mut RenderPass, resolution: Size) {
@@ -93,7 +96,7 @@ impl UIDrawer {
     fn draw_view<'a>(
         pass: &mut RenderPass<'a>,
         view: &'a dyn View,
-        text_sections: &mut Vec<Section<'a>>,
+        text_sections: &mut TextSections<'a>,
         debug_frames: bool,
         scale: f32,
         resolution: Size,
@@ -205,7 +208,7 @@ impl UIDrawer {
         }
     }
 
-    fn draw_label<'a>(frame: &Rect, label: &'a Label, sections: &mut Vec<Section<'a>>, scale: f32) {
+    fn draw_label<'a>(frame: &Rect, label: &'a Label, sections: &mut TextSections<'a>, scale: f32) {
         let frame = frame * scale;
 
         let center = frame.center();
@@ -246,7 +249,12 @@ impl UIDrawer {
                 center.y,
             ));
 
-        sections.push(section);
+        let font = label.font();
+
+        match sections.iter_mut().find(|(f, _)| f.name == font.name) {
+            Some((_, list)) => list.push(section),
+            None => sections.push((font, vec![section])),
+        }
     }
 }
 

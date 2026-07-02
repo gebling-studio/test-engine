@@ -11,6 +11,8 @@ UI_TEST_CYCLES=5 cargo run -p ui-test         # more cycles
 cargo run -p ui-test -- --test-name RestRequest   # one test by view struct name
 cargo run -p ui-test -- --headless            # offscreen, much faster, for CI and agents
 make uui                                      # full suite, headless, release mode
+cargo run -p ui-test -- --test-name FontZoo --human            # watch one test, space to advance
+cargo run -p ui-test -- --record-colors --headless --test-name FontZoo  # print check_colors blocks
 ```
 
 By default a failed test leaves the app running so the window can be inspected.
@@ -97,3 +99,35 @@ coordinates). To read UI state from test code use `from_main` (see [dispatch.md]
 
 One `#[view_test]` per file. Deliberate decision to keep files small — do not "fix" the macro
 to allow more.
+
+## Human mode
+
+`--human` makes a run watchable: vsync stays on, injected touches are drawn on screen, every
+injected event pauses (`UI_TEST_HUMAN_DELAY` ms, default 400, moved touches an eighth of it),
+and every screenshot pauses first so the verified state is visible. After each test the
+window title shows the result and the run holds until space is pressed. Works for one test
+or the whole suite. Rejected together with `--headless`.
+
+## Recording color probes
+
+`check_colors` expectations are recorded, not written by hand. With `--record-colors` every
+`check_colors` call prints a ready to paste block instead of asserting: it takes a
+screenshot, picks probe pixels automatically, and prints them labeled with the test name and
+check index. Write the test with empty `check_colors("")?` placeholders, run once with the
+flag, paste each block over its placeholder, rerun normally to verify.
+
+The picker is deterministic, the same screen always produces the same block. It samples a
+4px grid, keeps only pixels whose 3x3 neighborhood is near uniform — skipping antialiased
+edges, which differ between renderers — clusters candidates by color so text ink is probed
+alongside backgrounds, gives small enclosed features like letter holes their own probes
+first, and spreads the rest spatially.
+
+Default is 32 probes per check. A test declares its own density by calling
+`set_record_probe_count(n)` at the start of `perform_test`. It is inert outside record runs
+and resets when the next test starts.
+
+`--record-colors --human` combined marks every probed pixel with a square on screen and
+holds at each check, to review what gets pinned.
+
+Re-recording an existing block to make a failing test pass is editing expectations — same
+rule as above, only with explicit approval.

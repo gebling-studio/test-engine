@@ -5,7 +5,10 @@ use gm::{
 };
 use ui::{Button, Setup, UIManager, View, ViewData};
 
-use crate::ui_test::checks::check_colors_structured;
+use crate::ui_test::{
+    checks::check_colors_structured,
+    record::{print_recorded_colors, recording_colors},
+};
 
 #[allow(dead_code)]
 pub fn add_action(action: impl FnMut() + Send + 'static) {
@@ -20,6 +23,10 @@ pub fn add_action(action: impl FnMut() + Send + 'static) {
 }
 
 pub fn check_colors(data: &str) -> Result<()> {
+    if recording_colors() {
+        return print_recorded_colors();
+    }
+
     let checks: Vec<_> = data
         .split('\n')
         .filter_map(|line| {

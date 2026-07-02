@@ -57,5 +57,4 @@ impl ViewView {
 
         self.repr = repr;
     }
-
 }

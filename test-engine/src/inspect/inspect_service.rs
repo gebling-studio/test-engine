@@ -73,7 +73,12 @@ impl InspectService {
         }
 
         let mut png = Vec::new();
-        PngEncoder::new(&mut png).write_image(&bytes, shot.size.width, shot.size.height, ExtendedColorType::Rgba8)?;
+        PngEncoder::new(&mut png).write_image(
+            &bytes,
+            shot.size.width,
+            shot.size.height,
+            ExtendedColorType::Rgba8,
+        )?;
 
         Ok(AppCommand::Screenshot {
             width:      shot.size.width,
@@ -160,11 +165,11 @@ impl InspectService {
 fn entry(view: WeakView, what: impl ToString, old: impl ToString, new: impl ToString) -> EditEntry {
     EditEntry {
         timestamp: Local::now().format("%Y-%m-%d %H:%M:%S").to_string(),
-        view: view.label().to_string(),
-        view_id: weak_to_id(view),
-        what: what.to_string(),
-        old: old.to_string(),
-        new: new.to_string(),
+        view:      view.label().to_string(),
+        view_id:   weak_to_id(view),
+        what:      what.to_string(),
+        old:       old.to_string(),
+        new:       new.to_string(),
     }
 }
 

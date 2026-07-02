@@ -7,6 +7,9 @@ No proof, no merge. A performance claim needs an A/B per [docs/benchmark.md](doc
 acceptance criteria, a correctness claim needs a reproduced failure. Unproved ideas go to
 [docs/guesses.md](docs/guesses.md), not into the code.
 
+Every new UI feature or bugfix must land together with a new UI test that covers it. No exceptions.
+See [docs/ui-tests.md](docs/ui-tests.md) for how UI tests work.
+
 ## Docs
 
 Do not read these upfront. Read the matching file only when the task touches that area:
@@ -24,6 +27,9 @@ Do not read these upfront. Read the matching file only when the task touches tha
   results history in `bench/`. Read before touching the benchmark or measuring performance.
 - [docs/guesses.md](docs/guesses.md) — parked changes that lacked proof. Read before
   proposing an optimization or a speculative fix; add new unproved ideas there, not to code.
+- [docs/roadmap.md](docs/roadmap.md) — missing engine features found by porting a real app,
+  with current state, design notes, and order. Read before planning or starting a new
+  engine capability, and update it when one lands.
 
 Docs should be concise.
 
@@ -32,6 +38,8 @@ Docs should be concise.
 ```bash
 cargo run -p ui-test -- --stop-on-failure --headless                         # full UI test suite
 cargo run -p ui-test -- --stop-on-failure --headless --test-name <ViewName>  # single test
+cargo run -p ui-test -- --test-name <ViewName> --human                       # watchable run, space to advance
+cargo run -p ui-test -- --stop-on-failure --headless --test-name <ViewName> --record-colors  # print check_colors blocks
 cargo run -p render-test                                                     # render tests
 make lint                                                                    # clippy, pedantic, zero warnings
 cargo machete                                                                # unused dependencies, zero findings

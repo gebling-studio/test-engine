@@ -11,9 +11,7 @@ use anyhow::{Result, bail};
 use base64::{Engine, engine::general_purpose::STANDARD};
 use clap::{Parser, Subcommand};
 use gm::color::Color;
-use inspect::{
-    AppCommand, Client, InspectorCommand, SERVICE_TYPE, UIRequest, UIResponse, ui::ViewRepr,
-};
+use inspect::{AppCommand, Client, InspectorCommand, SERVICE_TYPE, UIRequest, UIResponse, ui::ViewRepr};
 use mdns_sd::{ScopedIp, ServiceDaemon, ServiceEvent};
 use refs::{Own, hreads::set_current_thread_as_main};
 use serde_json::{Value, from_str, json, to_string, to_string_pretty, to_value};
@@ -23,7 +21,10 @@ const NO_APPS: &str =
     "No running apps discovered. The app must be a debug build running on the same network.";
 
 #[derive(Parser)]
-#[command(name = "te-inspect", about = "Inspect and edit UI of running test-engine apps")]
+#[command(
+    name = "te-inspect",
+    about = "Inspect and edit UI of running test-engine apps"
+)]
 struct Cli {
     /// App id from `apps`. Needed only when several apps run.
     #[arg(long, global = true)]
@@ -39,7 +40,8 @@ enum Command {
     Apps,
     /// Print a compact overview of the view tree: label, frame, id per line
     Tree,
-    /// Print full JSON of every view whose label contains the query, or with this exact id
+    /// Print full JSON of every view whose label contains the query, or with
+    /// this exact id
     View {
         /// Label substring, case insensitive, or an exact view id
         query: String,
@@ -52,7 +54,8 @@ enum Command {
         #[arg(short, long)]
         out: Option<PathBuf>,
     },
-    /// Edit a layout rule: offset for Side and Anchor rules, ratio for Relative rules
+    /// Edit a layout rule: offset for Side and Anchor rules, ratio for Relative
+    /// rules
     EditRule {
         /// View id from `tree` or `view`
         view_id:    String,
@@ -193,8 +196,7 @@ async fn send(client: &Client, command: InspectorCommand) -> Result<AppCommand> 
 }
 
 async fn get_ui(client: &Client) -> Result<(f32, Own<ViewRepr>)> {
-    let AppCommand::UI(UIResponse::SendUI { scale, root }) =
-        send(client, UIRequest::GetUI.into()).await?
+    let AppCommand::UI(UIResponse::SendUI { scale, root }) = send(client, UIRequest::GetUI.into()).await?
     else {
         bail!("Unexpected response to get ui");
     };

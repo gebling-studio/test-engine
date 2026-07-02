@@ -20,6 +20,7 @@ impl Input {
     }
 
     pub fn on_key(key: NamedKey) {
+        UIManager::keymap().check(key);
         UIEvents::keyboard_key().trigger(key);
     }
 

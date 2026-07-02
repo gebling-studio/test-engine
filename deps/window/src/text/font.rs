@@ -5,6 +5,7 @@ use gm::LossyConvert;
 use log::error;
 use refs::{
     Weak,
+    main_lock::MainLock,
     manage::{DataManager, ResourceLoader},
     managed,
 };
@@ -42,13 +43,44 @@ impl Font {
     }
 }
 
+static DEFAULT_FONT: MainLock<Option<Weak<Font>>> = MainLock::new();
+
 impl Font {
     #[allow(clippy::should_implement_trait)]
     pub fn default() -> Weak<Font> {
-        Self::store_with_name("default", || {
+        if let Some(font) = *DEFAULT_FONT
+            && font.is_ok()
+        {
+            return font;
+        }
+        Self::helvetica()
+    }
+
+    pub fn set_default(font: Weak<Font>) {
+        *DEFAULT_FONT.get_mut() = Some(font);
+    }
+
+    pub fn reset_default() {
+        *DEFAULT_FONT.get_mut() = None;
+    }
+
+    pub fn helvetica() -> Weak<Font> {
+        Self::store_with_name("Helvetica.ttf", || {
             Self::new("Helvetica.ttf", include_bytes!("fonts/Helvetica.ttf"))
         })
-        .expect("Failed to load default font")
+        .expect("Failed to load Helvetica font")
+    }
+
+    pub fn san_francisco() -> Weak<Font> {
+        Self::store_with_name("SF.otf", || Self::new("SF.otf", include_bytes!("fonts/SF.otf")))
+            .expect("Failed to load San Francisco font")
+    }
+
+    pub fn roboto() -> Weak<Font> {
+        Self::store_with_name("Roboto-Regular.ttf", || {
+            Self::new("Roboto-Regular.ttf", include_bytes!("fonts/Roboto-Regular.ttf"))
+        })
+        .expect("Failed to load Roboto font")
     }
 }
 

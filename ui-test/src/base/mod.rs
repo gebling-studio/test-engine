@@ -8,6 +8,7 @@ use crate::base::{
     // dispatch::test_dispatch,
     global_styles::test_global_styles,
     keymap::test_keymap,
+    keymap_named_key::test_keymap_named_key,
     layout::test_layout,
     modal_test::test_modal,
     on_tap_add::test_add_on_tap,
@@ -33,6 +34,7 @@ mod corner_radius;
 mod dispatch;
 mod global_styles;
 mod keymap;
+mod keymap_named_key;
 mod layout;
 mod modal_test;
 mod on_tap_add;
@@ -79,6 +81,7 @@ pub async fn test_base_ui() -> anyhow::Result<()> {
     test_touch_stack().await?;
     test_selection().await?;
     test_keymap().await?;
+    test_keymap_named_key().await?;
     test_layout().await?;
 
     Ok(())

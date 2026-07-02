@@ -14,7 +14,7 @@ pub use ui_drawer::UIDrawer;
 pub use ui_proc::view;
 pub use views::*;
 pub use window::{
-    PolygonMode, Screenshot,
+    Font, PolygonMode, Screenshot,
     image::{Image, NoImage, Tinted},
 };
 
