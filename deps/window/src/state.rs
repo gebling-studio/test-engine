@@ -54,6 +54,7 @@ pub struct State {
     pub(crate) frame_counter: FrameCounter,
 
     offscreen_texture: Option<wgpu::Texture>,
+    scene_texture:     Option<wgpu::Texture>,
     depth_texture:     Option<Texture>,
 
     update_work: f32,
@@ -78,6 +79,7 @@ impl Default for State {
             read_display_request:                     RefCell::default(),
             frame_counter:                            FrameCounter::default(),
             offscreen_texture:                        None,
+            scene_texture:                            None,
             depth_texture:                            None,
             update_work:                              0.0,
             frame_work_time:                          0.0,
@@ -221,6 +223,10 @@ impl State {
 
         let work_started = Instant::now();
 
+        for font in Font::storage_mut().values_mut() {
+            font.brush.next_frame();
+        }
+
         if surface_texture.is_none() {
             self.ensure_offscreen_texture();
         }
@@ -229,12 +235,34 @@ impl State {
         #[cfg(feature = "bench")]
         self.ensure_gpu_timer();
 
+        // The surface cannot be sampled, so a frame that has to read
+        // itself back renders into an intermediate scene texture and
+        // is copied to the surface at the end. The headless offscreen
+        // texture is sampleable as is. Frames that do not sample skip
+        // all of this and render straight to the target.
+        let needs_sampling = AppHandler::current().te_window_events.needs_sampleable_frame();
+
+        if needs_sampling && surface_texture.is_some() {
+            self.ensure_scene_texture();
+        }
+
         let texture = match &surface_texture {
             Some(surface_texture) => &surface_texture.texture,
             None => self.offscreen_texture.as_ref().unwrap(),
         };
 
-        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let target_view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+
+        let (scene_view, present_view) = if needs_sampling && surface_texture.is_some() {
+            let scene = self.scene_texture.as_ref().unwrap();
+            (
+                scene.create_view(&wgpu::TextureViewDescriptor::default()),
+                Some(target_view),
+            )
+        } else {
+            (target_view, None)
+        };
+
         let encoder = Window::device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("Render Encoder"),
         });
@@ -250,8 +278,9 @@ impl State {
 
         let mut frame = RenderFrame::new(
             encoder,
-            &view,
-            &self.depth_texture.as_ref().unwrap().view,
+            scene_view,
+            present_view,
+            self.depth_texture.as_ref().unwrap().view.clone(),
             self.clear_color,
             timestamp_writes,
         );
@@ -415,7 +444,42 @@ impl State {
             sample_count:    1,
             dimension:       wgpu::TextureDimension::D2,
             format:          SURFACE_TEXTURE_FORMAT,
-            usage:           wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            usage:           wgpu::TextureUsages::RENDER_ATTACHMENT
+                | wgpu::TextureUsages::COPY_SRC
+                | wgpu::TextureUsages::TEXTURE_BINDING,
+            view_formats:    &[],
+        }));
+    }
+
+    /// Intermediate render target for frames that sample themselves,
+    /// for example for backdrop blur. Windowed only, the headless
+    /// offscreen texture is sampleable directly.
+    fn ensure_scene_texture(&mut self) {
+        let size = Window::render_size();
+        let width: u32 = size.width.lossy_convert();
+        let height: u32 = size.height.lossy_convert();
+
+        let up_to_date = self
+            .scene_texture
+            .as_ref()
+            .is_some_and(|texture| texture.size().width == width && texture.size().height == height);
+
+        if up_to_date {
+            return;
+        }
+
+        self.scene_texture = Some(Window::device().create_texture(&wgpu::TextureDescriptor {
+            label:           Some("Scene Render Texture"),
+            size:            wgpu::Extent3d {
+                width,
+                height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count:    1,
+            dimension:       wgpu::TextureDimension::D2,
+            format:          SURFACE_TEXTURE_FORMAT,
+            usage:           wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
             view_formats:    &[],
         }));
     }

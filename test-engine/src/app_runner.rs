@@ -321,9 +321,12 @@ impl window::WindowEvents for AppRunner {
             return;
         }
 
-        let pass = frame.pass();
-        LevelDrawer::draw(pass);
-        UIDrawer::draw(pass);
+        LevelDrawer::draw(frame.pass());
+        UIDrawer::draw(frame);
+    }
+
+    fn needs_sampleable_frame(&self) -> bool {
+        UIDrawer::needs_sampleable_frame()
     }
 
     fn resize(&mut self, inner_pos: Point, outer_pos: Point, inner_size: Size, outer_size: Size) {

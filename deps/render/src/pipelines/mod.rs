@@ -8,6 +8,8 @@ mod background_pipeline;
 mod pipeline_type;
 mod polygon_pipeline;
 mod rect_pipeline;
+mod ui_backdrop_pipeline;
+mod ui_blur_pipeline;
 mod ui_path_pipeline;
 
 const SPRITE_CODE: &str = include_str!("shaders/sprite.wgsl");
@@ -40,6 +42,8 @@ pub type UIShadowPipeline =
 
 pub use background_pipeline::BackgroundPipeline;
 pub use polygon_pipeline::PolygonPipeline;
+pub use ui_backdrop_pipeline::UIBackdropPipeline;
+pub use ui_blur_pipeline::UIBlurPipeline;
 pub use ui_path_pipeline::UIPathPipeline;
 
 use crate::data::{UIGradientInstance, UIImageInstance, UIShadowInstance};

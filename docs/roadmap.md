@@ -49,7 +49,13 @@ dedicated `ScrimView` drawn after every other pipeline including text, so it dim
 images, gradients and glyphs behind it, while the modal above keeps the depth buffer
 and stays bright. A plain translucent rect could not do this, it erased later
 pipelines through the depth test instead of dimming them. These unblocked the reader
-card grid spacing and the dialog dim.
+card grid spacing and the dialog dim. Backdrop blur landed as `BlurView` with
+`set_blur_radius`, its color acting as a tint over the blur. It shows a blurred copy
+of everything drawn before it in tree order inside its frame and corner radii, while
+its subviews stay crisp on top. The frame splits into several render passes at the
+blur view, the scene downsamples to quarter resolution, gets a separable gaussian
+blur, and composites back through a dedicated backdrop pipeline. A frame without a
+blur view keeps the old single pass path. This unblocked the frosted sticky header.
 
 ## 1. Text stack rework
 
@@ -68,10 +74,10 @@ Found by the FontZoo emoji page. Parked until a real need, the items above come 
 
 ## 2. Small niceties
 
-- Backdrop blur for the sticky header and the modal scrim. Render pass work,
-  lowest priority.
+- Backdrop blur for the modal scrim, an opt-in override on `ModalView` like
+  `modal_scrim_color`. The `BlurView` mechanism it needs is already in.
 
 ## Suggested order
 
-The backdrop blur is the last visual parity gap. The text stack rework waits for
-a real need for color emoji or complex scripts.
+The modal scrim blur is the last visual parity gap. The text stack rework waits
+for a real need for color emoji or complex scripts.

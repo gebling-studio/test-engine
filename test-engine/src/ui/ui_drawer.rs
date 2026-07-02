@@ -7,16 +7,17 @@ use gm::{
 };
 use refs::{Weak, main_lock::MainLock};
 use render::{
-    UIGradientPipeline, UIImageRectPipeline, UIRectPipeline, UIShadowPipeline,
+    UIBackdropPipeline, UIBlurPipeline, UIGradientPipeline, UIImageRectPipeline, UIRectPipeline,
+    UIShadowPipeline,
     data::{RectView, UIGradientInstance, UIImageInstance, UIRectInstance, UIShadowInstance},
 };
 use ui::{
-    ImageView, Label, ScrimView, TextAlignment, UIManager, View, ViewData, ViewFrame, ViewLayout,
-    ViewSubviews,
+    BlurView, ImageView, Label, ScrimView, TextAlignment, UIManager, View, ViewData, ViewFrame,
+    ViewLayout, ViewSubviews,
 };
 use wgpu::RenderPass;
 use wgpu_text::glyph_brush::{BuiltInLineBreaker, HorizontalAlign, Layout, Section, Text, VerticalAlign};
-use window::{Font, Window};
+use window::{Font, RenderFrame, Window};
 
 use crate::pipelines::Pipelines;
 
@@ -24,18 +25,40 @@ static GRADIENT_DRAWER: MainLock<UIGradientPipeline> = MainLock::new();
 static IMAGE_RECT_DRAWER: MainLock<UIImageRectPipeline> = MainLock::new();
 static SHADOW_DRAWER: MainLock<UIShadowPipeline> = MainLock::new();
 static SCRIM_DRAWER: MainLock<UIRectPipeline> = MainLock::new();
+static BLUR_DRAWER: MainLock<UIBlurPipeline> = MainLock::new();
+static BACKDROP_DRAWER: MainLock<UIBackdropPipeline> = MainLock::new();
+
+/// Set during update when a visible `BlurView` wants a blur, read by
+/// the window before it picks the frame's render target.
+static NEEDS_SAMPLING: MainLock<bool> = MainLock::new();
 
 type TextSections<'a> = Vec<(Weak<Font>, Vec<Section<'a>>)>;
+
+struct DrawContext<'a> {
+    text_sections: TextSections<'a>,
+    debug_frames:  bool,
+    scale:         f32,
+    resolution:    Size,
+    /// What the current pass has set, reapplied after a blur barrier
+    /// reopens the pass.
+    scissor:       Rect<u32>,
+    display:       Rect<u32>,
+}
 
 pub struct UIDrawer;
 
 impl UIDrawer {
     pub(crate) fn update() {
         UIManager::commit_animations();
+        *NEEDS_SAMPLING.get_mut() = false;
         Self::update_view(UIManager::root_view().deref_mut());
     }
 
-    pub(crate) fn draw(pass: &mut RenderPass) {
+    pub(crate) fn needs_sampleable_frame() -> bool {
+        *NEEDS_SAMPLING
+    }
+
+    pub(crate) fn draw(render_frame: &mut RenderFrame) {
         let resolution = UIManager::window_resolution();
         let display_rect: Rect<u32> = Size::<u32>::new(
             resolution.width.lossy_convert(),
@@ -43,38 +66,39 @@ impl UIDrawer {
         )
         .into();
 
-        let debug_frames = UIManager::should_draw_debug_frames();
-        let scale = UIManager::scale();
-
-        let mut text_sections: TextSections = vec![];
-
-        Self::draw_view(
-            pass,
-            UIManager::root_view_static(),
-            &mut text_sections,
-            debug_frames,
-            scale,
+        let mut ctx = DrawContext {
+            text_sections: vec![],
+            debug_frames: UIManager::should_draw_debug_frames(),
+            scale: UIManager::scale(),
             resolution,
-        );
+            scissor: display_rect,
+            display: display_rect,
+        };
 
-        Self::flush_pipelines(pass, resolution);
-        scissor(pass, display_rect);
+        Self::draw_view(render_frame, UIManager::root_view_static(), &mut ctx);
 
-        for (mut font, sections) in text_sections {
-            font.brush.queue(Window::device(), Window::queue(), sections).unwrap();
-            font.brush.draw(pass);
-        }
+        Self::flush_pipelines(render_frame.pass(), resolution);
+        scissor(render_frame.pass(), display_rect);
+
+        Self::flush_text(render_frame.pass(), &mut ctx.text_sections);
 
         // The scrim flushes after everything including text, so its
         // translucent color dims the whole frame drawn so far. The
         // modal above it owns the depth buffer and stays untouched.
         SCRIM_DRAWER.get_mut().draw(
-            pass,
+            render_frame.pass(),
             RectView {
                 resolution,
                 _padding: 0,
             },
         );
+
+        // When the frame rendered into the intermediate scene texture,
+        // copy the finished scene to the real surface.
+        let scene = render_frame.scene_view().clone();
+        if let Some(pass) = render_frame.present_pass() {
+            BLUR_DRAWER.get_mut().present(pass, &scene);
+        }
     }
 
     fn flush_pipelines(pass: &mut RenderPass, resolution: Size) {
@@ -94,6 +118,50 @@ impl UIDrawer {
         SHADOW_DRAWER.get_mut().draw(pass, rect_view);
     }
 
+    fn flush_text(pass: &mut RenderPass, text_sections: &mut TextSections) {
+        for (mut font, sections) in text_sections.drain(..) {
+            font.brush.queue(Window::device(), Window::queue(), sections).unwrap();
+            font.brush.draw(pass);
+        }
+    }
+
+    /// Everything drawn so far flushes into the scene texture and gets
+    /// blurred, then the pass reopens and the blurred backdrop draws
+    /// at the view's frame. Subviews and later views draw on top.
+    fn blur_barrier(render_frame: &mut RenderFrame, view: &BlurView, frame: &Rect, ctx: &mut DrawContext) {
+        Self::flush_pipelines(render_frame.pass(), ctx.resolution);
+        Self::flush_text(render_frame.pass(), &mut ctx.text_sections);
+
+        let (encoder, scene) = render_frame.split();
+        BLUR_DRAWER.get_mut().blur(
+            encoder,
+            scene,
+            ctx.resolution.lossy_convert(),
+            view.blur_radius() * ctx.scale,
+        );
+
+        let pass = render_frame.pass();
+        scissor(pass, ctx.scissor);
+
+        BACKDROP_DRAWER.get_mut().draw(
+            pass,
+            RectView {
+                resolution: ctx.resolution,
+                _padding:   0,
+            },
+            UIRectInstance::new(
+                *frame,
+                *view.color(),
+                *view.border_color(),
+                view.border_width(),
+                view.corner_radii(),
+                view.z_position(),
+                ctx.scale,
+            ),
+            BLUR_DRAWER.output_bind(),
+        );
+    }
+
     fn update_view(view: &mut dyn View) {
         if view.is_hidden() {
             return;
@@ -102,6 +170,12 @@ impl UIDrawer {
         view.calculate_absolute_frame();
         view.update();
         view.trigger_events();
+
+        if let Some(blur) = view.as_any().downcast_ref::<BlurView>()
+            && blur.blur_radius() > 0.0
+        {
+            *NEEDS_SAMPLING.get_mut() = true;
+        }
 
         // A child's update() may add views to this list, reallocating it.
         // Indexing re-borrows the list on every step, so only the Weak is
@@ -115,38 +189,33 @@ impl UIDrawer {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn draw_view<'a>(
-        pass: &mut RenderPass<'a>,
-        view: &'a dyn View,
-        text_sections: &mut TextSections<'a>,
-        debug_frames: bool,
-        scale: f32,
-        resolution: Size,
-    ) {
+    fn draw_view<'a>(render_frame: &mut RenderFrame, view: &'a dyn View, ctx: &mut DrawContext<'a>) {
         let frame = *view.absolute_frame();
 
         if view.is_hidden() || frame.size.has_no_area() {
             return;
         }
 
-        view.before_render(pass);
+        view.before_render(render_frame.pass());
 
         let clips = view.clips_to_bounds();
 
         if clips {
-            Self::flush_pipelines(pass, resolution);
-            let mut frame = frame * scale;
+            Self::flush_pipelines(render_frame.pass(), ctx.resolution);
+            let mut frame = frame * ctx.scale;
             frame.origin.clip_positive();
 
-            if frame.max_x() > resolution.width {
-                frame.size.width -= frame.max_x() - resolution.width;
+            if frame.max_x() > ctx.resolution.width {
+                frame.size.width -= frame.max_x() - ctx.resolution.width;
             }
 
-            if frame.max_y() > resolution.height {
-                frame.size.height -= frame.max_y() - resolution.height;
+            if frame.max_y() > ctx.resolution.height {
+                frame.size.height -= frame.max_y() - ctx.resolution.height;
             }
 
-            scissor(pass, frame.lossy_convert());
+            let clip_rect: Rect<u32> = frame.lossy_convert();
+            scissor(render_frame.pass(), clip_rect);
+            ctx.scissor = clip_rect;
         }
 
         if let Some(shadow) = view.shadow()
@@ -160,11 +229,15 @@ impl UIDrawer {
                 corner_radii: view.corner_radii(),
                 blur: shadow.radius,
                 z_position: view.z_position(),
-                scale,
+                scale: ctx.scale,
             });
         }
 
-        if view.as_any().downcast_ref::<ScrimView>().is_some() {
+        if let Some(blur) = view.as_any().downcast_ref::<BlurView>()
+            && blur.blur_radius() > 0.0
+        {
+            Self::blur_barrier(render_frame, blur, &frame, ctx);
+        } else if view.as_any().downcast_ref::<ScrimView>().is_some() {
             if view.color().a > 0.0 {
                 SCRIM_DRAWER.get_mut().add(UIRectInstance::new(
                     frame,
@@ -173,7 +246,7 @@ impl UIDrawer {
                     view.border_width(),
                     view.corner_radii(),
                     view.z_position(),
-                    scale,
+                    ctx.scale,
                 ));
             }
         } else if view.end_gradient_color().a > 0.0 {
@@ -184,7 +257,7 @@ impl UIDrawer {
                 end_color: *view.end_gradient_color(),
                 corner_radii: view.corner_radii(),
                 z_position: view.z_position(),
-                scale,
+                scale: ctx.scale,
             });
         } else if view.color().a > 0.0 || view.border_color().a > 0.0 {
             Pipelines::rect().add(UIRectInstance::new(
@@ -194,7 +267,7 @@ impl UIDrawer {
                 view.border_width(),
                 view.corner_radii(),
                 view.z_position(),
-                scale,
+                ctx.scale,
             ));
         }
 
@@ -211,7 +284,7 @@ impl UIDrawer {
                         view.z_position(),
                         image_view.flip_x,
                         image_view.flip_y,
-                        scale,
+                        ctx.scale,
                     ),
                     image,
                 );
@@ -219,10 +292,10 @@ impl UIDrawer {
         } else if let Some(label) = view.as_any().downcast_ref::<Label>()
             && !label.text.is_empty()
         {
-            Self::draw_label(&frame, label, text_sections, scale);
+            Self::draw_label(&frame, label, &mut ctx.text_sections, ctx.scale);
         }
 
-        if debug_frames {
+        if ctx.debug_frames {
             for rect in frame.to_borders(2.0) {
                 Pipelines::rect().add(UIRectInstance::new(
                     rect,
@@ -231,7 +304,7 @@ impl UIDrawer {
                     0.0,
                     CornerRadii::default(),
                     view.z_position() - 0.2,
-                    scale,
+                    ctx.scale,
                 ));
             }
         }
@@ -240,20 +313,14 @@ impl UIDrawer {
 
         for view in view.subviews() {
             if view.dont_hide() || view.absolute_frame().intersects(root_frame) {
-                Self::draw_view(pass, view.deref(), text_sections, debug_frames, scale, resolution);
+                Self::draw_view(render_frame, view.deref(), ctx);
             }
         }
 
         if clips {
-            Self::flush_pipelines(pass, resolution);
-            scissor(
-                pass,
-                Size::<u32>::new(
-                    resolution.width.lossy_convert(),
-                    resolution.height.lossy_convert(),
-                )
-                .into(),
-            );
+            Self::flush_pipelines(render_frame.pass(), ctx.resolution);
+            scissor(render_frame.pass(), ctx.display);
+            ctx.scissor = ctx.display;
         }
     }
 

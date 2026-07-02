@@ -12,6 +12,11 @@ pub trait WindowEvents {
     fn window_ready(&mut self) {}
     fn update(&mut self) {}
     fn render(&mut self, _frame: &mut RenderFrame) {}
+    /// Whether this frame must render into a texture that can be
+    /// sampled mid frame, for example to blur the drawn scene.
+    fn needs_sampleable_frame(&self) -> bool {
+        false
+    }
     fn resize(&mut self, _inner_pos: Point, _outer_pos: Point, _inner_size: Size, _outer_size: Size) {}
     fn mouse_moved(&mut self, _position: Point) -> bool {
         false

@@ -7286,7 +7286,7 @@ dependencies = [
 [[package]]
 name = "wgpu_text"
 version = "29.0.0"
-source = "git+https://github.com/VladasZ/wgpu-text?rev=bc69675bf8e8609c2ee6862700cdcc7e27548bf4#bc69675bf8e8609c2ee6862700cdcc7e27548bf4"
+source = "git+https://github.com/VladasZ/wgpu-text?rev=e6660d338c93e009ceab0a5b2299409bac69d809#e6660d338c93e009ceab0a5b2299409bac69d809"
 dependencies = [
  "bytemuck",
  "glyph_brush",

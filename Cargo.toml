@@ -114,5 +114,5 @@ window = { path = "deps/window" }
 #wgpu = { path = "../3/wgpu/wgpu" }
 #vents = { path = "../deps/vents/vents" }
 #reflected = { path = "../deps/reflected/reflected" }
-wgpu_text = { git = "https://github.com/VladasZ/wgpu-text", rev = "bc69675bf8e8609c2ee6862700cdcc7e27548bf4" }
+wgpu_text = { git = "https://github.com/VladasZ/wgpu-text", rev = "e6660d338c93e009ceab0a5b2299409bac69d809" }
 #hreads = { path = "../deps/hreads" }
