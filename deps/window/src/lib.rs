@@ -26,4 +26,5 @@ pub use window_events::*;
 pub use winit::{
     event::{ElementState, MouseButton},
     keyboard::NamedKey,
+    window::Theme,
 };

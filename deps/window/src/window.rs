@@ -87,6 +87,12 @@ impl Window {
         Self::current().screen.winit_window()
     }
 
+    /// The OS theme. `None` in headless mode or when the OS does not
+    /// report one.
+    pub fn system_theme() -> Option<winit::window::Theme> {
+        Self::winit_window()?.theme()
+    }
+
     pub fn inner_size() -> Size {
         match &Self::current().screen {
             Screen::Windowed { winit_window, .. } => {

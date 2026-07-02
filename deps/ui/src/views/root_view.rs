@@ -1,14 +1,11 @@
-use gm::{
-    color::Color,
-    flat::{Point, Size},
-};
+use gm::flat::{Point, Size};
 use plat::Platform;
 use refs::{Own, Weak};
 use ui_proc::view;
 use window::image::ToImage;
 
 use crate::{
-    Container, ImageMode, ImageView, View, ViewData, ViewFrame, ViewSubviews, WeakView, view::Setup,
+    Container, ImageMode, ImageView, UIColor, View, ViewData, ViewFrame, ViewSubviews, WeakView, view::Setup,
 };
 
 #[view(crate = crate::__macro_root)]
@@ -41,7 +38,7 @@ impl RootView {
         self.screen.remove_all_subviews();
     }
 
-    pub fn set_color(self: Weak<Self>, color: impl Into<Color>) -> Weak<Self> {
+    pub fn set_color(self: Weak<Self>, color: impl Into<UIColor>) -> Weak<Self> {
         self.background.set_color(color.into());
         self
     }

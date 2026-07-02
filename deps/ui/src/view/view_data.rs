@@ -4,7 +4,7 @@ use gm::{ToF32, color::Color};
 use refs::{Own, Weak, weak_from_ref};
 use vents::Event;
 
-use crate::{NavigationView, Style, UIAnimation, UIManager, View, WeakView, layout::Placer};
+use crate::{NavigationView, Style, UIAnimation, UIColor, UIManager, View, WeakView, layout::Placer};
 
 pub trait ViewData {
     fn tag(&self) -> usize;
@@ -17,13 +17,13 @@ pub trait ViewData {
     fn content_offset(&self) -> f32;
 
     fn color(&self) -> &Color;
-    fn set_color(&self, color: impl Into<Color>) -> &Self;
+    fn set_color(&self, color: impl Into<UIColor>) -> &Self;
 
     fn end_gradient_color(&self) -> &Color;
     fn set_gradient(&self, start: impl Into<Color>, end: impl Into<Color>) -> &Self;
 
     fn border_color(&self) -> &Color;
-    fn set_border_color(&self, color: impl Into<Color>) -> &Self;
+    fn set_border_color(&self, color: impl Into<UIColor>) -> &Self;
 
     fn border_width(&self) -> f32;
     fn set_border_width(&self, width: impl ToF32) -> &Self;
@@ -84,9 +84,19 @@ impl<T: ?Sized + View> ViewData for T {
         &self.__base_view().color
     }
 
-    fn set_color(&self, color: impl Into<Color>) -> &Self {
-        self.__base_view().color = color.into();
-        self.__base_view().end_gradient_color = Color::default();
+    fn set_color(&self, color: impl Into<UIColor>) -> &Self {
+        let base = self.__base_view();
+        match color.into() {
+            UIColor::Plain(color) => {
+                base.color = color;
+                base.dynamic_color = None;
+            }
+            UIColor::Dynamic(color) => {
+                base.color = color.resolve();
+                base.dynamic_color = Some(color);
+            }
+        }
+        base.end_gradient_color = Color::default();
         self
     }
 
@@ -95,8 +105,10 @@ impl<T: ?Sized + View> ViewData for T {
     }
 
     fn set_gradient(&self, start: impl Into<Color>, end: impl Into<Color>) -> &Self {
-        self.__base_view().color = start.into();
-        self.__base_view().end_gradient_color = end.into();
+        let base = self.__base_view();
+        base.color = start.into();
+        base.end_gradient_color = end.into();
+        base.dynamic_color = None;
         self
     }
 
@@ -104,8 +116,18 @@ impl<T: ?Sized + View> ViewData for T {
         &self.__base_view().border_color
     }
 
-    fn set_border_color(&self, color: impl Into<Color>) -> &Self {
-        self.__base_view().border_color = color.into();
+    fn set_border_color(&self, color: impl Into<UIColor>) -> &Self {
+        let base = self.__base_view();
+        match color.into() {
+            UIColor::Plain(color) => {
+                base.border_color = color;
+                base.dynamic_border_color = None;
+            }
+            UIColor::Dynamic(color) => {
+                base.border_color = color.resolve();
+                base.dynamic_border_color = Some(color);
+            }
+        }
         self
     }
 
@@ -210,6 +232,8 @@ impl<T: ?Sized + View> ViewData for T {
         let this = self.weak_view();
         this.set_color(*other.color());
         this.set_border_color(*other.border_color());
+        this.__base_view().dynamic_color = other.__base_view().dynamic_color;
+        this.__base_view().dynamic_border_color = other.__base_view().dynamic_border_color;
         this.set_border_width(other.border_width());
         this.set_corner_radius(other.corner_radius());
         self

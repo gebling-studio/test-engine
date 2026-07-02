@@ -7,7 +7,7 @@ use ui_proc::view;
 use vents::Event;
 use window::image::NoImage;
 
-use crate::{Button, Container, Setup, Style, ToLabel, UIImages, view::ViewData};
+use crate::{Button, Container, Setup, Style, ToLabel, UIColor, UIImages, view::ViewData};
 
 #[view(crate = crate::__macro_root)]
 pub struct NumberView {
@@ -114,7 +114,7 @@ impl NumberView {
         self.up.text_color()
     }
 
-    pub fn set_text_color(&self, color: impl Into<Color>) -> &Self {
+    pub fn set_text_color(&self, color: impl Into<UIColor>) -> &Self {
         let color = color.into();
         self.up.set_text_color(color);
         self.down.set_text_color(color);

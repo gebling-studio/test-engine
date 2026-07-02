@@ -2,7 +2,10 @@ use std::path::PathBuf;
 
 use gm::flat::{Point, Size};
 use wgpu::RenderPass;
-use winit::event::{ElementState, KeyEvent, MouseButton, Touch};
+use winit::{
+    event::{ElementState, KeyEvent, MouseButton, Touch},
+    window::Theme,
+};
 
 pub trait WindowEvents {
     fn window_ready(&mut self) {}
@@ -21,4 +24,5 @@ pub trait WindowEvents {
     }
     fn key_event(&mut self, _event: KeyEvent) {}
     fn dropped_file(&mut self, _path: PathBuf) {}
+    fn theme_changed(&mut self, _theme: Theme) {}
 }

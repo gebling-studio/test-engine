@@ -3,7 +3,7 @@ use refs::main_lock::MainLock;
 use vents::Event;
 use window::NamedKey;
 
-use crate::{Touch, UIEvent};
+use crate::{Theme, Touch, UIEvent};
 
 static UI_EVENTS: MainLock<UIEvents> = MainLock::new();
 
@@ -13,6 +13,7 @@ pub struct UIEvents {
     on_scroll:      UIEvent<Point>,
     on_debug_touch: Event<Touch>,
     size_changed:   UIEvent<()>,
+    theme_changed:  UIEvent<Theme>,
     gyro:           UIEvent<GyroData>,
     keyboard_input: UIEvent<char>,
     keyboard_key:   UIEvent<NamedKey>,
@@ -34,6 +35,11 @@ impl UIEvents {
 
     pub fn size_changed() -> &'static UIEvent<()> {
         &UI_EVENTS.size_changed
+    }
+
+    /// Triggered after the effective theme changes, with the new theme.
+    pub fn theme_changed() -> &'static UIEvent<Theme> {
+        &UI_EVENTS.theme_changed
     }
 
     pub fn keyboard_input() -> &'static UIEvent<char> {

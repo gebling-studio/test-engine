@@ -4,7 +4,7 @@ use crate::views::basic::{
     inject_touch::test_inject_touch, label::test_label, label_fit_text::test_label_fit_text,
     label_font::test_label_font, label_image::test_label_image, label_measure::test_label_measure,
     multiline_label::test_multiline, nine_segment::test_nine_segment, slider::test_slider,
-    switch::test_switch, text_field::test_text_field,
+    switch::test_switch, text_field::test_text_field, theme_switch::test_theme_switch,
 };
 
 mod background;
@@ -25,6 +25,7 @@ mod nine_segment;
 mod slider;
 mod switch;
 mod text_field;
+mod theme_switch;
 
 pub async fn test_base_views() -> anyhow::Result<()> {
     test_custom_text_field().await?;
@@ -44,6 +45,7 @@ pub async fn test_base_views() -> anyhow::Result<()> {
     test_slider().await?;
     test_switch().await?;
     test_text_field().await?;
+    test_theme_switch().await?;
 
     Ok(())
 }

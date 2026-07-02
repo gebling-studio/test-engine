@@ -9,9 +9,9 @@ use hreads::{from_main, invoke_dispatched, is_main_thread, wait_for_next_frame};
 use level::LevelManager;
 use log::debug;
 use refs::{Own, main_lock::MainLock};
-use ui::{Touch, TouchEvent, UIEvents, UIManager, View, ViewData, ViewSubviews, WeakView};
+use ui::{Theme, Touch, TouchEvent, UIEvents, UIManager, View, ViewData, ViewSubviews, WeakView};
 use wgpu::RenderPass;
-use window::{ElementState, MouseButton, Screenshot, Window};
+use window::{ElementState, MouseButton, Screenshot, Theme as OsTheme, Window};
 use winit::{
     event::{KeyEvent, TouchPhase},
     keyboard::Key,
@@ -275,6 +275,10 @@ impl window::WindowEvents for AppRunner {
 
             debug!("UI initialized");
 
+            if let Some(theme) = Window::system_theme() {
+                Theme::set_system(theme.into());
+            }
+
             #[cfg(not_wasm)]
             {
                 #[cfg(desktop)]
@@ -384,5 +388,9 @@ impl window::WindowEvents for AppRunner {
 
     fn dropped_file(&mut self, path: PathBuf) {
         UIManager::trigger_drop_file(path);
+    }
+
+    fn theme_changed(&mut self, theme: OsTheme) {
+        Theme::set_system(theme.into());
     }
 }

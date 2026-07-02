@@ -11,7 +11,7 @@ use ui_proc::view;
 use window::{Font, image::ToImage};
 
 use crate::{
-    ImageView, Setup, Style, ToLabel, UIManager, View, ViewFrame,
+    DynamicColor, ImageView, Setup, Style, ToLabel, UIColor, UIManager, View, ViewCallbacks, ViewFrame,
     view::{ViewData, ViewSubviews},
 };
 
@@ -42,6 +42,8 @@ pub struct Label {
     #[educe(Default = BLACK)]
     text_color: Color,
 
+    dynamic_text_color: Option<DynamicColor>,
+
     #[educe(Default = DEFAULT_TEXT_SIZE.load(Ordering::Relaxed))]
     text_size: f32,
 
@@ -62,8 +64,18 @@ impl Label {
         &self.text_color
     }
 
-    pub fn set_text_color(&self, color: impl Into<Color>) -> &Self {
-        weak_from_ref(self).text_color = color.into();
+    pub fn set_text_color(&self, color: impl Into<UIColor>) -> &Self {
+        let mut this = weak_from_ref(self);
+        match color.into() {
+            UIColor::Plain(color) => {
+                this.text_color = color;
+                this.dynamic_text_color = None;
+            }
+            UIColor::Dynamic(color) => {
+                this.text_color = color.resolve();
+                this.dynamic_text_color = Some(color);
+            }
+        }
         self
     }
 
@@ -171,6 +183,14 @@ impl Label {
 impl Setup for Label {
     fn setup(self: Weak<Self>) {
         Style::apply_global(self);
+    }
+}
+
+impl ViewCallbacks for Label {
+    fn theme_changed(&mut self) {
+        if let Some(color) = self.dynamic_text_color {
+            self.text_color = color.resolve();
+        }
     }
 }
 

@@ -172,6 +172,9 @@ impl ApplicationHandler<Window> for AppHandler {
             WindowEvent::DroppedFile(path) => {
                 self.te_window_events.dropped_file(path);
             }
+            WindowEvent::ThemeChanged(theme) => {
+                self.te_window_events.theme_changed(theme);
+            }
             WindowEvent::Resized(_physical_size) => {
                 if self.state.not_ready() {
                     return;

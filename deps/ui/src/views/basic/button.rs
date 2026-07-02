@@ -9,7 +9,7 @@ use ui_proc::view;
 use window::image::ToImage;
 
 use crate::{
-    ImageView, Label, Setup, Style, ToLabel, UIEvent, UIManager, View, ViewSubviews, ViewTransition,
+    ImageView, Label, Setup, Style, ToLabel, UIColor, UIEvent, UIManager, View, ViewSubviews, ViewTransition,
     view::{ViewData, ViewTouch},
 };
 
@@ -38,7 +38,7 @@ impl Button {
         self.label.text_color()
     }
 
-    pub fn set_text_color(&self, color: impl Into<Color>) -> &Self {
+    pub fn set_text_color(&self, color: impl Into<UIColor>) -> &Self {
         self.label.set_text_color(color);
         self
     }

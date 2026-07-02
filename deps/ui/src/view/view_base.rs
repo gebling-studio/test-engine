@@ -5,7 +5,7 @@ use gm::{color::Color, flat::Rect};
 use refs::{Own, Weak};
 use vents::{Event, OnceEvent};
 
-use crate::{NavigationView, Touch, UIEvent, View, WeakView, layout::Placer};
+use crate::{DynamicColor, NavigationView, Touch, UIEvent, View, WeakView, layout::Placer};
 
 #[derive(Educe)]
 #[educe(Default, Debug)]
@@ -13,14 +13,19 @@ pub struct ViewBase {
     pub(crate) color: Color,
 
     #[educe(Debug(ignore))]
+    pub(crate) dynamic_color: Option<DynamicColor>,
+
+    #[educe(Debug(ignore))]
     pub(crate) end_gradient_color: Color,
 
     #[educe(Debug(ignore))]
-    pub(crate) corner_radius: f32,
+    pub(crate) corner_radius:        f32,
     #[educe(Debug(ignore))]
-    pub(crate) border_color:  Color,
+    pub(crate) border_color:         Color,
     #[educe(Debug(ignore))]
-    pub(crate) border_width:  f32,
+    pub(crate) dynamic_border_color: Option<DynamicColor>,
+    #[educe(Debug(ignore))]
+    pub(crate) border_width:         f32,
 
     #[allow(clippy::pub_underscore_fields)]
     pub __content_offset: f32,

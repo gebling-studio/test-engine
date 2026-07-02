@@ -24,32 +24,27 @@ min and max clamps. Flow-wrap layout landed as the `all_wrap` placer tiling rule
 Subviews flow left to right in declaration order and wrap into rows, children keep
 their own sizes including fit-to-text, hidden children take no space, and the
 container height follows the content. Row and item gaps come from `all(margin)`.
-This unblocked the skaityk reader word grid.
+This unblocked the skaityk reader word grid. Runtime theming landed as `DynamicColor`
+light and dark pairs accepted by every color setter. `Theme` picks the effective look,
+`ThemeMode` follows the OS or forces one. A switch re-resolves bound colors on the
+live view tree in one walk and fires `UIEvents::theme_changed`, the draw path keeps
+reading plain resolved colors. The OS theme arrives through winit `ThemeChanged` and
+is read once at startup. This unblocked dark mode.
 
-## 1. Runtime theming
-
-- Current: `Style` applies once, at view setup, `deps/ui/src/style.rs`.
-  `apply_globally` affects only views created after the call. No re-style of a live view
-  tree, no OS theme detection.
-- Needed: a theme switch that re-applies colors to existing views, plus system light and
-  dark detection with a change event. winit exposes the window theme and a ThemeChanged
-  event, so the platform part is mostly plumbing.
-- Blocks: dark mode. The original app follows the system theme live.
-
-## 2. Hover events
+## 1. Hover events
 
 - Current: the input pipeline is touch only, `deps/ui/src/view/view_touch.rs`. No per-view
   hover tracking from mouse moves.
 - Needed: hover enter and exit events on the view under the cursor, desktop only.
 - Blocks: desktop polish, card lift on hover, button hover colors.
 
-## 3. Drop shadows
+## 2. Drop shadows
 
 - Current: the rect pipeline draws fill, border and corner radius. No shadow.
 - Needed: shadow rendering under rounded rects plus shadow parameters on `ViewData`.
 - Blocks: card elevation, the original uses a small resting shadow and a larger hover one.
 
-## 4. Text stack rework
+## 3. Text stack rework
 
 Found by the FontZoo emoji page. Parked until a real need, the items above come first.
 
@@ -64,7 +59,7 @@ Found by the FontZoo emoji page. Parked until a real need, the items above come 
   tests.
 - Blocks: colorful emoji, complex scripts. Nothing in the driver app today.
 
-## 5. Small niceties
+## 4. Small niceties
 
 - `TableView` cell spacing. Worked around in skaityk-te with a transparent cell and an
   inset card subview.
@@ -75,7 +70,6 @@ Found by the FontZoo emoji page. Parked until a real need, the items above come 
 
 ## Suggested order
 
-Theming, then hover and shadows, then the niceties. With flow-wrap and label
-measurement in place the reader layout is unblocked, so the remaining gaps are
-app-wide look and desktop polish. The text stack rework waits for a real need for
-color emoji or complex scripts.
+Hover, then shadows, then the niceties. The reader layout and dark mode are
+unblocked, so what remains is desktop polish and small visual parity gaps. The
+text stack rework waits for a real need for color emoji or complex scripts.

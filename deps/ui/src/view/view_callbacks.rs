@@ -11,6 +11,9 @@ pub trait ViewCallbacks {
     fn before_render(&self, pass: &mut RenderPass);
     fn content_size(&self) -> &Size;
     fn clips_to_bounds(&self) -> bool;
+    /// Called after the theme switches. `ViewBase` colors are already
+    /// re-resolved, override this to re-resolve colors stored elsewhere.
+    fn theme_changed(&mut self);
 }
 
 impl<T: ?Sized + View> ViewCallbacks for T {
@@ -22,6 +25,7 @@ impl<T: ?Sized + View> ViewCallbacks for T {
     default fn clips_to_bounds(&self) -> bool {
         false
     }
+    default fn theme_changed(&mut self) {}
 }
 
 pub trait __ViewInternalSetup {

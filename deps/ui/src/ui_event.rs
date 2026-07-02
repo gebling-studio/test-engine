@@ -1,3 +1,5 @@
+use std::any::type_name;
+
 use netrun::Function;
 use parking_lot::Mutex;
 use refs::Weak;
@@ -36,6 +38,12 @@ impl<T: Send + Clone> UIEvent<T> {
     }
 
     pub fn val<U: ?Sized>(&self, subscriber: Weak<U>, action: impl FnMut(T) + Send + 'static) {
+        assert!(
+            subscriber.is_ok(),
+            "Subscribing to a UIEvent with an invalid weak pointer: {}",
+            type_name::<U>()
+        );
+
         let mut subs = self.subscribers.lock();
 
         // Remove if this view is already subscribed
@@ -53,7 +61,13 @@ impl<T: Send + Clone> UIEvent<T> {
 
     pub fn trigger(&self, val: T)
     where T: Clone {
-        let actions: Vec<_> = self.subscribers.lock().iter().map(|s| s.action.clone()).collect();
+        let actions: Vec<_> = {
+            let mut subs = self.subscribers.lock();
+            // A subscriber may be freed by the time the event fires.
+            // Calling its action would dereference a dead weak pointer.
+            subs.retain(|s| s.subscriber.is_ok());
+            subs.iter().map(|s| s.action.clone()).collect()
+        };
 
         for action in actions {
             action.call(val.clone());
