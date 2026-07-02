@@ -10,6 +10,7 @@ members = [
   "inspector",
   "render-test",
   "test-engine",
+  "te-inspect",
   "test-game",
   "test-game-android",
   "ui-test",
@@ -30,6 +31,7 @@ anyhow = "1.0"
 arbitrary = { version = "1.4", features = ["derive"] }
 async-std = "1.13"
 atomic_float = "1.1"
+base64 = "0.22"
 bit_ops = "0.2"
 bytemuck = { version = "1.25", features = ["derive"] }
 cgmath = "0.18"

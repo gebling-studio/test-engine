@@ -1,6 +1,7 @@
 #![cfg(not_wasm)]
 #![cfg(debug_assertions)]
 
+mod edit_log;
 mod inspect_service;
 mod view_conversion;
 

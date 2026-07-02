@@ -1,8 +1,11 @@
+use gm::color::Color;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InspectorCommand {
     PlaySound,
+    Screenshot,
+    ListEdits,
     UI(UIRequest),
 }
 
@@ -21,5 +24,13 @@ pub enum UIRequest {
         rule_index: usize,
         offset:     f32,
         enabled:    bool,
+    },
+    SetText {
+        view_id: String,
+        text:    String,
+    },
+    SetColor {
+        view_id: String,
+        color:   Color,
     },
 }

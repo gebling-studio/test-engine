@@ -49,6 +49,8 @@ ui-proc = { workspace = true }
 window = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+base64 = { workspace = true }
+image = { workspace = true }
 inspect = { workspace = true }
 mdns-sd = { workspace = true }
 sentry = { workspace = true }

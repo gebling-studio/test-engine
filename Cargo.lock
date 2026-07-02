@@ -2778,6 +2778,7 @@ dependencies = [
  "anyhow",
  "hreads",
  "inspect",
+ "log",
  "mdns-sd",
  "parking_lot",
  "test-engine",
@@ -6016,6 +6017,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 
 [[package]]
+name = "te-inspect"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "clap",
+ "gm",
+ "inspect",
+ "mdns-sd",
+ "refs",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "termcolor"
 version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6031,6 +6047,7 @@ dependencies = [
  "android_logger",
  "anyhow",
  "audio",
+ "base64 0.22.1",
  "chrono",
  "console_error_panic_hook",
  "console_log",
@@ -6043,6 +6060,7 @@ dependencies = [
  "gm",
  "hex",
  "hreads",
+ "image",
  "inspect",
  "level",
  "log",

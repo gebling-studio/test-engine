@@ -6,7 +6,24 @@ use crate::ui::ViewRepr;
 #[derive(Debug, Serialize, Deserialize)]
 pub enum AppCommand {
     Ok,
+    Error(String),
+    Screenshot {
+        width:      u32,
+        height:     u32,
+        png_base64: String,
+    },
+    Edits(Vec<EditEntry>),
     UI(UIResponse),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EditEntry {
+    pub timestamp: String,
+    pub view:      String,
+    pub view_id:   String,
+    pub what:      String,
+    pub old:       String,
+    pub new:       String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

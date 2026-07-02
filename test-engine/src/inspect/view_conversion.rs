@@ -1,6 +1,6 @@
 use inspect::ui::ViewRepr;
 use refs::Own;
-use ui::{View, ViewData, ViewFrame, ViewSubviews, WeakView};
+use ui::{Button, Label, TextField, View, ViewData, ViewFrame, ViewSubviews, WeakView};
 
 pub trait ViewToInspect {
     fn view_to_inspect(&self) -> Own<ViewRepr>;
@@ -12,6 +12,8 @@ impl<T: View + ?Sized> ViewToInspect for T {
             label:    self.label().to_string(),
             id:       weak_to_id(self.weak_view()),
             frame:    *self.frame(),
+            color:    *self.color(),
+            text:     text_of(self.weak_view()),
             placer:   self.placer_copy(),
             subviews: self
                 .subviews()
@@ -21,6 +23,19 @@ impl<T: View + ?Sized> ViewToInspect for T {
                 .collect(),
         })
     }
+}
+
+pub(crate) fn text_of(view: WeakView) -> Option<String> {
+    if let Some(label) = view.downcast::<Label>() {
+        return Some(label.text().to_string());
+    }
+    if let Some(button) = view.downcast::<Button>() {
+        return Some(button.text().to_string());
+    }
+    if let Some(field) = view.downcast::<TextField>() {
+        return Some(field.text().to_string());
+    }
+    None
 }
 
 pub(crate) fn weak_to_id(weak_view: WeakView) -> String {

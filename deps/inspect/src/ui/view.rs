@@ -1,4 +1,4 @@
-use gm::flat::Rect;
+use gm::{color::Color, flat::Rect};
 use refs::Own;
 use serde::{Deserialize, Serialize};
 use ui::Placer;
@@ -8,6 +8,8 @@ pub struct ViewRepr {
     pub label:    String,
     pub id:       String,
     pub frame:    Rect,
+    pub color:    Color,
+    pub text:     Option<String>,
     pub placer:   Placer,
     pub subviews: Vec<Own<ViewRepr>>,
 }
@@ -18,6 +20,8 @@ impl Default for ViewRepr {
             label:    String::default(),
             id:       String::default(),
             frame:    Rect::default(),
+            color:    Color::default(),
+            text:     None,
             placer:   Placer::empty(),
             subviews: vec![],
         }

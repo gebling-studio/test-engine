@@ -7,31 +7,53 @@ a TCP listener on an OS-assigned port, advertised over mDNS as `_te-inspect._tcp
 with the app instance id in the TXT record. No config, no fixed ports, any number of apps
 per machine.
 
-The `inspector` crate is the client GUI. It browses mDNS continuously, lists running apps
-by app id in a dropdown, filters out its own advertisement, and talks to the selected app
-over TCP.
+Two clients exist:
+
+- `inspector` — the GUI. Browses mDNS continuously, lists running apps in a dropdown,
+  filters out its own advertisement.
+- `te-inspect` — the CLI, also the interface for AI agents. Install once with
+  `cargo install --path te-inspect`, reinstall after protocol changes. Commands: `apps`,
+  `tree`, `view`, `ui`, `screenshot`, `edit-rule`, `set-text`, `set-color`, `set-scale`,
+  `edits`, `play-sound`. The last discovery is cached in the temp dir, so repeat calls
+  connect instantly and fall back to a fresh mDNS browse when the cached address is dead.
+  The agent workflow is documented in
+  [.claude/skills/test-engine/SKILL.md](../.claude/skills/test-engine/SKILL.md).
 
 ## Protocol
 
 Lives in `deps/inspect`. Length-prefixed JSON frames over TCP (`transport.rs`), request in,
 response out:
 
-- `GetUI` — returns scale and the whole view tree as `ViewRepr`.
+- `GetUI` — returns scale and the whole view tree as `ViewRepr`: labels, ids, frames,
+  colors, texts and placer rules.
 - `SetScale(f32)` — applies the scale on the main thread.
-- `EditRule { view_id, rule_index, offset, enabled }` — finds the live view by id and edits
-  its placer rule. This is what the layout rule rows in the inspector send.
+- `EditRule { view_id, rule_index, offset, enabled }` — edits a placer rule of the live
+  view. Offset applies to Side and Anchor rules and edits the ratio of Relative rules.
+- `SetText { view_id, text }` — sets the text of a live `Label`, `Button` or `TextField`.
+- `SetColor { view_id, color }` — sets the background color of a live view.
+- `Screenshot` — returns the current frame as base64 PNG. Works headless too.
+- `ListEdits` — returns every edit applied in this session.
 - `PlaySound` — plays a sound in the app, for finding which instance is which.
 
-`SetScale` and `EditRule` reply with a fresh tree snapshotted one frame later, after layout
-ran, so the client never sees stale frames. All UI access happens on the main thread via
-`from_main`. Responses hold `Own` pointers, so the transport hands them to the main thread
-for dropping (see [refs.md](refs.md)).
+Edits reply with a fresh tree snapshotted one frame later, after layout ran, so the client
+never sees stale frames. Failures (unknown view id, bad rule index, view without text)
+reply with `Error(String)` instead of being silently ignored. All UI access happens on the
+main thread via `from_main`. Responses hold `Own` pointers, so the transport hands them to
+the main thread for dropping (see [refs.md](refs.md)).
+
+## Edit log
+
+Every applied edit (`edit_log.rs`) is kept in memory for `ListEdits` and appended as a JSON
+line to `target/inspect-edits.jsonl` under the app's git root: timestamp, view label and
+id, what changed, old and new values. The file survives app restarts. Outside a git repo,
+on a device for example, only the in-memory list works.
 
 ## Release builds
 
 The whole module is `cfg(debug_assertions)` and does not exist in release builds.
 `test-engine/build.rs` fails any release-profile build that enables debug-assertions, so
 the server can never ship. Consequence: the `inspector` app itself builds only in debug.
+`te-inspect` is a host-side tool and is excluded from default workspace members.
 
 ## Local hook
 

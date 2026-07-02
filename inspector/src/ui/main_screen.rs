@@ -5,6 +5,7 @@ use hreads::log_spawn;
 use inspect::{
     AppCommand, Client, InspectorCommand, SERVICE_TYPE, UIRequest, UIResponse, ui::ViewRepr,
 };
+use log::error;
 use mdns_sd::{ScopedIp, ServiceDaemon, ServiceEvent};
 use test_engine::{
     dispatch::on_main,
@@ -239,7 +240,8 @@ impl MainScreen {
                 self.ui_represent.set_root(scale, root);
                 self.restore_selection();
             }),
-            AppCommand::Ok => {}
+            AppCommand::Error(err) => error!("App returned an error: {err}"),
+            AppCommand::Ok | AppCommand::Screenshot { .. } | AppCommand::Edits(_) => {}
         }
     }
 }

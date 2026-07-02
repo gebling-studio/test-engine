@@ -68,7 +68,7 @@ fix-lint:
 	cargo clippy --fix --allow-dirty --allow-staged $(CLIPPY_FLAGS)
 
 lint:
-	cargo clippy $(CLIPPY_FLAGS) \
+	cargo clippy -p test-game -p inspector -p te-inspect $(CLIPPY_FLAGS) \
       \
       -D warnings
 
