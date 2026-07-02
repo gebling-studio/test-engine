@@ -1,4 +1,4 @@
-use inspect::ui::ViewRepr;
+use inspect::{UIRequest, ui::ViewRepr};
 use refs::Weak;
 use ui::{Setup, UIEvent, View, ViewData};
 use ui_proc::view;
@@ -10,7 +10,7 @@ use crate::{
 
 #[view(crate = crate)]
 pub struct PlacerView {
-    pub rule_changed: UIEvent,
+    pub rule_changed: UIEvent<UIRequest>,
 
     view: Weak<ViewRepr>,
 
@@ -53,8 +53,8 @@ impl TableData for PlacerView {
 
         cell.set_data(self.view, index);
         let this = self.weak();
-        cell.editing_ended.sub(this, move || {
-            this.rule_changed.trigger(());
+        cell.rule_edited.val(this, move |request| {
+            this.rule_changed.trigger(request);
         });
 
         cell

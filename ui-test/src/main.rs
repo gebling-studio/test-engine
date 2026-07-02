@@ -21,6 +21,7 @@ use test_engine::{
     ui_test::{UITest, enable_fps_report},
 };
 
+#[cfg(debug_assertions)]
 use crate::inspect::test_inspect;
 use crate::{
     base::test_base_ui,
@@ -36,6 +37,7 @@ use crate::{
 };
 
 mod base;
+#[cfg(debug_assertions)]
 mod inspect;
 mod level;
 mod views;
@@ -149,6 +151,7 @@ fn main() -> Result<()> {
 async fn test() -> Result<()> {
     test_base_ui().await?;
     test_base_views().await?;
+    #[cfg(debug_assertions)]
     test_inspect().await?;
     test_layout().await?;
     test_complex_views().await?;

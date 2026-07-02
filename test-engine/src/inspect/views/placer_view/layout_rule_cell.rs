@@ -1,5 +1,5 @@
 use gm::{LossyConvert, color::LIGHT_GRAY};
-use inspect::ui::ViewRepr;
+use inspect::{UIRequest, ui::ViewRepr};
 use refs::Weak;
 use ui::{CheckBox, Setup, TextField, UIEvent, ViewData, ViewFrame};
 use ui_proc::view;
@@ -8,7 +8,7 @@ use crate::inspect::views::AnchorView;
 
 #[view(crate = crate)]
 pub struct LayoutRuleCell {
-    pub editing_ended: UIEvent,
+    pub rule_edited: UIEvent<UIRequest>,
 
     view:  Weak<ViewRepr>,
     index: usize,
@@ -33,14 +33,19 @@ impl Setup for LayoutRuleCell {
 
         self.value.place().at_right(self.anchor, 8).w(88).relative_height(self, 0.6);
         self.value.editing_ended.val(move |val| {
-            let new_val: f32 = val.parse().unwrap();
-            self.view.placer.edit_rule(self.index).set_offset(new_val);
-            self.editing_ended.trigger(());
+            let Ok(offset) = val.parse::<f32>() else {
+                let old_offset = self.view.placer.get_rules()[self.index].offset();
+                self.value.set_text(LossyConvert::<i64>::lossy_convert(old_offset));
+                return;
+            };
+            self.view.placer.edit_rule(self.index).set_offset(offset);
+            self.rule_edited.trigger(self.edit_request());
         });
 
         self.enabled.place().at_right(self.value, 8).size(28, 28);
         self.enabled.on_change(move |on| {
             self.view.placer.edit_rule(self.index).enabled = on;
+            self.rule_edited.trigger(self.edit_request());
         });
     }
 }
@@ -57,5 +62,17 @@ impl LayoutRuleCell {
 
         self.view = view;
         self.index = index;
+    }
+
+    fn edit_request(self: Weak<Self>) -> UIRequest {
+        let rules = self.view.placer.get_rules();
+        let rule = &rules[self.index];
+
+        UIRequest::EditRule {
+            view_id:    self.view.id.clone(),
+            rule_index: self.index,
+            offset:     rule.offset(),
+            enabled:    rule.enabled,
+        }
     }
 }

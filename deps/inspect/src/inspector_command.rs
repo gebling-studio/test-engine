@@ -1,10 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InspectorCommand {
     PlaySound,
     UI(UIRequest),
-    GetSystemInfo,
 }
 
 impl From<UIRequest> for InspectorCommand {
@@ -13,9 +12,14 @@ impl From<UIRequest> for InspectorCommand {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum UIRequest {
-    GetScale,
     SetScale(f32),
     GetUI,
+    EditRule {
+        view_id:    String,
+        rule_index: usize,
+        offset:     f32,
+        enabled:    bool,
+    },
 }

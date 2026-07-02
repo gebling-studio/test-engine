@@ -23,7 +23,7 @@ impl<T: View + ?Sized> ViewToInspect for T {
     }
 }
 
-fn weak_to_id(weak_view: WeakView) -> String {
+pub(crate) fn weak_to_id(weak_view: WeakView) -> String {
     let raw = weak_view.raw();
     format!(
         "{}:{}",

@@ -10,9 +10,10 @@ pub struct ViewInspectorView {
     view: Weak<ViewRepr>,
 
     #[init]
-    label:       Label,
-    id:          Label,
-    placer_view: PlacerView,
+    label: Label,
+    id:    Label,
+
+    pub placer_view: PlacerView,
 }
 
 impl Setup for ViewInspectorView {
@@ -27,7 +28,7 @@ impl Setup for ViewInspectorView {
 impl ViewInspectorView {
     pub fn set_view(mut self: Weak<Self>, view: Weak<ViewRepr>) {
         self.label.set_text(format!("Label: {}", view.label));
-        self.id.set_text_size(10).set_text(format!("{}", view.id));
+        self.id.set_text_size(10).set_text(view.id.clone());
         self.placer_view.set_view(view);
 
         self.view = view;

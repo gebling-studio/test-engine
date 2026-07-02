@@ -1,25 +1,41 @@
 #![cfg(not_wasm)]
 
 use audio::Sound;
-use hreads::{log_spawn, on_main};
-use inspect::{AppCommand, InspectorCommand, SystemInfo, SystemResponse, UIRequest, UIResponse};
+use hreads::{from_main, log_spawn, on_main};
+use inspect::{AppCommand, InspectorCommand, SERVICE_TYPE, UIRequest, UIResponse, serve};
 use log::info;
-use netrun::zmq::Rep;
+use mdns_sd::{ServiceDaemon, ServiceInfo};
 use refs::manage::DataManager;
-use ui::UIManager;
+use tokio::net::TcpListener;
+use ui::{UIManager, ViewData, ViewSubviews, WeakView};
 
-use crate::inspect::view_conversion::ViewToInspect;
+use crate::inspect::view_conversion::{ViewToInspect, weak_to_id};
 
-#[derive(Clone)]
 pub struct InspectService;
 
 impl InspectService {
     pub fn start_listening() {
         log_spawn(async {
-            let server = Rep::<InspectorCommand, AppCommand>::new("tcp://0.0.0.0:6969").await?;
-            server.on_receive(Self::process_command);
-            info!("Waiting for inspect on: 6969");
-            Ok(())
+            let listener = TcpListener::bind("0.0.0.0:0").await?;
+            let port = listener.local_addr()?.port();
+
+            let app_id = UIManager::app_instance_id();
+
+            let mdns = ServiceDaemon::new()?;
+            let service = ServiceInfo::new(
+                SERVICE_TYPE,
+                app_id,
+                &format!("{app_id}.local."),
+                "",
+                port,
+                &[("app_id", app_id)][..],
+            )?
+            .enable_addr_auto();
+            mdns.register(service)?;
+
+            info!("Inspect server on port: {port}");
+
+            serve(listener, Self::process_command).await
         });
     }
 
@@ -33,26 +49,59 @@ impl InspectService {
                 AppCommand::Ok
             }
             InspectorCommand::UI(ui) => Self::process_ui_command(ui),
-            InspectorCommand::GetSystemInfo => SystemResponse::Info(SystemInfo {
-                app_id: UIManager::app_instance_id().to_string(),
-                info:   netrun::System::get_info(),
-            })
-            .into(),
         }
     }
 
     fn process_ui_command(command: UIRequest) -> AppCommand {
         match command {
-            UIRequest::GetScale => UIResponse::Scale(UIManager::scale()).into(),
             UIRequest::SetScale(scale) => {
-                UIManager::set_scale(scale);
-                AppCommand::Ok
+                from_main(move || {
+                    UIManager::set_scale(scale);
+                });
+
+                // send_ui dispatches a fresh from_main, so the snapshot runs
+                // one frame later, after layout applied the new scale.
+                Self::send_ui()
             }
-            UIRequest::GetUI => {
-                let scale = UIManager::scale();
-                let root = UIManager::root_view().view_to_inspect();
-                UIResponse::SendUI { scale, root }.into()
+            UIRequest::GetUI => Self::send_ui(),
+            UIRequest::EditRule {
+                view_id,
+                rule_index,
+                offset,
+                enabled,
+            } => {
+                from_main(move || {
+                    let Some(view) = find_view(UIManager::root_view(), &view_id) else {
+                        return;
+                    };
+
+                    if rule_index >= view.place().get_rules().len() {
+                        return;
+                    }
+
+                    let mut rule = view.place().edit_rule(rule_index);
+                    rule.set_offset(offset);
+                    rule.enabled = enabled;
+                });
+
+                Self::send_ui()
             }
         }
     }
+
+    fn send_ui() -> AppCommand {
+        from_main(|| {
+            let scale = UIManager::scale();
+            let root = UIManager::root_view().view_to_inspect();
+            UIResponse::SendUI { scale, root }.into()
+        })
+    }
+}
+
+fn find_view(view: WeakView, id: &str) -> Option<WeakView> {
+    if weak_to_id(view) == id {
+        return Some(view);
+    }
+
+    view.subviews().iter().find_map(|sub| find_view(sub.weak(), id))
 }

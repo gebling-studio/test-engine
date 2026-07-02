@@ -27,10 +27,6 @@ pub trait App {
         Box::pin(async { bail!("Not implemented") })
     }
 
-    fn enable_inspection(&self) -> bool {
-        true
-    }
-
     fn default_font(&self) -> Font {
         //Font::helvetica()
         //

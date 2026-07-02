@@ -279,9 +279,8 @@ impl window::WindowEvents for AppRunner {
                 {
                     Window::current().set_size(self.app.initial_size().lossy_convert());
                 }
-                if self.app.enable_inspection() {
-                    crate::inspect::InspectService::start_listening();
-                }
+                #[cfg(debug_assertions)]
+                crate::inspect::InspectService::start_listening();
             }
 
             UIManager::keymap().add(UIManager::root_view(), 'i', || {

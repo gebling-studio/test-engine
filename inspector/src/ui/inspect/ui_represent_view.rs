@@ -24,4 +24,8 @@ impl UIRepresentView {
         self.repr = repr;
         self.reload();
     }
+
+    pub fn repr(self: Weak<Self>) -> Weak<ViewRepr> {
+        self.repr.weak()
+    }
 }
