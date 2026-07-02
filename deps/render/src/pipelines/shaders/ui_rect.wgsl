@@ -9,7 +9,7 @@ struct UIRectInstance {
     @location(4) color:         vec4<f32>,
     @location(5) border_color:  vec4<f32>,
     @location(6) border_width:  f32,
-    @location(7) corner_radius: f32,
+    @location(7) corner_radii:  vec4<f32>,
     @location(8) z_position:    f32,
     @location(9) scale:         f32,
 }
@@ -23,7 +23,7 @@ struct VertexOutput {
     @location(1) uv: vec2<f32>,
     @location(2) size: vec2<f32>,
     @location(3) border_color: vec4<f32>,
-    @location(4) corner_radius: f32,
+    @location(4) corner_radii: vec4<f32>,
     @location(5) border_width: f32,
 }
 
@@ -63,59 +63,53 @@ fn v_main(
 
     out.uv = model * 0.5;
     out.size = instance.size;
-    out.corner_radius = instance.corner_radius;
+    out.corner_radii = instance.corner_radii;
     out.border_color = instance.border_color;
     out.border_width = instance.border_width;
 
     return out;
 }
 
+// Radii order: top left, top right, bottom left, bottom right.
+// Local coordinates have negative y at the top.
+fn pick_radius(p: vec2<f32>, radii: vec4<f32>) -> f32 {
+    if p.y < 0.0 {
+        if p.x < 0.0 {
+            return radii.x;
+        }
+        return radii.y;
+    }
+    if p.x < 0.0 {
+        return radii.z;
+    }
+    return radii.w;
+}
+
+// Signed distance to a rounded box centered at the origin. Negative
+// inside. With radius 0 the inside distance is minus the distance to
+// the nearest edge, so the border band below works for square corners.
+fn rounded_box_sdf(p: vec2<f32>, half_size: vec2<f32>, radius: f32) -> f32 {
+    let q = abs(p) - half_size + vec2<f32>(radius, radius);
+    return length(max(q, vec2<f32>(0.0, 0.0))) + min(max(q.x, q.y), 0.0) - radius;
+}
+
 @fragment
 fn f_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    let radius: f32 = in.corner_radius;
-    let border: f32 = in.border_width;
     let local_pos: vec2<f32> = in.uv * in.size;
+    let radius: f32 = pick_radius(local_pos, in.corner_radii);
+    let dist: f32 = rounded_box_sdf(local_pos, in.size * 0.5, radius);
 
-    if radius == 0.0 {
-        if border > 0.0 {
-            let half_size: vec2<f32> = in.size * 0.5;
-            let dist_to_edge: vec2<f32> = half_size - abs(local_pos);
-            let min_dist: f32 = min(dist_to_edge.x, dist_to_edge.y);
-
-            if min_dist < border {
-                return in.border_color;
-            }
-        }
-
-        if in.color.a == 0 {
-            discard;
-        } else {
-            return in.color;
-        }
-    } else {
-        let corner: vec2<f32> = in.size * 0.5 - vec2<f32>(radius, radius);
-        let d: vec2<f32> = abs(local_pos) - corner;
-        let dist_outer: f32 = length(max(d, vec2<f32>(0.0, 0.0)));
-
-        if (dist_outer > radius) {
-            discard;
-        }
-
-        if border > 0.0 {
-            let inner_radius: f32 = max(radius - border, 0.0);
-            let inner_corner: vec2<f32> = in.size * 0.5 - vec2<f32>(radius, radius);
-            let inner_d: vec2<f32> = abs(local_pos) - inner_corner;
-            let dist_inner: f32 = length(max(inner_d, vec2<f32>(0.0, 0.0)));
-
-            if dist_inner > inner_radius {
-                return in.border_color;
-            }
-        }
-
-        if in.color.a == 0 {
-            discard;
-        } else {
-            return in.color;
-        }
+    if dist > 0.0 {
+        discard;
     }
+
+    if in.border_width > 0.0 && dist > -in.border_width {
+        return in.border_color;
+    }
+
+    if in.color.a == 0.0 {
+        discard;
+    }
+
+    return in.color;
 }

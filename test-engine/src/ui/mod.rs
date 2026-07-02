@@ -7,7 +7,7 @@ pub(crate) mod views;
 pub use ::ui::*;
 pub use gm::{
     color::*,
-    flat::{Point, PointsPath, Rect, Size},
+    flat::{CornerRadii, Point, PointsPath, Rect, Size},
 };
 pub use input::*;
 pub use ui_drawer::UIDrawer;

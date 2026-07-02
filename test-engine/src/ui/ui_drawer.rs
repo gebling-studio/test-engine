@@ -3,12 +3,12 @@ use std::ops::{Deref, DerefMut};
 use gm::{
     LossyConvert,
     color::{CLEAR, TURQUOISE},
-    flat::{Rect, Size},
+    flat::{CornerRadii, Rect, Size},
 };
 use refs::{Weak, main_lock::MainLock};
 use render::{
-    UIGradientPipeline, UIImageRectPipeline,
-    data::{RectView, UIGradientInstance, UIImageInstance, UIRectInstance},
+    UIGradientPipeline, UIImageRectPipeline, UIShadowPipeline,
+    data::{RectView, UIGradientInstance, UIImageInstance, UIRectInstance, UIShadowInstance},
 };
 use ui::{ImageView, Label, TextAlignment, UIManager, View, ViewData, ViewFrame, ViewLayout, ViewSubviews};
 use wgpu::RenderPass;
@@ -19,6 +19,7 @@ use crate::pipelines::Pipelines;
 
 static GRADIENT_DRAWER: MainLock<UIGradientPipeline> = MainLock::new();
 static IMAGE_RECT_DRAWER: MainLock<UIImageRectPipeline> = MainLock::new();
+static SHADOW_DRAWER: MainLock<UIShadowPipeline> = MainLock::new();
 
 type TextSections<'a> = Vec<(Weak<Font>, Vec<Section<'a>>)>;
 
@@ -70,6 +71,12 @@ impl UIDrawer {
         Pipelines::rect().draw(pass, rect_view);
         IMAGE_RECT_DRAWER.get_mut().draw(pass, rect_view);
         GRADIENT_DRAWER.get_mut().draw(pass, rect_view);
+
+        // Shadows go last. A shadow shares its view's z, so the view
+        // drawn above already owns the depth buffer inside its shape
+        // and masks the shadow there. Everything farther is already
+        // drawn, so the soft band blends over it.
+        SHADOW_DRAWER.get_mut().draw(pass, rect_view);
     }
 
     fn update_view(view: &mut dyn View) {
@@ -127,13 +134,28 @@ impl UIDrawer {
             scissor(pass, frame.lossy_convert());
         }
 
+        if let Some(shadow) = view.shadow()
+            && shadow.radius > 0.0
+            && shadow.color.a > 0.0
+        {
+            SHADOW_DRAWER.get_mut().add(UIShadowInstance {
+                position: frame.origin + shadow.offset,
+                size: frame.size,
+                color: shadow.color,
+                corner_radii: view.corner_radii(),
+                blur: shadow.radius,
+                z_position: view.z_position(),
+                scale,
+            });
+        }
+
         if view.end_gradient_color().a > 0.0 {
             GRADIENT_DRAWER.get_mut().add(UIGradientInstance {
                 position: frame.origin,
                 size: frame.size,
                 start_color: *view.color(),
                 end_color: *view.end_gradient_color(),
-                corner_radius: view.corner_radius(),
+                corner_radii: view.corner_radii(),
                 z_position: view.z_position(),
                 scale,
             });
@@ -143,7 +165,7 @@ impl UIDrawer {
                 *view.color(),
                 *view.border_color(),
                 view.border_width(),
-                view.corner_radius(),
+                view.corner_radii(),
                 view.z_position(),
                 scale,
             ));
@@ -158,7 +180,7 @@ impl UIDrawer {
                         image_view.image_frame(),
                         *view.border_color(),
                         view.border_width(),
-                        view.corner_radius(),
+                        view.corner_radii(),
                         view.z_position(),
                         image_view.flip_x,
                         image_view.flip_y,
@@ -180,7 +202,7 @@ impl UIDrawer {
                     TURQUOISE,
                     CLEAR,
                     0.0,
-                    0.0,
+                    CornerRadii::default(),
                     view.z_position() - 0.2,
                     scale,
                 ));

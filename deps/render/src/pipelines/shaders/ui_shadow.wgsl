@@ -1,15 +1,14 @@
-
 struct RectView {
     resolution: vec2<f32>,
     _padding: vec2<u32>,
 }
 
-struct UIGradientInstance {
+struct UIShadowInstance {
     @location(2) position:      vec2<f32>,
     @location(3) size:          vec2<f32>,
-    @location(4) start_color:   vec4<f32>,
-    @location(5) end_color:     vec4<f32>,
-    @location(6) corner_radii:  vec4<f32>,
+    @location(4) color:         vec4<f32>,
+    @location(5) corner_radii:  vec4<f32>,
+    @location(6) blur:          f32,
     @location(7) z_position:    f32,
     @location(8) scale:         f32,
 }
@@ -18,20 +17,24 @@ struct UIGradientInstance {
 var<uniform> view: RectView;
 
 struct VertexOutput {
-    @builtin(position) pos:   vec4<f32>,
-          @location(0) uv:   vec2<f32>,
-          @location(1) size: vec2<f32>,
-          @location(2) corner_radii: vec4<f32>,
-          @location(3) gradient_pos:  f32,
-          @location(4) start_color: vec4<f32>,
-          @location(5) end_color:   vec4<f32>,
+    @builtin(position) pos: vec4<f32>,
+    @location(0) color: vec4<f32>,
+    @location(1) local_pos: vec2<f32>,
+    @location(2) half_size: vec2<f32>,
+    @location(3) corner_radii: vec4<f32>,
+    @location(4) blur: f32,
 }
 
+// The quad is the casting rect expanded by blur on every side, so the
+// falloff has room outside the rect.
 @vertex
 fn v_main(
     @location(0) model: vec2<f32>,
-    instance: UIGradientInstance,
+    instance: UIShadowInstance,
 ) -> VertexOutput {
+    let expanded: vec2<f32> = instance.size + vec2<f32>(instance.blur * 2.0);
+    let origin: vec2<f32> = instance.position - vec2<f32>(instance.blur);
+
     var out_pos: vec4<f32> = vec4<f32>(model, instance.z_position, 1.0);
 
     out_pos.x /= 2.0;
@@ -43,11 +46,11 @@ fn v_main(
     out_pos.x /= view.resolution.x;
     out_pos.y /= view.resolution.y;
 
-    out_pos.x *= instance.size.x * instance.scale;
-    out_pos.y *= instance.size.y * instance.scale;
+    out_pos.x *= expanded.x * instance.scale;
+    out_pos.y *= expanded.y * instance.scale;
 
-    out_pos.x += instance.position.x * instance.scale / view.resolution.x;
-    out_pos.y += instance.position.y * instance.scale / view.resolution.y;
+    out_pos.x += origin.x * instance.scale / view.resolution.x;
+    out_pos.y += origin.y * instance.scale / view.resolution.y;
 
     out_pos.y *= -1.0;
 
@@ -58,14 +61,12 @@ fn v_main(
     out_pos.y *= 2.0;
 
     var out: VertexOutput;
-    out.pos   = out_pos;
-
-    out.uv = model * 0.5;
-    out.gradient_pos = (model.y + 1.0) / 2.0;
-    out.size = instance.size;
+    out.pos = out_pos;
+    out.color = instance.color;
+    out.local_pos = model * 0.5 * expanded;
+    out.half_size = instance.size * 0.5;
     out.corner_radii = instance.corner_radii;
-    out.start_color = instance.start_color;
-    out.end_color = instance.end_color;
+    out.blur = instance.blur;
 
     return out;
 }
@@ -93,14 +94,15 @@ fn rounded_box_sdf(p: vec2<f32>, half_size: vec2<f32>, radius: f32) -> f32 {
 
 @fragment
 fn f_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    let mix = mix(in.start_color, in.end_color, in.gradient_pos);
+    let radius: f32 = pick_radius(in.local_pos, in.corner_radii);
+    let dist: f32 = rounded_box_sdf(in.local_pos, in.half_size, radius);
 
-    let local_pos: vec2<f32> = in.uv * in.size;
-    let radius: f32 = pick_radius(local_pos, in.corner_radii);
+    let alpha: f32 = in.color.a * (1.0 - smoothstep(-in.blur, in.blur, dist));
 
-    if rounded_box_sdf(local_pos, in.size * 0.5, radius) > 0.0 {
+    // Skip depth writes on the invisible outer band of the quad.
+    if alpha < 0.004 {
         discard;
     }
 
-    return mix;
+    return vec4<f32>(in.color.rgb, alpha);
 }

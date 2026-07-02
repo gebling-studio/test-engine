@@ -1,11 +1,14 @@
 #![allow(clippy::struct_excessive_bools)]
 
 use educe::Educe;
-use gm::{color::Color, flat::Rect};
+use gm::{
+    color::Color,
+    flat::{CornerRadii, Rect},
+};
 use refs::{Own, Weak};
 use vents::{Event, OnceEvent};
 
-use crate::{DynamicColor, NavigationView, Touch, UIEvent, View, WeakView, layout::Placer};
+use crate::{DynamicColor, NavigationView, Shadow, Touch, UIEvent, View, WeakView, layout::Placer};
 
 #[derive(Educe)]
 #[educe(Default, Debug)]
@@ -19,7 +22,9 @@ pub struct ViewBase {
     pub(crate) end_gradient_color: Color,
 
     #[educe(Debug(ignore))]
-    pub(crate) corner_radius:        f32,
+    pub(crate) corner_radii:         CornerRadii,
+    #[educe(Debug(ignore))]
+    pub(crate) shadow:               Option<Shadow>,
     #[educe(Debug(ignore))]
     pub(crate) border_color:         Color,
     #[educe(Debug(ignore))]

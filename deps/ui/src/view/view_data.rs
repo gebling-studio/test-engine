@@ -1,10 +1,16 @@
 use std::ops::DerefMut;
 
-use gm::{ToF32, color::Color};
+use gm::{
+    ToF32,
+    color::Color,
+    flat::CornerRadii,
+};
 use refs::{Own, Weak, weak_from_ref};
 use vents::Event;
 
-use crate::{NavigationView, Style, UIAnimation, UIColor, UIManager, View, WeakView, layout::Placer};
+use crate::{
+    NavigationView, Shadow, Style, UIAnimation, UIColor, UIManager, View, WeakView, layout::Placer,
+};
 
 pub trait ViewData {
     fn tag(&self) -> usize;
@@ -28,8 +34,12 @@ pub trait ViewData {
     fn border_width(&self) -> f32;
     fn set_border_width(&self, width: impl ToF32) -> &Self;
 
-    fn corner_radius(&self) -> f32;
+    fn corner_radii(&self) -> CornerRadii;
     fn set_corner_radius(&self, radius: impl ToF32) -> &Self;
+    fn set_corner_radii(&self, radii: CornerRadii) -> &Self;
+
+    fn shadow(&self) -> Option<Shadow>;
+    fn set_shadow(&self, shadow: impl Into<Option<Shadow>>) -> &Self;
 
     fn is_hidden(&self) -> bool;
     fn is_hidden_in_tree(&self) -> bool;
@@ -131,14 +141,29 @@ impl<T: ?Sized + View> ViewData for T {
         self
     }
 
-    fn corner_radius(&self) -> f32 {
-        self.__base_view().corner_radius
+    fn corner_radii(&self) -> CornerRadii {
+        self.__base_view().corner_radii
     }
 
     fn set_corner_radius(&self, radius: impl ToF32) -> &Self {
-        self.__base_view().corner_radius = radius.to_f32();
+        self.__base_view().corner_radii = CornerRadii::all(radius);
         self
     }
+
+    fn set_corner_radii(&self, radii: CornerRadii) -> &Self {
+        self.__base_view().corner_radii = radii;
+        self
+    }
+
+    fn shadow(&self) -> Option<Shadow> {
+        self.__base_view().shadow
+    }
+
+    fn set_shadow(&self, shadow: impl Into<Option<Shadow>>) -> &Self {
+        self.__base_view().shadow = shadow.into();
+        self
+    }
+
     fn is_hidden(&self) -> bool {
         self.__base_view().is_hidden
     }
@@ -235,7 +260,8 @@ impl<T: ?Sized + View> ViewData for T {
         this.__base_view().dynamic_color = other.__base_view().dynamic_color;
         this.__base_view().dynamic_border_color = other.__base_view().dynamic_border_color;
         this.set_border_width(other.border_width());
-        this.set_corner_radius(other.corner_radius());
+        this.set_corner_radii(other.corner_radii());
+        this.set_shadow(other.shadow());
         self
     }
 

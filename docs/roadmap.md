@@ -34,15 +34,15 @@ is read once at startup. This unblocked dark mode. Hover events landed as opt-in
 the topmost hover enabled view under the cursor is hovered, desktop only, and modal
 layers block hover like they block touches. Hover follows mouse moves and wheel scroll,
 and clears when the cursor leaves the window. Everything runs on input events, nothing
-per frame. This unblocked card lift and button hover colors.
+per frame. This unblocked card lift and button hover colors. Drop shadows landed as an
+opt-in `Shadow { offset, radius, color }` set through `set_shadow`. A dedicated shadow
+pipeline draws a blurred rounded rect under the view, following its corner radii. The
+view masks the shadow inside its own shape and hidden views cast nothing. Per-corner
+radius landed as `CornerRadii` with `set_corner_radii`, honored by the rect, image and
+gradient pipelines, while `set_corner_radius` keeps the uniform shortcut. Together
+these unblocked card elevation and top-only rounded card images.
 
-## 1. Drop shadows
-
-- Current: the rect pipeline draws fill, border and corner radius. No shadow.
-- Needed: shadow rendering under rounded rects plus shadow parameters on `ViewData`.
-- Blocks: card elevation, the original uses a small resting shadow and a larger hover one.
-
-## 2. Text stack rework
+## 1. Text stack rework
 
 Found by the FontZoo emoji page. Parked until a real need, the items above come first.
 
@@ -57,17 +57,15 @@ Found by the FontZoo emoji page. Parked until a real need, the items above come 
   tests.
 - Blocks: colorful emoji, complex scripts. Nothing in the driver app today.
 
-## 3. Small niceties
+## 2. Small niceties
 
 - `TableView` cell spacing. Worked around in skaityk-te with a transparent cell and an
   inset card subview.
-- Per-corner radius. The original rounds only the top corners of a card image.
 - Native modal backdrop. `ModalView` shows no scrim, the original dims and blurs behind
   the dialog. An app can fake the dim with a fullscreen translucent container.
 - Backdrop blur for the sticky header. Render pass work, lowest priority.
 
 ## Suggested order
 
-Shadows, then the niceties. The reader layout, dark mode and hover are unblocked,
-so what remains is small visual parity gaps. The text stack rework waits for a
-real need for color emoji or complex scripts.
+The niceties first, they are the last visual parity gaps. The text stack rework
+waits for a real need for color emoji or complex scripts.

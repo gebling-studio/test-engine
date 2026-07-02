@@ -1,16 +1,17 @@
 use crate::views::basic::{
     background::test_background, button::test_button, checkbox::test_checkbox,
-    custom_text_field::test_custom_text_field, font_zoo::test_font_zoo, gradient::test_gradient,
-    hover::test_hover, inject_touch::test_inject_touch, label::test_label,
+    corner_radii::test_corner_radii, custom_text_field::test_custom_text_field, font_zoo::test_font_zoo,
+    gradient::test_gradient, hover::test_hover, inject_touch::test_inject_touch, label::test_label,
     label_fit_text::test_label_fit_text, label_font::test_label_font, label_image::test_label_image,
     label_measure::test_label_measure, multiline_label::test_multiline, nine_segment::test_nine_segment,
-    slider::test_slider, switch::test_switch, text_field::test_text_field,
+    shadow::test_shadow, slider::test_slider, switch::test_switch, text_field::test_text_field,
     theme_switch::test_theme_switch,
 };
 
 mod background;
 mod button;
 mod checkbox;
+mod corner_radii;
 mod custom_text_field;
 mod font_zoo;
 mod gradient;
@@ -24,6 +25,7 @@ mod label_image;
 mod label_measure;
 mod multiline_label;
 mod nine_segment;
+mod shadow;
 mod slider;
 mod switch;
 mod text_field;
@@ -49,6 +51,8 @@ pub async fn test_base_views() -> anyhow::Result<()> {
     test_text_field().await?;
     test_theme_switch().await?;
     test_hover().await?;
+    test_corner_radii().await?;
+    test_shadow().await?;
 
     Ok(())
 }

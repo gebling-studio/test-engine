@@ -100,6 +100,10 @@ coordinates). To read UI state from test code use `from_main` (see [dispatch.md]
 One `#[view_test]` per file. Deliberate decision to keep files small — do not "fix" the macro
 to allow more.
 
+A new UI test is not finished when it passes. Always show it to the user for approval:
+run it with `--human`, let them watch it, and wait for their verdict before treating
+the work as done.
+
 ## Human mode
 
 `--human` makes a run watchable: vsync stays on, injected touches are drawn on screen, every

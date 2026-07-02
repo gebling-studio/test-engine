@@ -15,6 +15,7 @@ const TEXTURED_SPRITE_CODE: &str = include_str!("shaders/sprite_textured.wgsl");
 const UI_CODE: &str = include_str!("shaders/ui_rect.wgsl");
 const UI_IMAGE_CODE: &str = include_str!("shaders/ui_image.wgsl");
 const UI_GRADIENT_CODE: &str = include_str!("shaders/ui_gradient.wgsl");
+const UI_SHADOW_CODE: &str = include_str!("shaders/ui_shadow.wgsl");
 
 pub type SpriteBoxPipeline =
     RectPipeline<{ PipelineType::Color }, "sprite_box", SPRITE_CODE, SpriteView, SpriteInstance>;
@@ -34,8 +35,11 @@ pub type UIImageRectPipeline =
 pub type UIGradientPipeline =
     RectPipeline<{ PipelineType::Color }, "ui_gradient", UI_GRADIENT_CODE, RectView, UIGradientInstance>;
 
+pub type UIShadowPipeline =
+    RectPipeline<{ PipelineType::Color }, "ui_shadow", UI_SHADOW_CODE, RectView, UIShadowInstance>;
+
 pub use background_pipeline::BackgroundPipeline;
 pub use polygon_pipeline::PolygonPipeline;
 pub use ui_path_pipeline::UIPathPipeline;
 
-use crate::data::{UIGradientInstance, UIImageInstance};
+use crate::data::{UIGradientInstance, UIImageInstance, UIShadowInstance};

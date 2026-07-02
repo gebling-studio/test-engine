@@ -1,7 +1,7 @@
 use render::data::{RectView, UIImageInstance, UIRectInstance};
 use test_engine::{
     RenderPass,
-    ui::{BLUE, CLEAR, GREEN, RED, UIImages},
+    ui::{BLUE, CLEAR, CornerRadii, GREEN, RED, UIImages},
 };
 use window::Window;
 
@@ -16,7 +16,7 @@ pub(crate) fn render_occlusion(pass: &mut RenderPass) {
         RED,
         CLEAR,
         0.0,
-        0.0,
+        CornerRadii::default(),
         0.5,
         1.0,
     ));
@@ -26,7 +26,7 @@ pub(crate) fn render_occlusion(pass: &mut RenderPass) {
         GREEN,
         CLEAR,
         0.0,
-        0.0,
+        CornerRadii::default(),
         0.5,
         1.0,
     ));
@@ -35,7 +35,7 @@ pub(crate) fn render_occlusion(pass: &mut RenderPass) {
         BLUE,
         CLEAR,
         0.0,
-        0.0,
+        CornerRadii::default(),
         0.5,
         1.0,
     ));
@@ -45,7 +45,7 @@ pub(crate) fn render_occlusion(pass: &mut RenderPass) {
         BLUE,
         CLEAR,
         0.0,
-        0.0,
+        CornerRadii::default(),
         0.5,
         1.0,
     ));
@@ -54,7 +54,7 @@ pub(crate) fn render_occlusion(pass: &mut RenderPass) {
         GREEN,
         CLEAR,
         0.0,
-        0.0,
+        CornerRadii::default(),
         0.5,
         1.0,
     ));
@@ -63,7 +63,7 @@ pub(crate) fn render_occlusion(pass: &mut RenderPass) {
         RED,
         CLEAR,
         0.0,
-        0.0,
+        CornerRadii::default(),
         0.5,
         1.0,
     ));
@@ -73,7 +73,7 @@ pub(crate) fn render_occlusion(pass: &mut RenderPass) {
         RED,
         CLEAR,
         0.0,
-        0.0,
+        CornerRadii::default(),
         0.3,
         1.0,
     ));
@@ -82,7 +82,7 @@ pub(crate) fn render_occlusion(pass: &mut RenderPass) {
         GREEN,
         CLEAR,
         0.0,
-        0.0,
+        CornerRadii::default(),
         0.2,
         1.0,
     ));
@@ -91,7 +91,7 @@ pub(crate) fn render_occlusion(pass: &mut RenderPass) {
         BLUE,
         CLEAR,
         0.0,
-        0.0,
+        CornerRadii::default(),
         0.1,
         1.0,
     ));
@@ -101,7 +101,7 @@ pub(crate) fn render_occlusion(pass: &mut RenderPass) {
         GREEN,
         CLEAR,
         0.0,
-        0.0,
+        CornerRadii::default(),
         0.5,
         1.0,
     ));
@@ -116,14 +116,14 @@ pub(crate) fn render_occlusion(pass: &mut RenderPass) {
 
     image.add_with_image(
         UIImageInstance {
-            position:      (225, 75).into(),
-            size:          (50, 50).into(),
-            border_color:  CLEAR,
-            border_width:  0.0,
-            corner_radius: 0.0,
-            z_position:    0.4,
-            flags:         0,
-            scale:         1.0,
+            position:     (225, 75).into(),
+            size:         (50, 50).into(),
+            border_color: CLEAR,
+            border_width: 0.0,
+            corner_radii: CornerRadii::default(),
+            z_position:   0.4,
+            flags:        0,
+            scale:        1.0,
         },
         UIImages::rb(),
     );
