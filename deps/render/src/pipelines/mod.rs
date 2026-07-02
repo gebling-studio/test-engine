@@ -26,8 +26,7 @@ pub type TexturedSpriteBoxPipeline = RectPipeline<
     TexturedSpriteInstance,
 >;
 
-pub type UIRectPipeline =
-    RectPipeline<{ PipelineType::Color }, "ui_rect", UI_CODE, RectView, UIRectInstance>;
+pub type UIRectPipeline = RectPipeline<{ PipelineType::Color }, "ui_rect", UI_CODE, RectView, UIRectInstance>;
 
 pub type UIImageRectPipeline =
     RectPipeline<{ PipelineType::Image }, "ui_image_rect", UI_IMAGE_CODE, RectView, UIImageInstance>;

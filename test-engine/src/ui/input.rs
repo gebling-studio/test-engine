@@ -3,8 +3,8 @@ use level::LevelManager;
 use log::warn;
 use refs::Weak;
 use ui::{
-    Container, Scrollable, Setup, Touch, TouchStack, UIEvents, UIManager, ViewData, ViewFrame,
-    ViewSubviews, WeakView, check_touch,
+    Container, Scrollable, Setup, Touch, TouchStack, UIEvents, UIManager, ViewData, ViewFrame, ViewSubviews,
+    WeakView, check_touch,
 };
 pub use winit::keyboard::NamedKey;
 
@@ -87,10 +87,7 @@ impl Input {
         let mut deepest: Option<(usize, Weak<dyn Scrollable>)> = None;
 
         for scroll in TouchStack::scrolls() {
-            if scroll.is_null()
-                || scroll.is_hidden_in_tree()
-                || !scroll.absolute_frame().contains(cursor)
-            {
+            if scroll.is_null() || scroll.is_hidden_in_tree() || !scroll.absolute_frame().contains(cursor) {
                 continue;
             }
 

@@ -34,6 +34,14 @@ The `#[view]` macro rewrites `#[init]` fields to `Weak<Field>`. Real ownership l
 `ViewBase.subviews: Vec<Own<dyn View>>` — the view tree owns children, like in Swift.
 Methods take `self: Weak<Self>`, so closures capture `self` by copy.
 
+## Managed resources
+
+`managed!(T)` gives a type a global storage, a map from name to `Own<T>`. Assets like
+`Image` and `Font` live there. A resource loads once and stays until process exit.
+`free()` and `free_with_name()` exist in the refs crate, but nothing in the engine calls
+them. So a long-lived `Weak` to a managed resource never dangles. Render pipelines rely
+on this: `RectPipeline` keys instance batches by `Weak<Image>` and never removes entries.
+
 ## Rules
 
 - Objects live and die on the main thread. Dropping `Own` on another thread panics.

@@ -1,12 +1,12 @@
-use std::{any::type_name, path::PathBuf, sync::Once};
+use std::{path::PathBuf, sync::Once};
 
 use anyhow::Result;
 use gm::{
     LossyConvert,
     flat::{Point, Size},
 };
-use hreads::{from_main, invoke_dispatched};
-use level::{LevelBase, LevelManager};
+use hreads::{from_main, invoke_dispatched, is_main_thread, wait_for_next_frame};
+use level::LevelManager;
 use log::debug;
 use refs::{Own, main_lock::MainLock};
 use ui::{Touch, TouchEvent, UIEvents, UIManager, View, ViewData, ViewSubviews, WeakView};
@@ -28,6 +28,10 @@ use crate::{
 static WINDOW_READY: parking_lot::Mutex<vents::OnceEvent> =
     parking_lot::Mutex::new(vents::OnceEvent::const_default());
 static CURSOR_POSITION: MainLock<Point> = MainLock::new();
+
+/// Scroll sensitivity. Mouse wheel line deltas are already converted to
+/// pixels by `LINE_SCROLL_PIXELS` in the window crate, then scaled by this.
+const SCROLL_SPEED: f32 = 0.25;
 
 pub struct AppRunner {
     pub(crate) app:        Box<dyn App>,
@@ -96,7 +100,7 @@ impl AppRunner {
         let sentry_url = crate::config::Config::sentry_url(app).await?;
 
         let client = sentry::init((
-            dbg!(sentry_url),
+            sentry_url,
             sentry::ClientOptions {
                 release: sentry::release_name!(),
                 // Capture user IPs and potentially sensitive headers when using HTTP server integrations
@@ -133,18 +137,11 @@ impl AppRunner {
 
     #[cfg(target_os = "android")]
     pub(crate) async fn start(first_view: Own<dyn View>, app: crate::AndroidApp) -> Result<()> {
-        dbg!("PENIJEE");
-
         std::panic::set_hook(Box::new(|pan| {
             let backtrace = std::backtrace::Backtrace::force_capture();
-            println!("Custom panic hook");
-            dbg!(&pan);
-            dbg!(&pan.payload_as_str());
-            dbg!(&backtrace);
-            eprintln!("Backtrace: {}", backtrace);
+            eprintln!("{pan}");
+            eprintln!("Backtrace: {backtrace}");
         }));
-
-        dbg!("Panic hook set");
 
         use winit::platform::android::EventLoopBuilderExtAndroid;
 
@@ -155,12 +152,8 @@ impl AppRunner {
 
         android_logger::init_once(android_logger::Config::default().with_max_level(log::LevelFilter::Warn));
 
-        log::error!("AAAASOOOOOO");
-
         let event_loop: crate::EventLoop =
             crate::EventLoop::with_user_event().with_android_app(app).build().unwrap();
-
-        log::error!("EVANTO");
 
         Window::start(Self::new(first_view), event_loop).await
     }
@@ -216,9 +209,28 @@ impl AppRunner {
 
     #[cfg(desktop)]
     pub fn set_window_size(size: impl Into<Size<u32>> + Send + 'static) {
-        from_main(|| {
+        let size = size.into();
+
+        from_main(move || {
             Window::current().set_size(size);
         });
+
+        if is_main_thread() {
+            return;
+        }
+
+        // In windowed mode the OS applies the resize later. A touch injected
+        // before it lands is processed against the old layout and misses
+        // every view. Wait until the new size is real.
+        for _ in 0..100 {
+            let current: Size<u32> = from_main(Window::inner_size).lossy_convert();
+            if current == size {
+                return;
+            }
+            wait_for_next_frame();
+        }
+
+        panic!("Window did not resize to {size:?}");
     }
 
     pub fn take_screenshot() -> Result<Screenshot> {
@@ -339,7 +351,7 @@ impl window::WindowEvents for AppRunner {
     }
 
     fn mouse_scroll(&mut self, delta: Point) {
-        Input::on_scroll(delta * 0.25);
+        Input::on_scroll(delta * SCROLL_SPEED);
     }
 
     fn touch_event(&mut self, touch: winit::event::Touch) -> bool {
@@ -370,7 +382,6 @@ impl window::WindowEvents for AppRunner {
     }
 
     fn dropped_file(&mut self, path: PathBuf) {
-        dbg!(type_name::<LevelBase>());
         UIManager::trigger_drop_file(path);
     }
 }

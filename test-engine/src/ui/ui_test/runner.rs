@@ -6,9 +6,8 @@ use parking_lot::Mutex;
 fn no_display() -> bool {
     let is_ci = var("GITHUB_ACTIONS").is_ok() || var("CI").is_ok();
 
-    let is_headless_linux = cfg!(target_os = "linux")
-        && var("DISPLAY").is_err()
-        && var("WAYLAND_DISPLAY").is_err();
+    let is_headless_linux =
+        cfg!(target_os = "linux") && var("DISPLAY").is_err() && var("WAYLAND_DISPLAY").is_err();
 
     is_ci || is_headless_linux
 }
@@ -24,10 +23,12 @@ pub fn run_test_app(manifest_dir: &str, test_name: &str) -> Result<()> {
 
     let mut command = Command::new("cargo");
 
-    command
-        .args(["run", "-p", "ui-test", "--target-dir"])
-        .arg(target_dir)
-        .args(["--", "--test-name", test_name, "--stop-on-failure"]);
+    command.args(["run", "-p", "ui-test", "--target-dir"]).arg(target_dir).args([
+        "--",
+        "--test-name",
+        test_name,
+        "--stop-on-failure",
+    ]);
 
     if no_display() {
         command.arg("--headless");

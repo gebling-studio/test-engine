@@ -143,7 +143,6 @@ pub async fn test_cell_layout() -> anyhow::Result<()> {
         view.table.place().clear().lrb(10).anchor(Top, view.title, 10);
     });
 
-
     check_colors(
         r#"
              110  567 -  89 124 149

@@ -1,4 +1,4 @@
-use std::{convert::Infallible, fs::read, path::Path};
+use std::{convert::Infallible, fs::read, path::Path, sync::OnceLock};
 
 use anyhow::Result;
 use gm::flat::Size;
@@ -37,7 +37,7 @@ impl Image {
 
         let bind = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label:   "image_bind_group".into(),
-            layout:  &Self::uniform_layout(),
+            layout:  Self::uniform_layout(),
             entries: &[
                 BindGroupEntry {
                     binding:  0,
@@ -116,27 +116,30 @@ impl ResourceLoader for Image {
 }
 
 impl Image {
-    pub fn uniform_layout() -> BindGroupLayout {
-        Window::device().create_bind_group_layout(&BindGroupLayoutDescriptor {
-            label:   "image_bind_group_layout".into(),
-            entries: &[
-                BindGroupLayoutEntry {
-                    binding:    0,
-                    visibility: ShaderStages::FRAGMENT,
-                    ty:         BindingType::Texture {
-                        multisampled:   false,
-                        view_dimension: TextureViewDimension::D2,
-                        sample_type:    TextureSampleType::Float { filterable: true },
+    pub fn uniform_layout() -> &'static BindGroupLayout {
+        static LAYOUT: OnceLock<BindGroupLayout> = OnceLock::new();
+        LAYOUT.get_or_init(|| {
+            Window::device().create_bind_group_layout(&BindGroupLayoutDescriptor {
+                label:   "image_bind_group_layout".into(),
+                entries: &[
+                    BindGroupLayoutEntry {
+                        binding:    0,
+                        visibility: ShaderStages::FRAGMENT,
+                        ty:         BindingType::Texture {
+                            multisampled:   false,
+                            view_dimension: TextureViewDimension::D2,
+                            sample_type:    TextureSampleType::Float { filterable: true },
+                        },
+                        count:      None,
                     },
-                    count:      None,
-                },
-                BindGroupLayoutEntry {
-                    binding:    1,
-                    visibility: ShaderStages::FRAGMENT,
-                    ty:         BindingType::Sampler(SamplerBindingType::Filtering),
-                    count:      None,
-                },
-            ],
+                    BindGroupLayoutEntry {
+                        binding:    1,
+                        visibility: ShaderStages::FRAGMENT,
+                        ty:         BindingType::Sampler(SamplerBindingType::Filtering),
+                        count:      None,
+                    },
+                ],
+            })
         })
     }
 }

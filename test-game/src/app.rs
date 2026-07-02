@@ -1,14 +1,14 @@
 #![allow(dead_code)]
 
 use test_engine::{
-    App,
+    App, Window,
     refs::Own,
     ui::{Button, Label, Setup, Size, View},
 };
 
-use crate::interface::{loading_view::LoadingView, test_game_view::BUTTON};
 #[cfg(feature = "bench")]
 use crate::interface::test_game_view::UIBenchmarkView;
+use crate::interface::{loading_view::LoadingView, test_game_view::BUTTON};
 
 #[cfg(not_wasm)]
 async fn secrets() -> anyhow::Result<&'static test_engine::net::SecretsManager> {
@@ -45,6 +45,10 @@ impl App for TestGameApp {
     fn before_launch(&self) {
         BUTTON.apply_globally::<Button>();
         BUTTON.apply_globally::<Label>();
+    }
+
+    fn after_launch(&self) {
+        Window::set_quit_on_escape(true);
     }
 
     fn make_root_view(&self) -> Own<dyn View> {

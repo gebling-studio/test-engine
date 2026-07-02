@@ -16,6 +16,11 @@ use crate::{Window, WindowEvents, state::State};
 
 static APP_HANDLER: MainLock<Option<AppHandler>> = MainLock::new();
 
+/// Rough pixel height of one mouse wheel line. Wheel deltas arrive in lines,
+/// trackpads send pixels, this converts lines to pixels. The result is
+/// scaled again by `SCROLL_SPEED` in the engine.
+const LINE_SCROLL_PIXELS: f32 = 28.0;
+
 #[allow(clippy::large_enum_variant)]
 enum AppHandlerState {
     Ready(Window),
@@ -111,7 +116,7 @@ impl ApplicationHandler<Window> for AppHandler {
 
             #[cfg(not_wasm)]
             {
-                win_attr = win_attr.with_title("WebGPU example");
+                win_attr = win_attr.with_title("test-engine");
             }
 
             #[cfg(wasm)]
@@ -152,14 +157,14 @@ impl ApplicationHandler<Window> for AppHandler {
             WindowEvent::MouseWheel { delta, .. } => match delta {
                 MouseScrollDelta::LineDelta(x, y) => {
                     let point: Point = (x, y).into();
-                    self.te_window_events.mouse_scroll(point * 28.0);
+                    self.te_window_events.mouse_scroll(point * LINE_SCROLL_PIXELS);
                 }
                 MouseScrollDelta::PixelDelta(delta) => {
                     self.te_window_events.mouse_scroll((delta.x, delta.y).into());
                 }
             },
             WindowEvent::KeyboardInput { event, .. } => {
-                if event.physical_key == PhysicalKey::Code(KeyCode::Escape) {
+                if Window::quit_on_escape() && event.physical_key == PhysicalKey::Code(KeyCode::Escape) {
                     event_loop.exit();
                 }
                 self.te_window_events.key_event(event);

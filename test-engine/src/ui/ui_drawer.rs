@@ -10,9 +10,7 @@ use render::{
     UIGradientPipeline, UIImageRectPipeline,
     data::{RectView, UIGradientInstance, UIImageInstance, UIRectInstance},
 };
-use ui::{
-    ImageView, Label, TextAlignment, UIManager, View, ViewData, ViewFrame, ViewLayout, ViewSubviews,
-};
+use ui::{ImageView, Label, TextAlignment, UIManager, View, ViewData, ViewFrame, ViewLayout, ViewSubviews};
 use wgpu::RenderPass;
 use wgpu_text::glyph_brush::{BuiltInLineBreaker, HorizontalAlign, Layout, Section, Text, VerticalAlign};
 use window::{Font, Window};

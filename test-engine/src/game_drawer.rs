@@ -1,6 +1,6 @@
 use game::{Game, Shape};
 use gm::flat::Point;
-use refs::{main_lock::MainLock, manage::DataManager};
+use refs::main_lock::MainLock;
 use render::{BackgroundPipeline, SpriteView, TexturedSpriteBoxPipeline, data::TexturedSpriteInstance};
 use ui::UIManager;
 use window::RenderPass;
@@ -16,7 +16,7 @@ impl GameDrawer {
 
         BACKGROUND.get_mut().draw(
             pass,
-            unsafe { game.skybox.get_static() },
+            &game.skybox,
             UIManager::window_resolution(),
             Point::default(),
             0.0,

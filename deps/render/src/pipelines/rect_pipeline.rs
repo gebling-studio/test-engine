@@ -29,6 +29,8 @@ pub struct RectPipeline<
 
     view: UniformBind<View>,
 
+    // Entries are never removed. Managed images live for the whole process,
+    // see docs/refs.md, so a key cannot die.
     instances: IndexMap<Weak<Image>, VecBuffer<Instance>>,
 }
 
@@ -53,10 +55,8 @@ impl<
 
         let mut bind_group_layouts = vec![Some(&sprite_view_layout)];
 
-        let image_layout = Image::uniform_layout();
-
         if TYPE.image() {
-            bind_group_layouts.push(Some(&image_layout));
+            bind_group_layouts.push(Some(Image::uniform_layout()));
         }
 
         let uniform_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
@@ -113,8 +113,6 @@ impl<
     }
 
     pub fn draw<'a>(&'a mut self, render_pass: &mut RenderPass<'a>, view: View) {
-        assert!(TYPE.color() || TYPE.image());
-
         if self.instances.is_empty() {
             return;
         }

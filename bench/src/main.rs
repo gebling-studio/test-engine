@@ -55,10 +55,13 @@ fn main() -> Result<()> {
 
         let median_views = mark_suspects(&mut runs);
 
-        modes.insert((*name).to_string(), json!({
-            "median_views": median_views,
-            "runs": runs,
-        }));
+        modes.insert(
+            (*name).to_string(),
+            json!({
+                "median_views": median_views,
+                "runs": runs,
+            }),
+        );
     }
 
     let _ = fs::remove_file(&result_path);
@@ -150,7 +153,11 @@ fn mark_suspects(runs: &mut [Value]) -> i64 {
         .map(|r| r["views"].as_i64().expect("views is a number"))
         .collect();
 
-    if clean.is_empty() { all } else { median(clean.into_iter()) }
+    if clean.is_empty() {
+        all
+    } else {
+        median(clean.into_iter())
+    }
 }
 
 fn median(values: impl Iterator<Item = i64>) -> i64 {

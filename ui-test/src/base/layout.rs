@@ -105,7 +105,6 @@ pub async fn test_layout() -> Result<()> {
 
     AppRunner::set_window_size((240, 240));
 
-
     inject_touches(
         r"
             8    121  b

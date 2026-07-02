@@ -4,10 +4,9 @@ use ui_proc::view;
 use vents::Event;
 
 use crate::{
-    Setup, ViewCallbacks,
+    Button, Setup, UIImages, ViewCallbacks,
     view::{ViewData, ViewFrame},
 };
-use crate::{Button, UIImages};
 
 #[view(crate = crate::__macro_root)]
 pub struct DPadView {

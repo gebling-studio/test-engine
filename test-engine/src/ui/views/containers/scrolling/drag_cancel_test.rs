@@ -6,11 +6,7 @@ use hreads::from_main;
 use refs::Weak;
 use ui::{Button, Setup, ViewData, ViewSubviews, ViewTest};
 
-use crate::{
-    self as test_engine,
-    ui::ScrollView,
-    ui_test::inject_touches,
-};
+use crate::{self as test_engine, ui::ScrollView, ui_test::inject_touches};
 
 /// Drag scrolling must not tap the view the drag began on.
 /// Before the fix releasing a drag over a button pressed it, because the
@@ -37,9 +33,7 @@ impl Setup for DragCancel {
 
 impl ViewTest for DragCancel {
     fn perform_test(view: Weak<Self>) -> Result<()> {
-        let state = move || {
-            from_main(move || (view.taps, view.scroll.get_scroll_content_offset()))
-        };
+        let state = move || from_main(move || (view.taps, view.scroll.get_scroll_content_offset()));
 
         inject_touches(
             "

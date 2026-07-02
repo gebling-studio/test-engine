@@ -9,6 +9,9 @@ use window::Window;
 
 use crate::{ViewCallbacks, view::ViewFrame};
 
+/// Path rendering is currently disconnected. `UIDrawer` does not draw paths,
+/// so this view and everything built on it produces no visuals.
+/// Planned to be reimplemented later.
 #[view(crate = crate::__macro_root)]
 pub struct DrawingView {
     prev_size:   Size,
@@ -48,6 +51,7 @@ impl DrawingView {
             color,
             Window::render_size(),
             self.absolute_frame().origin,
+            self.z_position(),
             &path,
         ));
 

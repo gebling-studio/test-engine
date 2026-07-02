@@ -42,6 +42,7 @@ impl<T: ?Sized + View> ViewFrame for T {
             "Z position must be set before adding to superview"
         );
         self.__base_view().z_position = z;
+        self.__base_view().z_position_custom = true;
         self
     }
 

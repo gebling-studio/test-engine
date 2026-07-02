@@ -21,6 +21,8 @@ use test_engine::{
     },
 };
 
+#[cfg(feature = "bench")]
+use crate::interface::test_game_view::UIBenchmarkView;
 use crate::{
     api::TEST_REST_REQUEST,
     interface::{
@@ -34,8 +36,6 @@ use crate::{
     levels::{BenchmarkLevel, TestLevel},
     no_physics::NoPhysicsView,
 };
-#[cfg(feature = "bench")]
-use crate::interface::test_game_view::UIBenchmarkView;
 
 #[view]
 pub struct MenuView {

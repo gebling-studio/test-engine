@@ -30,6 +30,11 @@ pub struct ViewBase {
     #[educe(Default = crate::UIManager::ROOT_VIEW_Z_OFFSET)]
     pub(crate) z_position: f32,
 
+    /// Set through `set_z_position`. Blocks the automatic z assignment
+    /// when the view is added to a superview.
+    #[educe(Debug(ignore))]
+    pub(crate) z_position_custom: bool,
+
     pub(crate) frame:     Rect,
     #[allow(clippy::pub_underscore_fields)]
     pub __absolute_frame: Rect,

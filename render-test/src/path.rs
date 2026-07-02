@@ -13,6 +13,7 @@ pub(crate) fn render_path(pass: &mut RenderPass) {
             BLUE,
             Window::render_size(),
             (200, 200).into(),
+            0.5,
             &[
                 (0, 0).into(),
                 (80, 100).into(),
@@ -26,7 +27,7 @@ pub(crate) fn render_path(pass: &mut RenderPass) {
 
     let path = path.as_ref().unwrap();
 
-    PATH.draw(pass, path.buffer(), path.uniform_bind(), path.vertex_range(), 0.5);
+    PATH.draw(pass, path);
 
     UI_RECT.get_mut().add(UIRectInstance::new(
         (450, 200, 200, 200).into(),

@@ -37,7 +37,7 @@ const TEXTURED_VERTICES: &[Vertex2D; 4] = &[
 
 const VERTEX_RANGE: Range<u32> = 0..checked_usize_to_u32(VERTICES.len());
 
-const TEXTURED_VERTEX_RANGE: Range<u32> = 0..checked_usize_to_u32(VERTICES.len());
+const TEXTURED_VERTEX_RANGE: Range<u32> = 0..checked_usize_to_u32(TEXTURED_VERTICES.len());
 
 #[derive(ConstParamTy, PartialEq, Eq)]
 pub enum PipelineType {

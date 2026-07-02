@@ -4,8 +4,6 @@ use std::{
     sync::mpsc::{Receiver, Sender, channel},
 };
 
-use web_time::Instant;
-
 use anyhow::Result;
 use gm::{
     LossyConvert,
@@ -14,6 +12,7 @@ use gm::{
 use log::{info, warn};
 use plat::Platform;
 use refs::manage::DataManager;
+use web_time::Instant;
 use wgpu::{CurrentSurfaceTexture, TextureFormat};
 
 use crate::{
@@ -76,17 +75,17 @@ pub struct State {
 impl Default for State {
     fn default() -> Self {
         Self {
-            clear_color:          GRAY_BLUE,
-            read_display_request: RefCell::default(),
-            frame_counter:        FrameCounter::default(),
-            offscreen_texture:    None,
-            depth_texture:        None,
-            update_work:          0.0,
-            frame_work_time:      0.0,
+            clear_color:                              GRAY_BLUE,
+            read_display_request:                     RefCell::default(),
+            frame_counter:                            FrameCounter::default(),
+            offscreen_texture:                        None,
+            depth_texture:                            None,
+            update_work:                              0.0,
+            frame_work_time:                          0.0,
             #[cfg(feature = "bench")]
-            frame_gpu_time:       0.0,
+            frame_gpu_time:                           0.0,
             #[cfg(feature = "bench")]
-            gpu_timer:            None,
+            gpu_timer:                                None,
         }
     }
 }
@@ -102,7 +101,11 @@ impl State {
 
         let window = Window::current();
 
-        if let Screen::Windowed { winit_window, surface } = &mut window.screen {
+        if let Screen::Windowed {
+            winit_window,
+            surface,
+        } = &mut window.screen
+        {
             if surface.is_none() {
                 *surface = Surface::new(
                     &window.instance,
@@ -122,10 +125,7 @@ impl State {
 
             surface.as_ref().unwrap().presentable.configure(
                 &window.device,
-                &surface_config_with_size((
-                    new_size.width.lossy_convert(),
-                    new_size.height.lossy_convert(),
-                )),
+                &surface_config_with_size((new_size.width.lossy_convert(), new_size.height.lossy_convert())),
             );
         }
 
@@ -158,22 +158,19 @@ impl State {
         AppHandler::current().te_window_events.update();
         self.update_work = work_started.elapsed().as_secs_f32();
 
-        if Window::current().title_set {
-            return;
-        }
-
-        if self.frame_counter.update() {
-            let a = format!(
-                "{:.2}ms frame {:.1} FPS",
+        if self.frame_counter.update()
+            && !Window::current().title_set
+            && Platform::DESKTOP
+            && let Some(window) = Window::winit_window()
+        {
+            let size = Window::render_size();
+            window.set_title(&format!(
+                "{:.2}ms frame {:.1} FPS {} x {}",
                 self.frame_counter.frame_time * 1000.0,
-                self.frame_counter.fps
-            );
-            if Platform::DESKTOP
-                && let Some(window) = Window::winit_window()
-            {
-                let size = Window::render_size();
-                window.set_title(&format!("{a} {} x {}", size.width, size.height));
-            }
+                self.frame_counter.fps,
+                size.width,
+                size.height
+            ));
         }
     }
 
@@ -254,8 +251,8 @@ impl State {
 
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label:                    Some("Render Pass"),
-                color_attachments:        &[Some(wgpu::RenderPassColorAttachment {
+                label: Some("Render Pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view:           &view,
                     depth_slice:    None,
                     resolve_target: None,
@@ -277,9 +274,9 @@ impl State {
                     }),
                     stencil_ops: None,
                 }),
-                occlusion_query_set:      None,
+                occlusion_query_set: None,
                 timestamp_writes,
-                multiview_mask:           None,
+                multiview_mask: None,
             });
 
             AppHandler::current().te_window_events.render(&mut render_pass);
@@ -356,9 +353,10 @@ impl State {
         });
     }
 
-    /// Reads back the render pass timestamps resolved during `render` and blocks
-    /// until the GPU reports them. The blocking poll runs after the work timer
-    /// has closed, so it costs only wall-clock throughput, not `frame_work_time`.
+    /// Reads back the render pass timestamps resolved during `render` and
+    /// blocks until the GPU reports them. The blocking poll runs after the
+    /// work timer has closed, so it costs only wall-clock throughput, not
+    /// `frame_work_time`.
     #[cfg(feature = "bench")]
     fn read_gpu_time(&mut self) -> Result<()> {
         let gpu_seconds = {

@@ -1,8 +1,5 @@
 use level::LevelManager;
-use refs::{
-    main_lock::MainLock,
-    manage::{DataManager, ExistsManaged},
-};
+use refs::{main_lock::MainLock, manage::ExistsManaged};
 use render::{
     BackgroundPipeline, PolygonPipeline, SpriteBoxPipeline, SpriteView, TexturedSpriteBoxPipeline,
     data::{SpriteInstance, TexturedSpriteInstance},
@@ -35,7 +32,7 @@ impl LevelDrawer {
         if level.background.is_ok() {
             BACKGROUND.get_mut().draw(
                 pass,
-                unsafe { level.background.get_static() },
+                &level.background,
                 resolution,
                 camera_pos.neg() / 10.0,
                 0.0,

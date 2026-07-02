@@ -63,7 +63,6 @@ pub async fn test_modal() -> Result<()> {
 
     Modal::show_modally_with_input((), |()| {});
 
-
     check_colors(
         r#"
              158  295 - 255 255 255

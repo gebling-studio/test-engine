@@ -3,10 +3,8 @@ use hreads::assert_main_thread;
 use refs::{Own, Weak};
 use ui_proc::view;
 
-use crate::{Touch, WeakView};
-
 use crate::{
-    Setup, TouchStack, UIAnimation, View, ViewData,
+    Setup, Touch, TouchStack, UIAnimation, View, ViewData, WeakView,
     view::{ViewFrame, ViewSubviews},
 };
 

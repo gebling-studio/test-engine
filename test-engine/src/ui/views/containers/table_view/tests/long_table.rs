@@ -66,7 +66,6 @@ impl ViewTest for LongTableTest {
             crate::AppRunner::set_window_size((1000, 1000));
         }
 
-
         inject_touches(
             "
                  865  126  m

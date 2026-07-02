@@ -9,7 +9,6 @@ use std::{
 };
 
 use sysinfo::{Component, Components, MINIMUM_CPU_UPDATE_INTERVAL, ProcessesToUpdate, System};
-
 use test_engine::{
     Window,
     gm::LossyConvert,
@@ -161,7 +160,9 @@ pub fn guard_benchmark(force: bool) {
 
     let busy = load.cpu_usage > MAX_CPU_USAGE || load.load_per_core > MAX_LOAD_PER_CORE;
 
-    SYSTEM_AT_START.set(load).unwrap_or_else(|_| panic!("system load measured twice"));
+    SYSTEM_AT_START
+        .set(load)
+        .unwrap_or_else(|_| panic!("system load measured twice"));
 
     if reasons.is_empty() {
         return;
@@ -395,10 +396,17 @@ impl UIBenchmarkView {
     fn report(&self) {
         println!();
         println!("UI benchmark:");
-        println!("{:<7} {:>7} {:>8} {:>8} {:>9}", "panels", "views", "cpu_ms", "gpu_ms", "fps");
+        println!(
+            "{:<7} {:>7} {:>8} {:>8} {:>9}",
+            "panels", "views", "cpu_ms", "gpu_ms", "fps"
+        );
 
         for result in self.sampled() {
-            let fps = if result.avg_ms > 0.0 { 1000.0 / result.avg_ms } else { 0.0 };
+            let fps = if result.avg_ms > 0.0 {
+                1000.0 / result.avg_ms
+            } else {
+                0.0
+            };
             println!(
                 "{:<7} {:>7} {:>8.3} {:>8.3} {:>9.1}",
                 result.panels, result.views, result.avg_ms, result.gpu_ms, fps
@@ -512,7 +520,11 @@ impl Setup for BenchPanel {
         }
 
         self.check.set_color(shade(i, 22)).set_border_color(shade(i, 23));
-        self.check.place().same([Width, X], self.switch).anchor(Top, self.switch, 2).h(16);
+        self.check
+            .place()
+            .same([Width, X], self.switch)
+            .anchor(Top, self.switch, 2)
+            .h(16);
         if i.is_multiple_of(3) {
             self.check.set_on(true);
         }
@@ -560,7 +572,9 @@ impl Setup for BenchPanel {
 
         self.custom_box.set_color(shade(i, 12));
         let width: f32 = (10 + (i * 7) % 20).lossy_convert();
-        self.custom_box.place().custom(move |rect| *rect = (2.0, 30.0, width, 6.0).into());
+        self.custom_box
+            .place()
+            .custom(move |rect| *rect = (2.0, 30.0, width, 6.0).into());
 
         self.scroll.set_color(shade(i, 29));
         self.scroll.place().t(2).r(40).size(30, 40);

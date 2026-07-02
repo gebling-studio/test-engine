@@ -109,11 +109,7 @@ impl PolygonPipeline {
 
             if let (Some(index_buffer), Some(index_len)) = (index_buffer, index_len) {
                 render_pass.set_index_buffer(index_buffer.slice(..), IndexFormat::Uint16);
-                render_pass.draw_indexed(
-                    0..checked_usize_to_u32(*index_len),
-                    0,
-                    0..checked_usize_to_u32(*points_len),
-                );
+                render_pass.draw_indexed(0..checked_usize_to_u32(*index_len), 0, 0..1);
             } else {
                 render_pass.draw(0..checked_usize_to_u32(*points_len), 0..1);
             }

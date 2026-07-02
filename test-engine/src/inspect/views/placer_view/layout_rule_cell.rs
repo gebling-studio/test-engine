@@ -53,8 +53,6 @@ impl LayoutRuleCell {
             self.anchor.set_anchor(anchor);
             self.value.set_text(LossyConvert::<i64>::lossy_convert(rule.offset()));
             self.enabled.set_on(rule.enabled);
-        } else {
-            dbg!(&rule);
         }
 
         self.view = view;

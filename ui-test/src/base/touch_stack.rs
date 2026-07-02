@@ -60,7 +60,6 @@ pub async fn test_touch_stack() -> Result<()> {
 
     Alert::show("Hello");
 
-
     assert_eq!(
         TouchStack::dump(),
         vec![

@@ -15,8 +15,7 @@ struct _ProcView {
 // Pins where-clause support: the macro must carry it into generated impls.
 #[view(crate = ui::__macro_root)]
 struct _GenericView<T>
-where T: Default + 'static
-{
+where T: Default + 'static {
     _value: T,
 }
 

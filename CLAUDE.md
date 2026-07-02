@@ -31,6 +31,7 @@ cargo run -p ui-test -- --stop-on-failure --headless                         # f
 cargo run -p ui-test -- --stop-on-failure --headless --test-name <ViewName>  # single test
 cargo run -p render-test                                                     # render tests
 make lint                                                                    # clippy, pedantic, zero warnings
+cargo machete                                                                # unused dependencies, zero findings
 make bench                                                                   # UI benchmark suite, saves bench/<date>-<commit>.json
 UI_BENCHMARK=1 cargo run -p test-game --release --features bench             # single benchmark run, prints and exits
 ```
@@ -39,3 +40,6 @@ UI_BENCHMARK=1 cargo run -p test-game --release --features bench             # s
 
 Without `--stop-on-failure` a failed UI test leaves the app window running. Always pass it.
 `--headless` runs without a window or a display — tests run many times faster. Always pass it too.
+
+After touching any `Cargo.toml` or removing code, run `cargo machete`. It must report
+zero unused dependencies.

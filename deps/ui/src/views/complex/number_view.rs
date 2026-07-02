@@ -3,12 +3,11 @@ use gm::{
     color::{CLEAR, Color, LIGHT_GRAY},
 };
 use refs::{Weak, weak_from_ref};
+use ui_proc::view;
 use vents::Event;
+use window::image::NoImage;
 
 use crate::{Button, Container, Setup, Style, ToLabel, UIImages, view::ViewData};
-
-use ui_proc::view;
-use window::image::NoImage;
 
 #[view(crate = crate::__macro_root)]
 pub struct NumberView {

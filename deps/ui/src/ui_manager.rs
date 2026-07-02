@@ -18,9 +18,7 @@ use plat::Platform;
 use refs::{Own, Weak};
 use window::Window;
 
-use crate::{
-    Keymap, RootView, Setup, TouchStack, UIAnimation, UIEvent, View, ViewData, WeakView,
-};
+use crate::{Keymap, RootView, Setup, TouchStack, UIAnimation, UIEvent, View, ViewData, WeakView};
 
 pub(crate) static DELETED_VIEWS: Mutex<Vec<Own<dyn View>>> = Mutex::new(Vec::new());
 

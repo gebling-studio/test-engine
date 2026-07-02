@@ -77,16 +77,22 @@ impl Style {
 
 #[cfg(test)]
 mod test {
+    use std::hint::black_box;
+
     use hreads::set_current_thread_as_main;
 
     use crate::{Button, Label, Style, Switch};
 
+    // Styles compare by function pointer. Empty identical bodies can be
+    // merged by the compiler into one function, which would make these
+    // styles equal and trip the duplicate check in apply_globally.
+    // black_box with distinct strings keeps the bodies distinct.
     const STYLE: Style = Style::new(|_v| {});
     const STYLE2: Style = Style::new(|_v| {
-        dbg!("a");
+        black_box("a");
     });
     const STYLE3: Style = Style::new(|_v| {
-        dbg!("b");
+        black_box("b");
     });
 
     #[test]

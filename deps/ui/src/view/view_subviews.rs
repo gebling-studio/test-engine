@@ -140,7 +140,7 @@ impl<T: ?Sized + View> ViewSubviews for T {
             view.__base_view().navigation_view = self.__base_view().navigation_view;
         }
 
-        if weak.z_position() == UIManager::ROOT_VIEW_Z_OFFSET {
+        if !weak.__base_view().z_position_custom {
             weak.__base_view().z_position = self.z_position()
                 - UIManager::subview_z_offset()
                 - UIManager::additional_z_offset() * self.__base_view().subviews.len().lossy_convert();

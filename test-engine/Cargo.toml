@@ -9,9 +9,9 @@ crate-type = ["rlib", "staticlib"]
 name = "test_engine"
 
 [features]
+bench = ["window/bench"]
 default = []
 webgl = ["wgpu/webgl"]
-bench = ["window/bench"]
 
 [dependencies]
 anyhow = { workspace = true }

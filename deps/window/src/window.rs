@@ -29,6 +29,7 @@ use crate::{
 
 static VSYNC: AtomicBool = AtomicBool::new(true);
 static MAX_FRAME_LATENCY: AtomicU32 = AtomicU32::new(2);
+static QUIT_ON_ESCAPE: AtomicBool = AtomicBool::new(false);
 static RENDER_FRAME: AtomicU64 = AtomicU64::new(0);
 /// Mirrors `Screen::Headless` so any thread can check it. Set once at
 /// startup, never changes.
@@ -242,7 +243,10 @@ impl Window {
             adapter,
             device,
             queue,
-            screen: Screen::Windowed { winit_window, surface },
+            screen: Screen::Windowed {
+                winit_window,
+                surface,
+            },
             #[cfg(desktop)]
             is_resizing: false,
             title_set: false,
@@ -353,6 +357,15 @@ impl Window {
         self.state.frame_counter.frame_count
     }
 
+    /// Close the app when Escape is pressed. Off by default.
+    pub fn set_quit_on_escape(enable: bool) {
+        QUIT_ON_ESCAPE.store(enable, Ordering::Relaxed);
+    }
+
+    pub(crate) fn quit_on_escape() -> bool {
+        QUIT_ON_ESCAPE.load(Ordering::Relaxed)
+    }
+
     /// Always enabled on mobile platforms. Takes effect on the next frame.
     pub fn set_vsync(enable: bool) {
         on_main(move || {
@@ -385,7 +398,8 @@ impl Window {
         let window = Self::current();
 
         if let Screen::Windowed {
-            surface: Some(surface), ..
+            surface: Some(surface),
+            ..
         } = &window.screen
         {
             let size: Size<u32> = Self::render_size().lossy_convert();
