@@ -57,17 +57,20 @@ jobs:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Free Space
         if: ${{ matrix.target.os != 'windows' }}
-        run: ./build/scripts/free_action_runner.sh
+        run: bun build/scripts/free_action_runner.ts
 
       - name: Build
         if: ${{ matrix.target.os != 'windows' }}
-        run: ./build/build.sh ${{ matrix.target.os }}
+        run: bun build/build.ts ${{ matrix.target.os }}
 
       - name: Build windows
         if: ${{ matrix.target.os == 'windows' }}
-        run: py build/build.py
+        run: bun build/build.ts
 
       - name: Test
         if: ${{ matrix.target.os != 'ios' && matrix.target.os != 'android' }}
@@ -95,8 +98,11 @@ jobs:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Free Space
-        run: ./build/scripts/free_action_runner.sh
+        run: bun build/scripts/free_action_runner.ts
 
       - name: Build
-        run: echo ${{ matrix.target.container }} && ./build/in_docker.sh ${{ matrix.target.container }}
+        run: echo ${{ matrix.target.container }} && bun build/in_docker.ts ${{ matrix.target.container }}
