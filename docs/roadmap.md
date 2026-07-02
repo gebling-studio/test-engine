@@ -56,10 +56,15 @@ its subviews stay crisp on top. The frame splits into several render passes at t
 blur view, the scene downsamples to quarter resolution, gets a separable gaussian
 blur, and composites back through a dedicated backdrop pipeline. A frame without a
 blur view keeps the old single pass path. This unblocked the frosted sticky header.
+The modal scrim blur landed as an opt-in `modal_blur` override on `ModalView`, zero
+by default. With a radius the modal wrapper is a `BlurView` tinted by
+`modal_scrim_color` instead of a plain scrim, so the whole scene behind the dialog
+blurs and dims while the dialog stays crisp. This closed the last visual parity gap
+of the skaityk port.
 
-## 1. Text stack rework
+## Text stack rework
 
-Found by the FontZoo emoji page. Parked until a real need, the items above come first.
+Found by the FontZoo emoji page. Parked until a real need.
 
 - Current: text renders through wgpu_text, glyph_brush and ab_glyph — outline glyphs
   only, a single channel atlas tinted by the text color. Color emoji tables, CBDT, sbix
@@ -72,12 +77,7 @@ Found by the FontZoo emoji page. Parked until a real need, the items above come 
   tests.
 - Blocks: colorful emoji, complex scripts. Nothing in the driver app today.
 
-## 2. Small niceties
-
-- Backdrop blur for the modal scrim, an opt-in override on `ModalView` like
-  `modal_scrim_color`. The `BlurView` mechanism it needs is already in.
-
 ## Suggested order
 
-The modal scrim blur is the last visual parity gap. The text stack rework waits
-for a real need for color emoji or complex scripts.
+Only the text stack rework remains, and it waits for a real need for color emoji
+or complex scripts.

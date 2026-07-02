@@ -4,7 +4,8 @@ use refs::{Own, Weak};
 use vents::OnceEvent;
 
 use crate::{
-    ScrimView, Setup, TouchStack, UIColor, UIManager, View, ViewData, ViewFrame, view::ViewSubviews,
+    BlurView, ScrimView, Setup, TouchStack, UIColor, UIManager, View, ViewData, ViewFrame,
+    view::ViewSubviews,
 };
 
 pub trait ModalView<In = (), Out: 'static = ()>: 'static + View + Default {
@@ -18,8 +19,15 @@ pub trait ModalView<In = (), Out: 'static = ()>: 'static + View + Default {
         // The scrim owns the modal, so hiding removes both at once.
         // It sits one subview step behind the modal and in front of
         // everything else. It is not a touch layer, the modal already
-        // blocks touches under it.
-        let mut scrim = ScrimView::new();
+        // blocks touches under it. With a blur it is a BlurView, which
+        // blurs the whole scene and tints it with the scrim color.
+        let mut scrim: Own<dyn View> = if Self::modal_blur() > 0.0 {
+            let mut blur = BlurView::new();
+            blur.set_blur_radius(Self::modal_blur());
+            blur
+        } else {
+            ScrimView::new()
+        };
         scrim.set_z_position(UIManager::MODAL_Z_OFFSET + UIManager::subview_z_offset());
         let scrim = UIManager::root_view().add_subview_to_root(scrim);
         scrim.set_color(Self::modal_scrim_color());
@@ -76,6 +84,13 @@ pub trait ModalView<In = (), Out: 'static = ()>: 'static + View + Default {
     /// Transparent by default, override to dim the background.
     fn modal_scrim_color() -> UIColor {
         CLEAR.into()
+    }
+
+    /// The blur radius of the backdrop behind the modal. Zero by
+    /// default, override to blur the background. Combines with
+    /// `modal_scrim_color`, which tints the blur.
+    fn modal_blur() -> f32 {
+        0.0
     }
 
     fn setup_input(self: Weak<Self>, _: In) {}
