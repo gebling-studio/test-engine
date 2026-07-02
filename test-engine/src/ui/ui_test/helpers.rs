@@ -1,13 +1,16 @@
 use anyhow::Result;
 use gm::{
+    LossyConvert,
     color::{LIGHT_GRAY, U8Color},
     flat::Point,
 };
 use ui::{Button, Setup, UIManager, View, ViewData};
 
 use crate::ui_test::{
+    TEST_NAME,
     checks::check_colors_structured,
-    record::{print_recorded_colors, recording_colors},
+    human::{human_mode, show_probes},
+    record::{next_check_index, print_recorded_colors, recording_colors},
 };
 
 #[allow(dead_code)]
@@ -53,6 +56,16 @@ pub fn check_colors(data: &str) -> Result<()> {
             Some((pos, color))
         })
         .collect();
+
+    if human_mode() {
+        let positions: Vec<(u32, u32)> = checks
+            .iter()
+            .map(|(pos, _)| (pos.x.lossy_convert(), pos.y.lossy_convert()))
+            .collect();
+
+        let test_name = TEST_NAME.lock().clone();
+        show_probes(&positions, &test_name, next_check_index(&test_name));
+    }
 
     check_colors_structured(&checks)
 }

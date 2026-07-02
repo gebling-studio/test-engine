@@ -4,20 +4,15 @@ use std::{
 };
 
 use anyhow::Result;
-use gm::{
-    LossyConvert,
-    color::{BLACK, CLEAR, U8Color, WHITE},
-};
-use hreads::from_main;
+use gm::color::U8Color;
 use parking_lot::Mutex;
-use ui::{Container, Setup, UIManager, ViewData, ViewFrame, ViewSubviews, WeakView};
-use window::{Screenshot, Window};
+use window::Screenshot;
 
 use crate::{
     AppRunner,
     ui_test::{
         TEST_NAME,
-        human::{human_mode, wait_for_space},
+        human::{human_mode, show_probes},
     },
 };
 
@@ -71,21 +66,25 @@ fn probe_count() -> usize {
     if count == 0 { DEFAULT_PROBE_COUNT } else { count }
 }
 
+/// Which `check_colors` call this is within the running test. Names
+/// printed blocks and marker hold titles.
+pub(crate) fn next_check_index(test_name: &str) -> usize {
+    let mut last = LAST_TEST.lock();
+
+    if *last != test_name {
+        test_name.clone_into(&mut last);
+        CHECK_INDEX.store(0, Ordering::Relaxed);
+    }
+
+    CHECK_INDEX.fetch_add(1, Ordering::Relaxed) + 1
+}
+
 pub(crate) fn print_recorded_colors() -> Result<()> {
     let screenshot = AppRunner::take_screenshot()?;
     let probes = pick_probes(&screenshot);
 
     let test_name = TEST_NAME.lock().clone();
-
-    {
-        let mut last = LAST_TEST.lock();
-        if *last != test_name {
-            last.clone_from(&test_name);
-            CHECK_INDEX.store(0, Ordering::Relaxed);
-        }
-    }
-
-    let index = CHECK_INDEX.fetch_add(1, Ordering::Relaxed) + 1;
+    let index = next_check_index(&test_name);
 
     println!();
     println!("{test_name} check {index}, {} probes:", probes.len());
@@ -105,49 +104,11 @@ pub(crate) fn print_recorded_colors() -> Result<()> {
     println!();
 
     if human_mode() {
-        show_probes(&probes, &test_name, index);
+        let positions: Vec<(u32, u32)> = probes.iter().map(|(pos, _)| *pos).collect();
+        show_probes(&positions, &test_name, index);
     }
 
     Ok(())
-}
-
-/// Marks every probe with a square around it, the probed pixel in the
-/// center, and holds until space. Black square in a white one, so
-/// markers stay visible on any background.
-fn show_probes(probes: &[Probe], test_name: &str, index: usize) {
-    let probes = probes.to_vec();
-
-    let markers = from_main(move || {
-        let mut markers: Vec<WeakView> = vec![];
-
-        for ((x, y), _) in probes {
-            let x: f32 = x.lossy_convert();
-            let y: f32 = y.lossy_convert();
-
-            for (size, color) in [(12.0, WHITE), (10.0, BLACK)] {
-                let mut view = Container::new();
-                view.set_z_position(0.1);
-                view.set_color(CLEAR).set_border_color(color).set_border_width(1).set_frame((
-                    x - size / 2.0,
-                    y - size / 2.0,
-                    size,
-                    size,
-                ));
-                markers.push(UIManager::root_view().add_subview_to_root(view));
-            }
-        }
-
-        markers
-    });
-
-    Window::set_title(format!("{test_name} check {index}: space to continue"));
-    wait_for_space();
-
-    from_main(move || {
-        for mut marker in markers {
-            marker.remove_from_superview();
-        }
-    });
 }
 
 type Probe = ((u32, u32), U8Color);

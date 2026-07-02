@@ -14,9 +14,11 @@ impl Placer {
     fn add_size_rule(&self, rule: LayoutRule) {
         if rule.width() {
             self.has().width = true;
+            self.fit_text.borrow_mut().width = false;
             self.rules().retain(|r| !r.width());
         } else {
             self.has().height = true;
+            self.fit_text.borrow_mut().height = false;
             self.rules().retain(|r| !r.height());
         }
         self.rules().insert(0, rule);
@@ -95,6 +97,24 @@ impl Placer {
             }
         }
         self
+    }
+
+    pub fn fit_text_width(&self) -> &Self {
+        self.has().width = true;
+        self.rules().retain(|r| !r.width());
+        self.fit_text.borrow_mut().width = true;
+        self
+    }
+
+    pub fn fit_text_height(&self) -> &Self {
+        self.has().height = true;
+        self.rules().retain(|r| !r.height());
+        self.fit_text.borrow_mut().height = true;
+        self
+    }
+
+    pub fn fit_text(&self) -> &Self {
+        self.fit_text_width().fit_text_height()
     }
 
     pub fn w(&self, w: impl ToF32) -> &Self {

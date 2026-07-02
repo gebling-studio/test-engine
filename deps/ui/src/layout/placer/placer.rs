@@ -26,6 +26,8 @@ pub struct Placer {
 
     pub(crate) has: RefCell<Size<bool>>,
 
+    pub(crate) fit_text: RefCell<Size<bool>>,
+
     #[allow(clippy::type_complexity)]
     pub(crate) custom: RefCell<Option<Arc<Mutex<dyn FnMut(&mut Rect) + Send>>>>,
 }
@@ -39,6 +41,7 @@ impl Placer {
             s_content:        Rglica::default(),
             all_margin:       RefCell::new(0.0),
             has:              RefCell::new(Size::default()),
+            fit_text:         RefCell::new(Size::default()),
             custom:           RefCell::new(None),
         }
     }
@@ -65,6 +68,7 @@ impl Placer {
         self.rules.borrow_mut().clear();
         self.all_tiling_rules.borrow_mut().clear();
         *self.has.borrow_mut() = Size::default();
+        *self.fit_text.borrow_mut() = Size::default();
         self
     }
 
@@ -105,5 +109,6 @@ impl PartialEq for Placer {
             && self.all_tiling_rules == other.all_tiling_rules
             && self.all_margin == other.all_margin
             && self.has == other.has
+            && self.fit_text == other.fit_text
     }
 }

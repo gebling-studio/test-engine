@@ -104,9 +104,10 @@ to allow more.
 
 `--human` makes a run watchable: vsync stays on, injected touches are drawn on screen, every
 injected event pauses (`UI_TEST_HUMAN_DELAY` ms, default 400, moved touches an eighth of it),
-and every screenshot pauses first so the verified state is visible. After each test the
-window title shows the result and the run holds until space is pressed. Works for one test
-or the whole suite. Rejected together with `--headless`.
+and every screenshot pauses first so the verified state is visible. Every `check_colors`
+marks its checked pixels with squares on screen, the window title names the check, and the
+run holds until space before asserting. After each test the title shows the result and the
+run holds again. Works for one test or the whole suite. Rejected together with `--headless`.
 
 ## Recording color probes
 
@@ -126,8 +127,8 @@ Default is 32 probes per check. A test declares its own density by calling
 `set_record_probe_count(n)` at the start of `perform_test`. It is inert outside record runs
 and resets when the next test starts.
 
-`--record-colors --human` combined marks every probed pixel with a square on screen and
-holds at each check, to review what gets pinned.
+`--record-colors --human` combined shows the freshly picked probes the same way normal
+human runs show existing ones, to review what gets pinned before pasting.
 
 Re-recording an existing block to make a failing test pass is editing expectations — same
 rule as above, only with explicit approval.

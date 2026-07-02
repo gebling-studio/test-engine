@@ -4,13 +4,14 @@ use atomic_float::AtomicF32;
 use gm::{
     ToF32,
     color::{BLACK, Color},
+    flat::Size,
 };
 use refs::{Weak, weak_from_ref};
 use ui_proc::view;
 use window::{Font, image::ToImage};
 
 use crate::{
-    ImageView, Setup, Style, ToLabel, View, ViewFrame,
+    ImageView, Setup, Style, ToLabel, UIManager, View, ViewFrame,
     view::{ViewData, ViewSubviews},
 };
 
@@ -33,9 +34,6 @@ impl TextAlignment {
 #[view(crate = crate::__macro_root)]
 pub struct Label {
     pub alignment: TextAlignment,
-
-    #[educe(Default = 5.0)]
-    pub margin: f32,
 
     pub text: String,
 
@@ -89,6 +87,36 @@ impl Label {
     pub fn set_font(&self, font: Weak<Font>) -> &Self {
         weak_from_ref(self).font = font;
         self
+    }
+
+    /// Size the label's frame needs to show the current text. Multiline
+    /// wraps at the current frame width.
+    pub fn content_size(&self) -> Size {
+        self.size_for_width(self.width())
+    }
+
+    /// Size the label's frame needs at the given frame width. For multiline
+    /// this is how auto-height panels measure before layout.
+    pub fn size_for_width(&self, width: f32) -> Size {
+        let margin = self.alignment_margin();
+        let bound = self.multiline.then_some(width - margin);
+        let measured = self.font().measure(&self.text, self.text_size, bound);
+
+        if measured.has_no_area() {
+            return measured;
+        }
+
+        Size::new(measured.width + margin, measured.height)
+    }
+
+    // The drawer indents left and right aligned text by 16 physical pixels,
+    // so the fitted frame must include it or the text clips.
+    fn alignment_margin(&self) -> f32 {
+        if self.alignment.center() {
+            0.0
+        } else {
+            16.0 / UIManager::scale()
+        }
     }
 }
 

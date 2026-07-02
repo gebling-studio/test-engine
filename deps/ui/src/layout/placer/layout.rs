@@ -9,8 +9,11 @@ use refs::{Own, ToRglica};
 
 use super::Placer;
 use crate::{
-    View, ViewSubviews, WeakView,
-    layout::{Anchor, Tiling, layout_rule::Placement},
+    Label, View, ViewSubviews, WeakView,
+    layout::{
+        Anchor, Tiling,
+        layout_rule::{LayoutRule, Placement},
+    },
     view::ViewFrame,
 };
 
@@ -31,21 +34,7 @@ impl Placer {
         let mut new_frame = old_frame;
 
         for rule in this.rules().iter().filter(|r| r.enabled) {
-            match &rule.placement {
-                Placement::Side { side, offset } => self.simple_layout(&mut new_frame, *side, *offset),
-                Placement::Anchor { side, offset, view } => {
-                    anchor_layout(&mut new_frame, *side, *offset, *view, has_left, has_top);
-                }
-                Placement::Relative { side, ratio, view } => {
-                    relative_layout(&mut new_frame, *side, *ratio, *view);
-                }
-                Placement::Same { side, view } => same_layout(&mut new_frame, *side, *view),
-                Placement::Between { a, b } => between_2_layout(&mut new_frame, *a, *b),
-                Placement::BetweenSuper { side, view } => {
-                    self.between_super_layout(&mut new_frame, *side, *view);
-                }
-                Placement::Tiling(tiling) => self.tiling_layout(&mut new_frame, tiling),
-            }
+            self.apply_rule(&mut new_frame, rule, has_left, has_top);
         }
 
         for rule in this.all_tiling_rules().iter().filter(|r| r.enabled) {
@@ -55,6 +44,14 @@ impl Placer {
             self.tiling_layout(&mut new_frame, tiling);
         }
 
+        if self.fit_text_layout(&mut new_frame) {
+            // Position rules run again so centers and edges see the fitted
+            // size. The has flags are set, so no rule resizes here.
+            for rule in this.rules().iter().filter(|r| r.enabled) {
+                self.apply_rule(&mut new_frame, rule, has_left, has_top);
+            }
+        }
+
         if let Some(custom) = self.custom.borrow().as_ref() {
             custom.lock()(&mut new_frame);
         }
@@ -62,6 +59,51 @@ impl Placer {
         if new_frame != old_frame {
             self.view.set_frame(new_frame);
         }
+    }
+
+    fn apply_rule(&mut self, frame: RMut, rule: &LayoutRule, has_left: bool, has_top: bool) {
+        match &rule.placement {
+            Placement::Side { side, offset } => self.simple_layout(frame, *side, *offset),
+            Placement::Anchor { side, offset, view } => {
+                anchor_layout(frame, *side, *offset, *view, has_left, has_top);
+            }
+            Placement::Relative { side, ratio, view } => {
+                relative_layout(frame, *side, *ratio, *view);
+            }
+            Placement::Same { side, view } => same_layout(frame, *side, *view),
+            Placement::Between { a, b } => between_2_layout(frame, *a, *b),
+            Placement::BetweenSuper { side, view } => {
+                self.between_super_layout(frame, *side, *view);
+            }
+            Placement::Tiling(tiling) => self.tiling_layout(frame, tiling),
+        }
+    }
+
+    fn fit_text_layout(&self, frame: RMut) -> bool {
+        let fit = *self.fit_text.borrow();
+
+        if !fit.width && !fit.height {
+            return false;
+        }
+
+        let Some(label) = self.view.as_any().downcast_ref::<Label>() else {
+            return false;
+        };
+
+        let size = label.size_for_width(frame.width());
+        let mut changed = false;
+
+        if fit.width && (frame.width() - size.width).abs() > f32::EPSILON {
+            frame.size.width = size.width;
+            changed = true;
+        }
+
+        if fit.height && (frame.height() - size.height).abs() > f32::EPSILON {
+            frame.size.height = size.height;
+            changed = true;
+        }
+
+        changed
     }
 
     fn simple_layout(&mut self, frame: RMut, side: Anchor, offset: f32) {

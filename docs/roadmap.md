@@ -16,8 +16,11 @@ Already proven sufficient during the port, for reference: `TableView` with colum
 `Window::set_title`.
 
 Landed from this list already, each with UI tests: font wiring, an app-wide default via
-`Font::set_default` plus per-label `Label::set_font`, and named keys in `Keymap`, arrows,
-enter and friends via `NamedKey`.
+`Font::set_default` plus per-label `Label::set_font`, named keys in `Keymap`, arrows,
+enter and friends via `NamedKey`, and label content measurement, `Label::content_size`
+and `size_for_width` on top of `Font::measure`, with fit-to-text placer rules
+`fit_text_width`, `fit_text_height` and `fit_text` that compose with anchors and
+min and max clamps.
 
 ## 1. Flow-wrap layout container
 
@@ -29,26 +32,14 @@ The largest gap. The core interaction of the driver app sits on it.
   content-driven container and it is vertical only.
 - Needed: a container that lays out subviews left to right in row order, wraps to the
   next row when the width is exceeded, sizes rows by the tallest child, and re-wraps on
-  resize. Children need intrinsic sizes, which for text means gap 2.
+  resize. Children need intrinsic sizes, which labels now have via `content_size` and
+  the fit-to-text placer rules.
 - Blocks: the skaityk reader word grid. One sentence renders as a wrapping row of
   tappable word views. Tapping a word shows its translation in a mini label above the
   word at half font size. A second panel shows a gray slot per word, sized by word
   length, that reveals the translated word. None of this can be laid out today.
 
-## 2. Label content measurement
-
-- Current: `Label` has no content size API, multiline text just draws into whatever
-  frame the layout gives it, `deps/ui/src/views/basic/label.rs`. No auto-height, no
-  fit-to-text.
-- Needed: measure text at a font size to get content size, then a label mode or placer
-  rule where height follows the text. Combined with `ScrollView` for overflow. If gap 6,
-  the text stack rework, ever happens it provides this natively, check before building
-  it twice.
-- Blocks: the reader panels. Sentences can be long and the font size goes up to 144, the
-  panel must grow and scroll. Also feeds gap 1, word views in the flow grid must size
-  themselves to their word.
-
-## 3. Runtime theming
+## 2. Runtime theming
 
 - Current: `Style` applies once, at view setup, `deps/ui/src/style.rs`.
   `apply_globally` affects only views created after the call. No re-style of a live view
@@ -58,20 +49,20 @@ The largest gap. The core interaction of the driver app sits on it.
   event, so the platform part is mostly plumbing.
 - Blocks: dark mode. The original app follows the system theme live.
 
-## 4. Hover events
+## 3. Hover events
 
 - Current: the input pipeline is touch only, `deps/ui/src/view/view_touch.rs`. No per-view
   hover tracking from mouse moves.
 - Needed: hover enter and exit events on the view under the cursor, desktop only.
 - Blocks: desktop polish, card lift on hover, button hover colors.
 
-## 5. Drop shadows
+## 4. Drop shadows
 
 - Current: the rect pipeline draws fill, border and corner radius. No shadow.
 - Needed: shadow rendering under rounded rects plus shadow parameters on `ViewData`.
 - Blocks: card elevation, the original uses a small resting shadow and a larger hover one.
 
-## 6. Text stack rework
+## 5. Text stack rework
 
 Found by the FontZoo emoji page. Parked until a real need, the items above come first.
 
@@ -81,11 +72,12 @@ Found by the FontZoo emoji page. Parked until a real need, the items above come 
   There is no shaping, multi codepoint emoji and ligatures do not combine.
 - Needed: migrate label rendering to cosmic-text with swash. Brings shaping, font
   fallback chains, color emoji in every format, and native text measurement, which
-  subsumes gap 2. Large: replaces the glyph atlas and `draw_label`, and invalidates
-  every recorded text expectation in the UI tests.
+  would replace the `glyph_bounds` based `Font::measure`. Large: replaces the glyph
+  atlas and `draw_label`, and invalidates every recorded text expectation in the UI
+  tests.
 - Blocks: colorful emoji, complex scripts. Nothing in the driver app today.
 
-## 7. Small niceties
+## 6. Small niceties
 
 - `TableView` cell spacing. Worked around in skaityk-te with a transparent cell and an
   inset card subview.
@@ -96,7 +88,7 @@ Found by the FontZoo emoji page. Parked until a real need, the items above come 
 
 ## Suggested order
 
-Flow-wrap, then label measurement, then theming, then hover and shadows, then the
-niceties. Flow-wrap and measurement unlock the reader, which is the whole point of the
-driver app. The text stack rework waits for a real need for color emoji or complex
-scripts, but check it before building label measurement, it provides that natively.
+Flow-wrap, then theming, then hover and shadows, then the niceties. Flow-wrap unlocks
+the reader, which is the whole point of the driver app, and its text sizing side is
+already covered by label measurement. The text stack rework waits for a real need for
+color emoji or complex scripts.

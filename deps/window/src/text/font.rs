@@ -1,7 +1,7 @@
 use std::fs::read;
 
 use anyhow::Result;
-use gm::LossyConvert;
+use gm::{LossyConvert, ToF32, flat::Size};
 use log::error;
 use refs::{
     Weak,
@@ -10,7 +10,10 @@ use refs::{
     managed,
 };
 use wgpu::{CompareFunction, DepthBiasState, DepthStencilState, StencilState, TextureFormat};
-use wgpu_text::{BrushBuilder, TextBrush, glyph_brush::ab_glyph::FontArc};
+use wgpu_text::{
+    BrushBuilder, TextBrush,
+    glyph_brush::{BuiltInLineBreaker, Layout, Section, Text, ab_glyph::FontArc},
+};
 
 use crate::{SURFACE_TEXTURE_FORMAT, window::Window};
 
@@ -40,6 +43,33 @@ impl Font {
             name: name.to_string(),
             brush,
         })
+    }
+
+    /// Size the text takes when drawn at `size`. `width` bounds wrapping,
+    /// `None` measures a single unbounded line. Layout params must mirror
+    /// `draw_label` or measured sizes will not match rendering.
+    pub fn measure(&mut self, text: &str, size: impl ToF32, width: Option<f32>) -> Size {
+        if text.is_empty() {
+            return Size::default();
+        }
+
+        let section = Section::default()
+            .add_text(Text::new(text).with_scale(size.to_f32()))
+            .with_bounds((width.unwrap_or(f32::INFINITY), f32::INFINITY))
+            .with_layout(
+                if width.is_some() {
+                    Layout::default_wrap()
+                } else {
+                    Layout::default_single_line()
+                }
+                .line_breaker(BuiltInLineBreaker::UnicodeLineBreaker),
+            );
+
+        let Some(bounds) = self.brush.glyph_bounds(section) else {
+            return Size::default();
+        };
+
+        Size::new(bounds.width(), bounds.height())
     }
 }
 

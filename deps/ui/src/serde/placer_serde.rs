@@ -13,8 +13,7 @@ use crate::Placer;
 impl Serialize for Placer {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
-        // 6 represents the number of fields in the struct
-        let mut state = serializer.serialize_struct("Placer", 6)?;
+        let mut state = serializer.serialize_struct("Placer", 5)?;
 
         // Use .borrow() to access the inner value of RefCells
         state.serialize_field("rules", &*self.rules.borrow())?;
@@ -23,6 +22,7 @@ impl Serialize for Placer {
         // state.serialize_field("s_content", &self.s_content)?;
         state.serialize_field("all_margin", &*self.all_margin.borrow())?;
         state.serialize_field("has", &*self.has.borrow())?;
+        state.serialize_field("fit_text", &*self.fit_text.borrow())?;
 
         state.end()
     }
@@ -40,6 +40,7 @@ impl<'de> Deserialize<'de> for Placer {
             // s_content,
             all_margin,
             has,
+            fit_text,
         }
 
         impl<'de> Deserialize<'de> for Field {
@@ -60,6 +61,7 @@ impl<'de> Deserialize<'de> for Placer {
                             // "s_content" => Ok(Field::s_content),
                             "all_margin" => Ok(Field::all_margin),
                             "has" => Ok(Field::has),
+                            "fit_text" => Ok(Field::fit_text),
                             _ => Err(de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -84,6 +86,7 @@ impl<'de> Deserialize<'de> for Placer {
                 // let mut s_content = None;
                 let mut all_margin = None;
                 let mut has = None;
+                let mut fit_text = None;
 
                 while let Some(key) = map.next_key()? {
                     match key {
@@ -93,6 +96,7 @@ impl<'de> Deserialize<'de> for Placer {
                         // Field::s_content => s_content = Some(map.next_value()?),
                         Field::all_margin => all_margin = Some(map.next_value()?),
                         Field::has => has = Some(map.next_value()?),
+                        Field::fit_text => fit_text = Some(map.next_value()?),
                     }
                 }
 
@@ -109,6 +113,9 @@ impl<'de> Deserialize<'de> for Placer {
                         all_margin.ok_or_else(|| de::Error::missing_field("all_margin"))?,
                     ),
                     has:              RefCell::new(has.ok_or_else(|| de::Error::missing_field("has"))?),
+                    fit_text:         RefCell::new(
+                        fit_text.ok_or_else(|| de::Error::missing_field("fit_text"))?,
+                    ),
                     custom:           RefCell::new(None),
                 })
             }
@@ -121,6 +128,7 @@ impl<'de> Deserialize<'de> for Placer {
             "s_content",
             "all_margin",
             "has",
+            "fit_text",
         ];
         deserializer.deserialize_struct("Placer", FIELDS, PlacerVisitor)
     }

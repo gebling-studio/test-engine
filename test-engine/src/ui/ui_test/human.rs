@@ -9,10 +9,14 @@ use std::{
     time::Duration,
 };
 
+use gm::{
+    LossyConvert,
+    color::{BLACK, CLEAR, WHITE},
+};
 use hreads::from_main;
 use log::warn;
 use parking_lot::Mutex;
-use ui::UIManager;
+use ui::{Container, Setup, UIManager, ViewData, ViewFrame, ViewSubviews, WeakView};
 use window::Window;
 
 use crate::ui_test::TEST_NAME;
@@ -58,6 +62,45 @@ pub(crate) fn hold_for_human() {
     Window::set_title(format!("{test_name}: OK - space to continue"));
 
     wait_for_space();
+}
+
+/// Marks every checked pixel with a square around it, the pixel in the
+/// center, and holds until space. Black square in a white one, so
+/// markers stay visible on any background.
+pub(crate) fn show_probes(positions: &[(u32, u32)], test_name: &str, index: usize) {
+    let positions = positions.to_vec();
+
+    let markers = from_main(move || {
+        let mut markers: Vec<WeakView> = vec![];
+
+        for (x, y) in positions {
+            let x: f32 = x.lossy_convert();
+            let y: f32 = y.lossy_convert();
+
+            for (size, color) in [(12.0, WHITE), (10.0, BLACK)] {
+                let mut view = Container::new();
+                view.set_z_position(0.1);
+                view.set_color(CLEAR).set_border_color(color).set_border_width(1).set_frame((
+                    x - size / 2.0,
+                    y - size / 2.0,
+                    size,
+                    size,
+                ));
+                markers.push(UIManager::root_view().add_subview_to_root(view));
+            }
+        }
+
+        markers
+    });
+
+    Window::set_title(format!("{test_name} check {index}: space to continue"));
+    wait_for_space();
+
+    from_main(move || {
+        for mut marker in markers {
+            marker.remove_from_superview();
+        }
+    });
 }
 
 pub(crate) fn wait_for_space() {
