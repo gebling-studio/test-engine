@@ -40,7 +40,16 @@ pipeline draws a blurred rounded rect under the view, following its corner radii
 view masks the shadow inside its own shape and hidden views cast nothing. Per-corner
 radius landed as `CornerRadii` with `set_corner_radii`, honored by the rect, image and
 gradient pipelines, while `set_corner_radius` keeps the uniform shortcut. Together
-these unblocked card elevation and top-only rounded card images.
+these unblocked card elevation and top-only rounded card images. TableView cell
+spacing landed as `set_cell_spacing`, gaps between rows and columns, no gap after the
+last row. Gaps are purely visual for touch, the table maps a tap to the nearest cell
+index instead of per cell touch areas. The modal backdrop landed as an opt-in
+`modal_scrim_color` override on `ModalView`, transparent by default. The scrim is a
+dedicated `ScrimView` drawn after every other pipeline including text, so it dims
+images, gradients and glyphs behind it, while the modal above keeps the depth buffer
+and stays bright. A plain translucent rect could not do this, it erased later
+pipelines through the depth test instead of dimming them. These unblocked the reader
+card grid spacing and the dialog dim.
 
 ## 1. Text stack rework
 
@@ -59,13 +68,10 @@ Found by the FontZoo emoji page. Parked until a real need, the items above come 
 
 ## 2. Small niceties
 
-- `TableView` cell spacing. Worked around in skaityk-te with a transparent cell and an
-  inset card subview.
-- Native modal backdrop. `ModalView` shows no scrim, the original dims and blurs behind
-  the dialog. An app can fake the dim with a fullscreen translucent container.
-- Backdrop blur for the sticky header. Render pass work, lowest priority.
+- Backdrop blur for the sticky header and the modal scrim. Render pass work,
+  lowest priority.
 
 ## Suggested order
 
-The niceties first, they are the last visual parity gaps. The text stack rework
-waits for a real need for color emoji or complex scripts.
+The backdrop blur is the last visual parity gap. The text stack rework waits for
+a real need for color emoji or complex scripts.

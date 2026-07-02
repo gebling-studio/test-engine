@@ -39,6 +39,11 @@ test pass. The expectations are the spec: the UI must behave exactly like before
 test fails after a code change, the code is wrong. Expectations change only when the new
 look or behavior is intended and explicitly approved.
 
+Never change existing UI tests while implementing a new feature unless the user
+explicitly allows it. Design the feature so old tests stay green: make new behavior
+opt-in instead of changing defaults. If a new mechanism genuinely invalidates an old
+assertion, stop and ask before touching it.
+
 Temporary edits that are never committed are allowed — for example breaking one
 expectation on purpose to verify the failure machinery. Say what you are doing first,
 revert right after the run, and check that `git diff` is clean before committing.

@@ -1,6 +1,7 @@
+use gm::{LossyConvert, ToF32, flat::Point};
 use netrun::Function;
 use refs::{Own, Weak};
-use ui::{Setup, UIEvent, View, ViewData, ViewFrame, view};
+use ui::{Setup, UIEvent, View, ViewData, ViewFrame, ViewTouch, view};
 
 use super::layout::LayoutMode;
 use crate::{
@@ -14,6 +15,8 @@ pub struct TableView {
 
     #[educe(Default = 1)]
     pub(super) columns: usize,
+
+    pub(super) cell_spacing: f32,
 
     pub(super) registry: CellRegistry,
 
@@ -33,6 +36,11 @@ impl Setup for TableView {
 
         self.size_changed().sub(move || {
             self.layout_cells(LayoutMode::Resize);
+        });
+
+        self.enable_touch_low_priority();
+        self.touch().up_inside.val(weak, move |touch| {
+            self.select_at(touch.position);
         });
     }
 }
@@ -75,12 +83,52 @@ impl TableView {
         self
     }
 
+    pub fn set_cell_spacing(&mut self, spacing: impl ToF32) -> &mut Self {
+        self.cell_spacing = spacing.to_f32();
+        self.layout_cells(LayoutMode::Full);
+        self
+    }
+
     pub fn bottom_reached(&self) -> &UIEvent {
         &self.scroll.bottom_reached
     }
 }
 
 impl TableView {
+    // The whole table maps a tap to a cell index, so a tap in a
+    // spacing gap selects the nearest cell instead of dying on a
+    // pixel gap between touch areas. Taps past the last row are
+    // ignored.
+    fn select_at(mut self: Weak<Self>, pos: Point) {
+        if self.data.is_null() {
+            return;
+        }
+
+        let number_of_cells = self.data.number_of_cells();
+
+        if number_of_cells == 0 {
+            return;
+        }
+
+        let columns: f32 = self.columns.lossy_convert();
+        let cell_height = self.data.cell_height(0);
+        let spacing = self.cell_spacing;
+        let cell_width = (self.width() - spacing * (columns - 1.0)) / columns;
+
+        let col = ((pos.x - cell_width / 2.0) / (cell_width + spacing)).round().clamp(0.0, columns - 1.0);
+
+        let y = pos.y - self.scroll.get_scroll_content_offset();
+        let row = ((y - cell_height / 2.0) / (cell_height + spacing)).round().max(0.0);
+
+        let index: usize = (row * columns + col).lossy_convert();
+
+        if index >= number_of_cells {
+            return;
+        }
+
+        self.data.cell_selected(index);
+    }
+
     fn layout_cells(&mut self, mode: LayoutMode) {
         if self.height() <= 0.0 {
             return;

@@ -162,7 +162,8 @@ impl Spinner {
 
             animation.on_finish.sub(|| {
                 let mut spinner = Self::current();
-                spinner.remove_from_superview();
+                let mut scrim = *spinner.superview();
+                scrim.remove_from_superview();
                 *spinner = Weak::default();
             });
 

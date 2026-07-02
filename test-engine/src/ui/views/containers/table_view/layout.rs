@@ -2,7 +2,7 @@ use std::ops::DerefMut;
 
 use gm::LossyConvert;
 use refs::weak_from_ref;
-use ui::{ViewData, ViewFrame, ViewSubviews, ViewTouch};
+use ui::{ViewData, ViewFrame, ViewSubviews};
 
 use crate::ui::TableView;
 
@@ -12,28 +12,37 @@ pub(super) enum LayoutMode {
     Full,
 }
 
-fn cell_frame(i: usize, columns: usize, cell_width: f32, cell_height: f32) -> (f32, f32, f32, f32) {
-    let x: f32 = (i % columns).lossy_convert() * cell_width;
-    let y: f32 = (i / columns).lossy_convert() * cell_height;
+fn cell_frame(
+    i: usize,
+    columns: usize,
+    cell_width: f32,
+    cell_height: f32,
+    spacing: f32,
+) -> (f32, f32, f32, f32) {
+    let x: f32 = (i % columns).lossy_convert() * (cell_width + spacing);
+    let y: f32 = (i / columns).lossy_convert() * (cell_height + spacing);
     (x, y, cell_width, cell_height)
 }
 
 impl TableView {
     pub(super) fn layout_fixed_cells(&mut self, number_of_cells: usize, columns: usize, mode: LayoutMode) {
         let cell_height = self.data.cell_height(0);
+        let spacing = self.cell_spacing;
+        let row_pitch = cell_height + spacing;
         let width = self.width();
-        let cell_width = width / columns.lossy_convert();
+        let cell_width = (width - spacing * (columns - 1).lossy_convert()) / columns.lossy_convert();
 
-        let total_height = (number_of_cells.lossy_convert() / columns.lossy_convert()).ceil() * cell_height;
+        let rows: f32 = (number_of_cells.lossy_convert() / columns.lossy_convert()).ceil();
+        let total_height = rows * row_pitch - spacing;
 
         self.scroll.set_content_height(total_height);
         if columns == 1 {
             self.scroll.set_content_width(width);
         }
 
-        let rows_fit: usize = (self.height() / cell_height).ceil().lossy_convert();
+        let rows_fit: usize = (self.height() / row_pitch).ceil().lossy_convert();
         let offset = self.scroll.get_scroll_content_offset();
-        let first_visible_row: usize = (-offset / cell_height).floor().lossy_convert();
+        let first_visible_row: usize = (-offset / row_pitch).floor().lossy_convert();
         let first_index = first_visible_row * columns;
 
         let mut last_index = first_index + rows_fit * columns + columns * 2;
@@ -73,7 +82,7 @@ impl TableView {
         if matches!(mode, LayoutMode::Resize) {
             for view in weak_table.scroll.content.subviews() {
                 if !view.is_hidden() {
-                    view.set_frame(cell_frame(view.tag(), columns, cell_width, cell_height));
+                    view.set_frame(cell_frame(view.tag(), columns, cell_width, cell_height, spacing));
                 }
             }
         }
@@ -87,13 +96,8 @@ impl TableView {
             let cell = cell.deref_mut();
 
             cell.set_tag(i);
-            cell.set_frame(cell_frame(i, columns, cell_width, cell_height));
+            cell.set_frame(cell_frame(i, columns, cell_width, cell_height, spacing));
 
-            cell.touch().up_inside.clear_subscribers();
-            cell.enable_touch_low_priority();
-            cell.touch().up_inside.sub(weak_table, move || {
-                weak_table.data.cell_selected(i);
-            });
             cell.as_cell().cell_added();
         }
     }

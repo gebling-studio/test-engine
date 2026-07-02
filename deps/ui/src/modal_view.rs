@@ -1,9 +1,11 @@
-use gm::flat::Size;
+use gm::{color::CLEAR, flat::Size};
 use hreads::{from_main, on_main};
 use refs::{Own, Weak};
 use vents::OnceEvent;
 
-use crate::{TouchStack, UIManager, View, ViewData, ViewFrame, view::ViewSubviews};
+use crate::{
+    ScrimView, Setup, TouchStack, UIColor, UIManager, View, ViewData, ViewFrame, view::ViewSubviews,
+};
 
 pub trait ModalView<In = (), Out: 'static = ()>: 'static + View + Default {
     fn show_modally(view: Self) -> Weak<Self> {
@@ -12,7 +14,18 @@ pub trait ModalView<In = (), Out: 'static = ()>: 'static + View + Default {
         let size = Self::modal_size();
         let weak = view.weak();
         TouchStack::push_layer(weak.weak_view());
-        UIManager::root_view().add_subview_to_root(view);
+
+        // The scrim owns the modal, so hiding removes both at once.
+        // It sits one subview step behind the modal and in front of
+        // everything else. It is not a touch layer, the modal already
+        // blocks touches under it.
+        let mut scrim = ScrimView::new();
+        scrim.set_z_position(UIManager::MODAL_Z_OFFSET + UIManager::subview_z_offset());
+        let scrim = UIManager::root_view().add_subview_to_root(scrim);
+        scrim.set_color(Self::modal_scrim_color());
+        scrim.place().back();
+        scrim.add_subview(view);
+
         weak.place().size(size.width, size.height).center();
         weak
     }
@@ -45,10 +58,11 @@ pub trait ModalView<In = (), Out: 'static = ()>: 'static + View + Default {
         from_main(|| Self::prepare_modally_with_input(input).modal_event().receiver().recv().unwrap())
     }
 
-    fn hide_modal(mut self: Weak<Self>, result: Out)
+    fn hide_modal(self: Weak<Self>, result: Out)
     where Out: Send {
         on_main(move || {
-            self.remove_from_superview();
+            let mut scrim = *self.superview();
+            scrim.remove_from_superview();
             TouchStack::pop_layer(self.weak_view());
             self.modal_event().trigger(result);
         });
@@ -57,6 +71,12 @@ pub trait ModalView<In = (), Out: 'static = ()>: 'static + View + Default {
     fn modal_event(&self) -> &OnceEvent<Out>;
 
     fn modal_size() -> Size;
+
+    /// The color of the fullscreen backdrop behind the modal.
+    /// Transparent by default, override to dim the background.
+    fn modal_scrim_color() -> UIColor {
+        CLEAR.into()
+    }
 
     fn setup_input(self: Weak<Self>, _: In) {}
 }

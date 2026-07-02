@@ -7,10 +7,13 @@ use gm::{
 };
 use refs::{Weak, main_lock::MainLock};
 use render::{
-    UIGradientPipeline, UIImageRectPipeline, UIShadowPipeline,
+    UIGradientPipeline, UIImageRectPipeline, UIRectPipeline, UIShadowPipeline,
     data::{RectView, UIGradientInstance, UIImageInstance, UIRectInstance, UIShadowInstance},
 };
-use ui::{ImageView, Label, TextAlignment, UIManager, View, ViewData, ViewFrame, ViewLayout, ViewSubviews};
+use ui::{
+    ImageView, Label, ScrimView, TextAlignment, UIManager, View, ViewData, ViewFrame, ViewLayout,
+    ViewSubviews,
+};
 use wgpu::RenderPass;
 use wgpu_text::glyph_brush::{BuiltInLineBreaker, HorizontalAlign, Layout, Section, Text, VerticalAlign};
 use window::{Font, Window};
@@ -20,6 +23,7 @@ use crate::pipelines::Pipelines;
 static GRADIENT_DRAWER: MainLock<UIGradientPipeline> = MainLock::new();
 static IMAGE_RECT_DRAWER: MainLock<UIImageRectPipeline> = MainLock::new();
 static SHADOW_DRAWER: MainLock<UIShadowPipeline> = MainLock::new();
+static SCRIM_DRAWER: MainLock<UIRectPipeline> = MainLock::new();
 
 type TextSections<'a> = Vec<(Weak<Font>, Vec<Section<'a>>)>;
 
@@ -60,6 +64,17 @@ impl UIDrawer {
             font.brush.queue(Window::device(), Window::queue(), sections).unwrap();
             font.brush.draw(pass);
         }
+
+        // The scrim flushes after everything including text, so its
+        // translucent color dims the whole frame drawn so far. The
+        // modal above it owns the depth buffer and stays untouched.
+        SCRIM_DRAWER.get_mut().draw(
+            pass,
+            RectView {
+                resolution,
+                _padding: 0,
+            },
+        );
     }
 
     fn flush_pipelines(pass: &mut RenderPass, resolution: Size) {
@@ -149,7 +164,19 @@ impl UIDrawer {
             });
         }
 
-        if view.end_gradient_color().a > 0.0 {
+        if view.as_any().downcast_ref::<ScrimView>().is_some() {
+            if view.color().a > 0.0 {
+                SCRIM_DRAWER.get_mut().add(UIRectInstance::new(
+                    frame,
+                    *view.color(),
+                    *view.border_color(),
+                    view.border_width(),
+                    view.corner_radii(),
+                    view.z_position(),
+                    scale,
+                ));
+            }
+        } else if view.end_gradient_color().a > 0.0 {
             GRADIENT_DRAWER.get_mut().add(UIGradientInstance {
                 position: frame.origin,
                 size: frame.size,
