@@ -1,16 +1,17 @@
 use std::path::PathBuf;
 
 use gm::flat::{Point, Size};
-use wgpu::RenderPass;
 use winit::{
     event::{ElementState, KeyEvent, MouseButton, Touch},
     window::Theme,
 };
 
+use crate::RenderFrame;
+
 pub trait WindowEvents {
     fn window_ready(&mut self) {}
     fn update(&mut self) {}
-    fn render<'a>(&'a mut self, _pass: &mut RenderPass<'a>) {}
+    fn render(&mut self, _frame: &mut RenderFrame) {}
     fn resize(&mut self, _inner_pos: Point, _outer_pos: Point, _inner_size: Size, _outer_size: Size) {}
     fn mouse_moved(&mut self, _position: Point) -> bool {
         false

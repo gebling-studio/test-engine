@@ -112,7 +112,7 @@ impl<
         self.instances.entry(image).or_default().push(instance);
     }
 
-    pub fn draw<'a>(&'a mut self, render_pass: &mut RenderPass<'a>, view: View) {
+    pub fn draw(&mut self, render_pass: &mut RenderPass, view: View) {
         if self.instances.is_empty() {
             return;
         }

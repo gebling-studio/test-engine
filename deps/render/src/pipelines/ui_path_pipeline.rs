@@ -37,7 +37,7 @@ impl Default for UIPathPipeline {
 }
 
 impl UIPathPipeline {
-    pub fn draw<'a>(&'a self, render_pass: &mut RenderPass<'a>, path: &'a PathData) {
+    pub fn draw(&self, render_pass: &mut RenderPass, path: &PathData) {
         render_pass.set_pipeline(&self.pipeline);
 
         render_pass.set_bind_group(0, path.uniform_bind(), &[]);

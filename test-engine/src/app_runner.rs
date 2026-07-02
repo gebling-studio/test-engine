@@ -10,8 +10,7 @@ use level::LevelManager;
 use log::debug;
 use refs::{Own, main_lock::MainLock};
 use ui::{Hover, Theme, Touch, TouchEvent, UIEvents, UIManager, View, ViewData, ViewSubviews, WeakView};
-use wgpu::RenderPass;
-use window::{ElementState, MouseButton, Screenshot, Theme as OsTheme, Window};
+use window::{ElementState, MouseButton, RenderFrame, Screenshot, Theme as OsTheme, Window};
 use winit::{
     event::{KeyEvent, TouchPhase},
     keyboard::Key,
@@ -317,11 +316,12 @@ impl window::WindowEvents for AppRunner {
         UIDrawer::update();
     }
 
-    fn render<'a>(&'a mut self, pass: &mut RenderPass<'a>) {
+    fn render(&mut self, frame: &mut RenderFrame) {
         if UIManager::window_resolution().has_no_area() {
             return;
         }
 
+        let pass = frame.pass();
         LevelDrawer::draw(pass);
         UIDrawer::draw(pass);
     }

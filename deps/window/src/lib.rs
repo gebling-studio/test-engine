@@ -5,6 +5,7 @@ mod window_events;
 mod app_handler;
 mod frame_counter;
 pub mod image;
+mod render_frame;
 mod screen;
 mod screenshot;
 pub mod state;
@@ -13,6 +14,7 @@ mod vertex_buffer;
 
 pub use app_handler::AppHandler;
 pub use bytemuck::cast_slice;
+pub use render_frame::RenderFrame;
 pub use screenshot::*;
 pub use state::SURFACE_TEXTURE_FORMAT;
 pub use text::*;

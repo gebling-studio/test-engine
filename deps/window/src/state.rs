@@ -1,6 +1,5 @@
 use std::{
     cell::RefCell,
-    f64,
     sync::mpsc::{Receiver, Sender, channel},
 };
 
@@ -16,8 +15,8 @@ use web_time::Instant;
 use wgpu::{CurrentSurfaceTexture, TextureFormat};
 
 use crate::{
-    Font, Screenshot, Window, app_handler::AppHandler, frame_counter::FrameCounter, image::Texture,
-    screen::Screen, surface::Surface, window::surface_config_with_size,
+    Font, RenderFrame, Screenshot, Window, app_handler::AppHandler, frame_counter::FrameCounter,
+    image::Texture, screen::Screen, surface::Surface, window::surface_config_with_size,
 };
 
 type ReadDisplayRequest = Sender<Screenshot>;
@@ -236,7 +235,7 @@ impl State {
         };
 
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = Window::device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
+        let encoder = Window::device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("Render Encoder"),
         });
 
@@ -249,38 +248,17 @@ impl State {
         #[cfg(not(feature = "bench"))]
         let timestamp_writes = None;
 
-        {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Render Pass"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view:           &view,
-                    depth_slice:    None,
-                    resolve_target: None,
-                    ops:            wgpu::Operations {
-                        load:  wgpu::LoadOp::Clear(wgpu::Color {
-                            r: f64::from(self.clear_color.r),
-                            g: f64::from(self.clear_color.g),
-                            b: f64::from(self.clear_color.b),
-                            a: f64::from(self.clear_color.a),
-                        }),
-                        store: wgpu::StoreOp::Store,
-                    },
-                })],
-                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view:        &self.depth_texture.as_ref().unwrap().view,
-                    depth_ops:   Some(wgpu::Operations {
-                        load:  wgpu::LoadOp::Clear(1.0),
-                        store: wgpu::StoreOp::Store,
-                    }),
-                    stencil_ops: None,
-                }),
-                occlusion_query_set: None,
-                timestamp_writes,
-                multiview_mask: None,
-            });
+        let mut frame = RenderFrame::new(
+            encoder,
+            &view,
+            &self.depth_texture.as_ref().unwrap().view,
+            self.clear_color,
+            timestamp_writes,
+        );
 
-            AppHandler::current().te_window_events.render(&mut render_pass);
-        }
+        AppHandler::current().te_window_events.render(&mut frame);
+
+        let mut encoder = frame.finish();
 
         #[cfg(not_wasm)]
         let buffer = if self.read_display_request.borrow().is_some() {

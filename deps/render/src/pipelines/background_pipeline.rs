@@ -109,9 +109,9 @@ impl Default for BackgroundPipeline {
 }
 
 impl BackgroundPipeline {
-    pub fn draw<'a>(
-        &'a mut self,
-        render_pass: &mut RenderPass<'a>,
+    pub fn draw(
+        &mut self,
+        render_pass: &mut RenderPass,
         image: &Image,
         resolution: Size,
         camera_pos: Point,

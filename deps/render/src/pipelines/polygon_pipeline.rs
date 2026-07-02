@@ -92,7 +92,7 @@ impl PolygonPipeline {
         ));
     }
 
-    pub fn draw<'a>(&'a mut self, render_pass: &mut RenderPass<'a>, view: SpriteView) {
+    pub fn draw(&mut self, render_pass: &mut RenderPass, view: SpriteView) {
         if self.polygons.is_empty() {
             return;
         }
