@@ -7,6 +7,7 @@
 #![feature(unsized_const_params)]
 #![feature(const_type_name)]
 
+mod hover;
 mod images;
 mod input;
 mod layout;
@@ -28,6 +29,7 @@ pub mod mobile;
 pub mod serde;
 pub mod ui_dispatch;
 
+pub use hover::*;
 pub use images::*;
 pub use input::*;
 pub use layout::*;

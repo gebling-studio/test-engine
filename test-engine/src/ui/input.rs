@@ -2,6 +2,8 @@ use gm::{color::Color, flat::Point};
 use level::LevelManager;
 use log::warn;
 use refs::Weak;
+#[cfg(desktop)]
+use ui::Hover;
 use ui::{
     Container, Scrollable, Setup, Touch, TouchStack, UIEvents, UIManager, ViewData, ViewFrame, ViewSubviews,
     WeakView, check_touch,
@@ -27,6 +29,12 @@ impl Input {
     pub fn on_scroll(offset: Point) {
         UIEvents::on_scroll().trigger(offset);
         Self::check_wheel_scroll(offset);
+
+        // Scroll moves content under a still cursor. Re-pick the hovered
+        // view. Frames update on the next layout, so a scroll burst is
+        // one event behind until the cursor moves again.
+        #[cfg(desktop)]
+        Hover::update(UIManager::cursor_position());
     }
 
     pub fn process_touch_event(mut touch: Touch) -> bool {
@@ -42,6 +50,11 @@ impl Input {
 
         UIManager::set_cursor_position(touch.position);
         UIEvents::on_touch().trigger(touch);
+
+        #[cfg(desktop)]
+        if touch.is_moved() {
+            Hover::update(touch.position);
+        }
 
         if LOG_TOUCHES && !touch.is_moved() {
             warn!("{touch:?}");

@@ -29,22 +29,20 @@ light and dark pairs accepted by every color setter. `Theme` picks the effective
 `ThemeMode` follows the OS or forces one. A switch re-resolves bound colors on the
 live view tree in one walk and fires `UIEvents::theme_changed`, the draw path keeps
 reading plain resolved colors. The OS theme arrives through winit `ThemeChanged` and
-is read once at startup. This unblocked dark mode.
+is read once at startup. This unblocked dark mode. Hover events landed as opt-in
+`enable_hover` plus a `hovered` event that fires true on enter and false on exit. Only
+the topmost hover enabled view under the cursor is hovered, desktop only, and modal
+layers block hover like they block touches. Hover follows mouse moves and wheel scroll,
+and clears when the cursor leaves the window. Everything runs on input events, nothing
+per frame. This unblocked card lift and button hover colors.
 
-## 1. Hover events
-
-- Current: the input pipeline is touch only, `deps/ui/src/view/view_touch.rs`. No per-view
-  hover tracking from mouse moves.
-- Needed: hover enter and exit events on the view under the cursor, desktop only.
-- Blocks: desktop polish, card lift on hover, button hover colors.
-
-## 2. Drop shadows
+## 1. Drop shadows
 
 - Current: the rect pipeline draws fill, border and corner radius. No shadow.
 - Needed: shadow rendering under rounded rects plus shadow parameters on `ViewData`.
 - Blocks: card elevation, the original uses a small resting shadow and a larger hover one.
 
-## 3. Text stack rework
+## 2. Text stack rework
 
 Found by the FontZoo emoji page. Parked until a real need, the items above come first.
 
@@ -59,7 +57,7 @@ Found by the FontZoo emoji page. Parked until a real need, the items above come 
   tests.
 - Blocks: colorful emoji, complex scripts. Nothing in the driver app today.
 
-## 4. Small niceties
+## 3. Small niceties
 
 - `TableView` cell spacing. Worked around in skaityk-te with a transparent cell and an
   inset card subview.
@@ -70,6 +68,6 @@ Found by the FontZoo emoji page. Parked until a real need, the items above come 
 
 ## Suggested order
 
-Hover, then shadows, then the niceties. The reader layout and dark mode are
-unblocked, so what remains is desktop polish and small visual parity gaps. The
-text stack rework waits for a real need for color emoji or complex scripts.
+Shadows, then the niceties. The reader layout, dark mode and hover are unblocked,
+so what remains is small visual parity gaps. The text stack rework waits for a
+real need for color emoji or complex scripts.

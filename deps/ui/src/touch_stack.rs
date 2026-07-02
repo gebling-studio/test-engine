@@ -52,6 +52,10 @@ impl TouchStack {
         Self::get().stack.last().views().into_iter().rev()
     }
 
+    pub fn hover_views() -> impl Iterator<Item = WeakView> {
+        Self::get().stack.last().hovered().into_iter().rev()
+    }
+
     pub fn scrolls() -> impl Iterator<Item = Weak<dyn Scrollable>> {
         Self::get().stack.last().scrolls().into_iter()
     }
@@ -66,6 +70,10 @@ impl TouchStack {
 
     pub fn enable_for_low_priority(view: WeakView) {
         Self::get().layer_for(view).add_low_priority(view);
+    }
+
+    pub fn enable_hover(view: WeakView) {
+        Self::get().layer_for(view).add_hover(view);
     }
 
     pub fn disable_for(view: WeakView) {

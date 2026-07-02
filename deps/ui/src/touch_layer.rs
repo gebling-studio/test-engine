@@ -14,6 +14,7 @@ pub trait Scrollable: View {
 pub(crate) struct TouchLayer {
     pub(crate) root: WeakView,
     listeners:       Vec<WeakView>,
+    hovered:         Vec<WeakView>,
     scrolls:         WeakVec<dyn Scrollable>,
 }
 
@@ -39,12 +40,23 @@ impl TouchLayer {
         self.listeners.insert(0, view);
     }
 
+    pub(crate) fn add_hover(&mut self, view: WeakView) {
+        if self.hovered.iter().any(|l| l.raw() == view.raw()) {
+            return;
+        }
+        self.hovered.push(view);
+    }
+
     pub(crate) fn remove(&mut self, view: WeakView) {
         self.listeners.retain(|a| a.raw() != view.raw());
     }
 
     pub(crate) fn views(&self) -> Vec<WeakView> {
         self.listeners.clone()
+    }
+
+    pub(crate) fn hovered(&self) -> Vec<WeakView> {
+        self.hovered.clone()
     }
 
     pub(crate) fn scrolls(&self) -> WeakVec<dyn Scrollable> {
@@ -58,6 +70,7 @@ impl TouchLayer {
     pub(crate) fn clear_freed(&mut self) {
         assert!(self.root.is_ok());
         self.listeners.remove_freed();
+        self.hovered.remove_freed();
         self.scrolls.remove_freed();
     }
 }
@@ -67,6 +80,7 @@ impl From<WeakView> for TouchLayer {
         Self {
             root,
             listeners: vec![],
+            hovered: vec![],
             scrolls: vec![],
         }
     }

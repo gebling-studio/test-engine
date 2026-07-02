@@ -151,6 +151,9 @@ impl ApplicationHandler<Window> for AppHandler {
             WindowEvent::MouseInput { state, button, .. } => {
                 self.te_window_events.mouse_event(state, button);
             }
+            WindowEvent::CursorLeft { .. } => {
+                self.te_window_events.cursor_left();
+            }
             WindowEvent::Touch(touch) => {
                 self.te_window_events.touch_event(touch);
             }

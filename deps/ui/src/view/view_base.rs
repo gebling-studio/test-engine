@@ -58,6 +58,9 @@ pub struct ViewBase {
     pub(crate) is_selected: bool,
 
     #[educe(Debug(ignore))]
+    pub(crate) is_hovered: bool,
+
+    #[educe(Debug(ignore))]
     pub(crate) is_system: bool,
 
     #[educe(Debug(ignore))]
@@ -108,4 +111,7 @@ pub struct ViewTouchEvents {
     pub began:     Event<Touch>,
     pub moved:     Event<Touch>,
     pub up_inside: UIEvent<Touch>,
+    /// Fires true on hover enter and false on exit. Only the topmost
+    /// hover enabled view under the cursor is hovered. Desktop only.
+    pub hovered:   UIEvent<bool>,
 }

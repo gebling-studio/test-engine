@@ -9,7 +9,7 @@ use hreads::{from_main, invoke_dispatched, is_main_thread, wait_for_next_frame};
 use level::LevelManager;
 use log::debug;
 use refs::{Own, main_lock::MainLock};
-use ui::{Theme, Touch, TouchEvent, UIEvents, UIManager, View, ViewData, ViewSubviews, WeakView};
+use ui::{Hover, Theme, Touch, TouchEvent, UIEvents, UIManager, View, ViewData, ViewSubviews, WeakView};
 use wgpu::RenderPass;
 use window::{ElementState, MouseButton, Screenshot, Theme as OsTheme, Window};
 use winit::{
@@ -357,6 +357,10 @@ impl window::WindowEvents for AppRunner {
 
     fn mouse_scroll(&mut self, delta: Point) {
         Input::on_scroll(delta * SCROLL_SPEED);
+    }
+
+    fn cursor_left(&mut self) {
+        Hover::clear();
     }
 
     fn touch_event(&mut self, touch: winit::event::Touch) -> bool {
