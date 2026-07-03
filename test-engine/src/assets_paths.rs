@@ -32,7 +32,7 @@ impl AssetsPaths {
         return _base.into();
     }
 
-    pub fn assets(_root: &Path) -> PathBuf {
+    pub(crate) fn assets(_root: &Path) -> PathBuf {
         #[cfg(android)]
         return Default::default();
         #[cfg(not_android)]

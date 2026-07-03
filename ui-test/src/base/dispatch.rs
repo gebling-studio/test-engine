@@ -2,7 +2,7 @@
 // use test_engine::{
 //     dispatch::{Task, from_main, wait_for_next_frame},
 //     refs::Weak,
-//     ui::{Button,  Setup, Spinner, UI, ViewData, async_link_button,
+//     test_engine::ui::{Button,  Setup, Spinner, UI, ViewData, async_link_button,
 // link_button, view},     ui_test::inject_touches,
 // };
 // use tokio::sync::{
@@ -114,9 +114,7 @@
 //         ",
 //     )
 //     .await;
-//
-//     wait_for_next_frame();
-//
+////
 //     assert_eq!("tapped arg: 555", DATA.lock().await.as_str());
 //
 //     Ok(())

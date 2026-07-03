@@ -1,11 +1,13 @@
 #![allow(dead_code)]
 
 use test_engine::{
-    App,
+    App, Window,
     refs::Own,
     ui::{Button, Label, Setup, Size, View},
 };
 
+#[cfg(feature = "bench")]
+use crate::interface::test_game_view::UIBenchmarkView;
 use crate::interface::{loading_view::LoadingView, test_game_view::BUTTON};
 
 #[cfg(not_wasm)]
@@ -45,7 +47,17 @@ impl App for TestGameApp {
         BUTTON.apply_globally::<Label>();
     }
 
+    fn after_launch(&self) {
+        Window::set_quit_on_escape(true);
+    }
+
     fn make_root_view(&self) -> Own<dyn View> {
+        #[cfg(feature = "bench")]
+        if std::env::var("UI_BENCHMARK").is_ok() {
+            let force = std::env::args().any(|arg| arg == "--no-guard");
+            crate::interface::test_game_view::guard_benchmark(force);
+            return UIBenchmarkView::new();
+        }
         LoadingView::new()
     }
 

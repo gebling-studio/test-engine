@@ -37,9 +37,30 @@ jobs:
       - name: Build
         run: make wasm
 
+  ui-tests:
+    name: UI Tests
+    needs: [typos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          submodules: recursive
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake pkg-config libssl-dev xorg-dev libasound2-dev \
+            mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev mesa-vulkan-drivers
+
+      - name: Run UI tests
+        run: cargo run -p ui-test --profile=ci -- --stop-on-failure --headless
+
   build:
     name: Build
     needs: [typos]
+    env:
+      SKIP_UI_TESTS: 1
     strategy:
       fail-fast: false
       matrix:
@@ -57,17 +78,20 @@ jobs:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Free Space
         if: ${{ matrix.target.os != 'windows' }}
-        run: ./build/scripts/free_action_runner.sh
+        run: bun build/scripts/free_action_runner.ts
 
       - name: Build
         if: ${{ matrix.target.os != 'windows' }}
-        run: ./build/build.sh ${{ matrix.target.os }}
+        run: bun build/build.ts ${{ matrix.target.os }}
 
       - name: Build windows
         if: ${{ matrix.target.os == 'windows' }}
-        run: py build/build.py
+        run: bun build/build.ts
 
       - name: Test
         if: ${{ matrix.target.os != 'ios' && matrix.target.os != 'android' }}
@@ -76,6 +100,8 @@ jobs:
   linux:
     name: Build Linux
     needs: [typos]
+    env:
+      SKIP_UI_TESTS: 1
     strategy:
       fail-fast: false
       matrix:
@@ -95,8 +121,11 @@ jobs:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Free Space
-        run: ./build/scripts/free_action_runner.sh
+        run: bun build/scripts/free_action_runner.ts
 
       - name: Build
-        run: echo ${{ matrix.target.container }} && ./build/in_docker.sh ${{ matrix.target.container }}
+        run: echo ${{ matrix.target.container }} && bun build/in_docker.ts ${{ matrix.target.container }}

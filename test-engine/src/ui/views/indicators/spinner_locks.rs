@@ -1,7 +1,7 @@
 use hreads::on_main;
 use log::trace;
 use refs::Weak;
-use ui::ViewSubviews;
+use crate::ui::ViewSubviews;
 
 use crate::ui::Spinner;
 
@@ -26,11 +26,15 @@ impl Drop for SpinnerLockGlobal {
     }
 }
 
+#[derive(Default)]
 pub struct SpinnerLockOnView {
-    pub(super) spinner: Weak<Spinner>,
+    pub spinner: Weak<Spinner>,
 }
 
 impl SpinnerLockOnView {
+    pub fn is_active(&self) -> bool {
+        self.spinner.is_ok()
+    }
     pub fn stop(self) {}
 }
 

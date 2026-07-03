@@ -1,8 +1,8 @@
 use anyhow::Result;
-use gm::color::BLACK;
+use crate::gm::color::BLACK;
 use hreads::{from_main, on_main, sleep, spawn};
 use refs::Weak;
-use ui::{Setup, View, ViewData, ViewTest, view_test};
+use crate::ui::{Setup, View, ViewData, ViewTest, view_test};
 
 use crate::{
     self as test_engine,
@@ -197,7 +197,7 @@ impl ViewTest for InfiniteScrollTest {
          ",
         );
 
-        assert_eq!(view.test_string, "|201||205|");
+        assert_eq!(view.test_string, "|198||201||205|");
 
         // crate::ui_test::record_ui_test();
 

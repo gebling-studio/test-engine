@@ -1,4 +1,4 @@
-use inspect::ui::ViewRepr;
+use test_engine::inspect::protocol::ui::ViewRepr;
 use parking_lot::Mutex;
 use test_engine::{
     refs::Weak,
@@ -39,8 +39,6 @@ impl ViewView {
     pub fn set_repr(mut self: Weak<Self>, scale: f32, repr: Weak<ViewRepr>) {
         let shrink_scale = *SHRINK_SCALE.lock();
 
-        self.cleanup();
-
         self.label.set_text(format!("{} {}", repr.label, &repr.id[..5]));
 
         let frame = (
@@ -58,20 +56,5 @@ impl ViewView {
         }
 
         self.repr = repr;
-    }
-
-    pub fn cleanup(self: Weak<Self>) {
-        let mut to_remove = vec![];
-
-        for view in self.subviews() {
-            if let Some(view) = view.downcast_view::<Self>() {
-                view.cleanup();
-                to_remove.push(view);
-            }
-        }
-
-        for mut v in to_remove {
-            v.remove_from_superview();
-        }
     }
 }

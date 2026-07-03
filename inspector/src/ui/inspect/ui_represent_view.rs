@@ -1,4 +1,4 @@
-use inspect::ui::ViewRepr;
+use test_engine::inspect::protocol::ui::ViewRepr;
 use test_engine::{
     refs::{Own, Weak},
     ui::{ViewSubviews, view},
@@ -23,5 +23,9 @@ impl UIRepresentView {
         self.scale = scale;
         self.repr = repr;
         self.reload();
+    }
+
+    pub fn repr(self: Weak<Self>) -> Weak<ViewRepr> {
+        self.repr.weak()
     }
 }

@@ -1,10 +1,9 @@
 use std::pin::Pin;
 
 use anyhow::bail;
-use gm::flat::Size;
+use crate::gm::flat::Size;
 use refs::Own;
-use ui::View;
-use window::Font;
+use crate::ui::View;
 
 use crate::app_starter::test_engine_start_with_app;
 
@@ -26,23 +25,13 @@ pub trait App {
     fn sentry_url(&self) -> PinnedFuture<String> {
         Box::pin(async { bail!("Not implemented") })
     }
-
-    fn enable_inspection(&self) -> bool {
-        true
-    }
-
-    fn default_font(&self) -> Font {
-        //Font::helvetica()
-        //
-        todo!()
-    }
 }
 
 #[cfg(ios)]
 unsafe extern "C" {
     #[allow(improper_ctypes_definitions)]
     #[allow(improper_ctypes)]
-    pub fn test_engine_create_app() -> Box<dyn App>;
+    pub(crate) fn test_engine_create_app() -> Box<dyn App>;
 }
 
 #[cfg(not(ios))]

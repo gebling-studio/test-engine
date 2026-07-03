@@ -1,5 +1,9 @@
 mod checks;
 pub mod helpers;
+mod human;
+mod record;
+mod report;
+mod runner;
 pub mod state;
 mod ui_test;
 
@@ -10,21 +14,27 @@ use std::{
 };
 
 use anyhow::{Result, bail};
-use gm::drop_on_main;
+use crate::gm::drop_on_main;
 pub use helpers::*;
 use hreads::{from_main, is_main_thread, on_main, wait_for_next_frame};
+pub use human::{enable_human_mode, human_mode};
+pub(crate) use human::{hold_for_human, human_pause, human_pause_quick};
 use log::{error, warn};
 use parking_lot::Mutex;
+pub(crate) use record::reset_record_probe_count;
+pub use record::{enable_color_recording, recording_colors, set_record_probe_count};
 use refs::Own;
+pub use report::failure_report;
+pub use runner::run_test_app;
 use serde::de::DeserializeOwned;
 pub use state::*;
-pub use ui_test::*;
-use window::Window;
+pub use self::ui_test::*;
+use crate::window::Window;
 
 use crate::{
     AppRunner,
     gm::{LossyConvert, ToF32},
-    ui::{Input, Touch, U8Color, UIEvents, UIManager},
+    ui::{Input, NamedKey, Touch, U8Color, UIEvents, UIManager},
 };
 
 pub fn test_combinations<const A: usize, Val>(comb: [(&'static str, Val); A]) -> Result<()>
@@ -38,6 +48,12 @@ where Val: Display + PartialEq + DeserializeOwned + Default + Send + 'static {
             from_main(move || {
                 inject_touch(touch);
             });
+
+            if touch.is_moved() {
+                human_pause_quick();
+            } else {
+                human_pause();
+            }
         }
 
         if get_state::<Val>() != comb.1 {
@@ -62,10 +78,28 @@ pub fn inject_scroll(scroll: impl ToF32) {
     from_main(move || {
         Input::on_scroll((0, scroll).into());
     });
+    human_pause();
 }
 
 pub fn inject_touches(data: impl ToString + Send + 'static) {
     let scale = UIManager::scale();
+
+    if human_mode() {
+        for mut touch in Touch::vec_from_str(&data.to_string()) {
+            touch.position *= scale;
+            from_main(move || {
+                inject_touch(touch);
+            });
+
+            if touch.is_moved() {
+                human_pause_quick();
+            } else {
+                human_pause();
+            }
+        }
+        return;
+    }
+
     from_main(move || {
         for mut touch in Touch::vec_from_str(&data.to_string()) {
             touch.position *= scale;
@@ -81,6 +115,12 @@ pub fn inject_touches_delayed(data: &str) {
             inject_touch(touch);
         });
         wait_for_next_frame();
+
+        if touch.is_moved() {
+            human_pause_quick();
+        } else {
+            human_pause();
+        }
     }
 }
 
@@ -93,15 +133,21 @@ pub fn inject_keys(s: impl ToString) {
 
 pub fn inject_key(key: char) {
     from_main(move || Input::on_char(key));
+    human_pause();
+}
+
+pub fn inject_named_key(key: NamedKey) {
+    from_main(move || Input::on_key(key));
+    human_pause();
 }
 
 #[allow(dead_code)]
-pub fn record_touches() {
+pub(crate) fn record_touches() {
     record_touches_internal(true);
 }
 
 #[allow(dead_code)]
-pub fn record_moved_touches() {
+pub(crate) fn record_moved_touches() {
     record_touches_internal(false);
 }
 
@@ -162,7 +208,7 @@ fn record_touches_internal(skip_moved: bool) {
 }
 
 #[allow(dead_code)]
-pub fn record_ui_test() {
+pub(crate) fn record_ui_test() {
     if is_main_thread() {
         panic!("record_ui_test is blocking function. It shouldn't be called on main thread.");
     }
@@ -176,7 +222,7 @@ pub fn record_ui_test() {
 }
 
 #[allow(dead_code)]
-pub fn record_colors() -> Result<()> {
+pub(crate) fn record_colors() -> Result<()> {
     let touch_lock = Touch::lock();
 
     let screenshot = AppRunner::take_screenshot()?;

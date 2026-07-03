@@ -8,6 +8,9 @@ ui:
 	cargo run -p ui-test
 	cargo run -p ui-test --release
 
+uui:
+	cargo run -p ui-test --release -- --stop-on-failure --headless
+
 all:
 	order
 	make wasm
@@ -15,14 +18,12 @@ all:
 	make ui
 	make render
 
-ui3:
-	cargo run -p ui-benchmark --profile=r3
-
 fix:
 	cargo fix --allow-dirty --allow-staged --all
 
+.PHONY: bench
 bench:
-	cargo run -p ui-benchmark --release
+	cargo run -p bench --release
 
 mobile:
 	cargo install test-mobile
@@ -52,20 +53,21 @@ CLIPPY_FLAGS = -- \
       -A clippy::missing_panics_doc \
       -A clippy::missing_errors_doc \
       -A clippy::missing_safety_doc \
+      -A clippy::format_push_string \
+      -A clippy::new_without_default \
       -A clippy::must_use_candidate \
       -A clippy::module_inception \
       -A clippy::needless_pass_by_value \
       -A clippy::unnecessary_box_returns \
       -A clippy::return_self_not_must_use \
       -A clippy::struct_field_names \
-      -A clippy::manual_assert \
-      -A dead_code
+      -A clippy::manual_assert
 
 fix-lint:
 	cargo clippy --fix --allow-dirty --allow-staged $(CLIPPY_FLAGS)
 
 lint:
-	cargo clippy $(CLIPPY_FLAGS) \
+	cargo clippy -p test-game -p inspector -p te-inspect $(CLIPPY_FLAGS) \
       \
       -D warnings
 

@@ -1,108 +1,104 @@
-use gm::LossyConvert;
+use std::ops::DerefMut;
+
+use crate::gm::LossyConvert;
 use refs::weak_from_ref;
-use ui::{ViewData, ViewFrame, ViewSubviews, ViewTouch};
+use crate::ui::{ViewData, ViewFrame, ViewSubviews};
 
 use crate::ui::TableView;
 
+pub(super) enum LayoutMode {
+    Scroll,
+    Resize,
+    Full,
+}
+
+fn cell_frame(
+    i: usize,
+    columns: usize,
+    cell_width: f32,
+    cell_height: f32,
+    spacing: f32,
+) -> (f32, f32, f32, f32) {
+    let x: f32 = (i % columns).lossy_convert() * (cell_width + spacing);
+    let y: f32 = (i / columns).lossy_convert() * (cell_height + spacing);
+    (x, y, cell_width, cell_height)
+}
+
 impl TableView {
-    fn clear_old_cells(&mut self) {
-        let old_cells: Vec<_> = self
-            .scroll
-            .content
-            .subviews_mut()
-            .iter()
-            .map(|c| {
-                let weak = c.weak();
-                weak.set_hidden(true);
-                weak
-            })
-            .collect();
-
-        self.registry.load_old_cells(old_cells);
-    }
-
-    pub(super) fn layout_single_column_cells(&mut self, number_of_cells: usize) {
+    pub(super) fn layout_fixed_cells(&mut self, number_of_cells: usize, columns: usize, mode: LayoutMode) {
         let cell_height = self.data.cell_height(0);
-
-        let total_height = number_of_cells.lossy_convert() * cell_height;
-
+        let spacing = self.cell_spacing;
+        let row_pitch = cell_height + spacing;
         let width = self.width();
+        let cell_width = (width - spacing * (columns - 1).lossy_convert()) / columns.lossy_convert();
+
+        let rows: f32 = (number_of_cells.lossy_convert() / columns.lossy_convert()).ceil();
+        let total_height = rows * row_pitch - spacing;
 
         self.scroll.set_content_height(total_height);
-        self.scroll.set_content_width(width);
+        if columns == 1 {
+            self.scroll.set_content_width(width);
+        }
 
-        let number_of_cells_fits: usize = (self.height() / cell_height).ceil().lossy_convert();
-
+        let rows_fit: usize = (self.height() / row_pitch).ceil().lossy_convert();
         let offset = self.scroll.get_scroll_content_offset();
+        let first_visible_row: usize = (-offset / row_pitch).floor().lossy_convert();
+        let first_index = first_visible_row * columns;
 
-        let first_index: usize = (-offset / cell_height).floor().lossy_convert();
-
-        let mut last_index = first_index + number_of_cells_fits + 1;
-
+        let mut last_index = first_index + rows_fit * columns + columns * 2;
         if last_index > number_of_cells {
             last_index = number_of_cells;
         }
 
-        self.clear_old_cells();
+        let mut to_recycle = Vec::new();
+        let mut shown = Vec::new();
 
-        let mut weak_table = self.weak();
+        for view in self.scroll.content.subviews() {
+            if view.is_hidden() {
+                continue;
+            }
 
-        for i in first_index..last_index {
-            let cell = self.data.setup_cell(i, &mut weak_table.registry);
-
-            cell.set_frame((0, i.lossy_convert() * cell_height, width, cell_height));
-
-            cell.enable_touch_low_priority();
-            cell.touch().up_inside.sub(weak_table, move || {
-                weak_table.data.cell_selected(i);
-            });
-        }
-    }
-
-    pub(crate) fn layout_two_column_cells(&mut self, number_of_cells: usize) {
-        let row_height = self.data.cell_height(0);
-        let cell_width = self.width() / 2.0;
-
-        let total_height = (number_of_cells.lossy_convert() / 2.0).ceil() * row_height;
-
-        self.scroll.set_content_height(total_height);
-
-        let mut number_of_cells_fits: usize = (self.height() / row_height).ceil().lossy_convert();
-        number_of_cells_fits *= 2;
-
-        let offset = self.scroll.get_scroll_content_offset();
-
-        let mut first_index: usize = (-offset / row_height).floor().lossy_convert();
-        if !first_index.is_multiple_of(2) {
-            first_index -= 1;
-        }
-        first_index *= 2;
-
-        let mut last_index = first_index + number_of_cells_fits + 4;
-
-        if last_index > number_of_cells {
-            last_index = number_of_cells;
+            let idx = view.tag();
+            if !matches!(mode, LayoutMode::Full) && idx >= first_index && idx < last_index {
+                shown.push(idx);
+            } else {
+                to_recycle.push(view.weak());
+            }
         }
 
-        self.clear_old_cells();
+        self.registry.load_old_cells(
+            to_recycle
+                .into_iter()
+                .map(|mut cell| {
+                    cell.set_hidden(true);
+                    cell.as_cell().cell_removed();
+                    cell
+                })
+                .collect(),
+        );
 
         let mut weak_table = weak_from_ref(self);
 
-        for i in first_index..last_index {
-            let cell = self.data.setup_cell(i, &mut weak_table.registry);
-
-            cell.enable_touch_low_priority();
-            cell.touch().up_inside.sub(weak_table, move || {
-                weak_table.data.cell_selected(i);
-            });
-
-            let y_pos = (i / 2).lossy_convert() * row_height;
-
-            if i % 2 == 0 {
-                cell.set_frame((0, y_pos, cell_width, row_height));
-            } else {
-                cell.set_frame((cell_width, y_pos, cell_width, row_height));
+        if matches!(mode, LayoutMode::Resize) {
+            for view in weak_table.scroll.content.subviews() {
+                if !view.is_hidden() {
+                    view.set_frame(cell_frame(view.tag(), columns, cell_width, cell_height, spacing));
+                }
             }
+        }
+
+        for i in first_index..last_index {
+            if shown.contains(&i) {
+                continue;
+            }
+
+            let mut cell = self.data.setup_cell(i, &mut weak_table.registry);
+            let cell = cell.deref_mut();
+
+            cell.set_tag(i);
+            cell.set_frame(cell_frame(i, columns, cell_width, cell_height, spacing));
+
+            cell.as_cell().cell_added();
         }
     }
 }

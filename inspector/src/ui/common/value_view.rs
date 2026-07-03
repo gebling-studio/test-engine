@@ -19,11 +19,6 @@ impl ValueView {
         self.title.set_text(title);
         self
     }
-
-    pub fn set_value(self: Weak<Self>, val: f32) {
-        self.buttons.set_value(val);
-        self.value_label.set_text(val);
-    }
 }
 
 impl Setup for ValueView {

@@ -1,16 +1,13 @@
-use level::LevelManager;
-use refs::{
-    main_lock::MainLock,
-    manage::{DataManager, ExistsManaged},
-};
-use render::{
-    BackgroundPipeline, PolygonPipeline, SpriteBoxPipepeline, SpriteView, TexturedSpriteBoxPipeline,
+use crate::level::LevelManager;
+use refs::{main_lock::MainLock, manage::ExistsManaged};
+use crate::render::{
+    BackgroundPipeline, PolygonPipeline, SpriteBoxPipeline, SpriteView, TexturedSpriteBoxPipeline,
     data::{SpriteInstance, TexturedSpriteInstance},
 };
-use ui::UIManager;
+use crate::ui::UIManager;
 use wgpu::RenderPass;
 
-static SPRITE_DRAWER: MainLock<SpriteBoxPipepeline> = MainLock::new();
+static SPRITE_DRAWER: MainLock<SpriteBoxPipeline> = MainLock::new();
 static TEXTURED_SPRITE_DRAWER: MainLock<TexturedSpriteBoxPipeline> = MainLock::new();
 static BACKGROUND: MainLock<BackgroundPipeline> = MainLock::new();
 static POLYGON: MainLock<PolygonPipeline> = MainLock::new();
@@ -22,7 +19,7 @@ impl LevelDrawer {
         LevelManager::update();
     }
 
-    pub(crate) fn draw(pass: &mut RenderPass) {
+    pub fn draw(pass: &mut RenderPass) {
         if LevelManager::no_level() {
             return;
         }
@@ -35,7 +32,7 @@ impl LevelDrawer {
         if level.background.is_ok() {
             BACKGROUND.get_mut().draw(
                 pass,
-                unsafe { level.background.get_static() },
+                &level.background,
                 resolution,
                 camera_pos.neg() / 10.0,
                 0.0,

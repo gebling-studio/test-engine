@@ -1,7 +1,7 @@
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{Anchor::CenterY, BLUE, Container, GREEN, Setup, ViewData, ViewSubviews, view},
+    ui::{BLUE, Container, GREEN, Setup, ViewData, ViewSubviews, view},
     ui_test::{UITest, check_colors},
 };
 
@@ -183,7 +183,7 @@ pub async fn test_center_field() -> anyhow::Result<()> {
     )?;
 
     from_main(move || {
-        view.field.place().relative(CenterY, view.container, -50.0);
+        view.field.place().center_y_offset(-50);
     });
 
     check_colors(

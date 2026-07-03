@@ -1,10 +1,9 @@
-use gm::flat::Point;
+use crate::gm::flat::Point;
 use refs::Weak;
-use ui::{ImageView, Setup, Touch, UIImages, ViewData, ViewFrame, ViewTouch};
+use crate::ui::{ImageView, Setup, Touch, UIImages, ViewData, ViewFrame, ViewTouch};
 use ui_proc::view;
 use vents::Event;
 
-use crate as test_engine;
 
 #[view]
 pub struct StickView {
@@ -71,11 +70,10 @@ impl Setup for StickView {
 
 mod test {
     use anyhow::Result;
-    use gm::flat::Point;
+    use crate::gm::flat::Point;
     use refs::Weak;
-    use ui::{Setup, ViewData, ViewTest, view_test};
+    use crate::ui::{Setup, ViewData, ViewTest, view_test};
 
-    use crate as test_engine;
     use crate::{ui::StickView, ui_test::inject_touches};
 
     #[view_test]

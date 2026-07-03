@@ -1,14 +1,20 @@
 use anyhow::Result;
-use gm::{
+use crate::gm::{
+    LossyConvert,
     color::{LIGHT_GRAY, U8Color},
     flat::Point,
 };
-use ui::{Button, Setup, UIManager, View, ViewData};
+use crate::ui::{Button, Setup, UIManager, View, ViewData};
 
-use crate::ui_test::checks::check_colors_structured;
+use crate::ui_test::{
+    TEST_NAME,
+    checks::check_colors_structured,
+    human::{human_mode, show_probes},
+    record::{next_check_index, print_recorded_colors, recording_colors},
+};
 
 #[allow(dead_code)]
-pub fn add_action(action: impl FnMut() + Send + 'static) {
+pub(crate) fn add_action(action: impl FnMut() + Send + 'static) {
     let button = UIManager::root_view()
         .add_subview_to_root(Button::new())
         .downcast::<Button>()
@@ -20,6 +26,10 @@ pub fn add_action(action: impl FnMut() + Send + 'static) {
 }
 
 pub fn check_colors(data: &str) -> Result<()> {
+    if recording_colors() {
+        return print_recorded_colors();
+    }
+
     let checks: Vec<_> = data
         .split('\n')
         .filter_map(|line| {
@@ -46,6 +56,16 @@ pub fn check_colors(data: &str) -> Result<()> {
             Some((pos, color))
         })
         .collect();
+
+    if human_mode() {
+        let positions: Vec<(u32, u32)> = checks
+            .iter()
+            .map(|(pos, _)| (pos.x.lossy_convert(), pos.y.lossy_convert()))
+            .collect();
+
+        let test_name = TEST_NAME.lock().clone();
+        show_probes(&positions, &test_name, next_check_index(&test_name));
+    }
 
     check_colors_structured(&checks)
 }

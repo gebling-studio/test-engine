@@ -1,22 +1,28 @@
 use std::ops::{DerefMut, Neg};
 
-use gm::{
+use crate::gm::{
     ToF32,
     flat::{Point, Size},
 };
 use refs::{Own, Weak, weak_from_ref};
-use ui::{
-    NO_TOUCH_ID, Scrollable, Setup, Touch, TouchStack, UIAnimation, UIEvent, UIManager, View, ViewData,
-    ViewFrame, ViewSubviews, view,
+use crate::ui::{
+    NO_TOUCH_ID, Scrollable, Setup, Touch, TouchStack, UIAnimation, UIEvent, View, ViewData, ViewFrame,
+    ViewSubviews, view,
 };
 use vents::Event;
 
 use crate::{self as test_engine, ui::views::containers::scrolling::ScrollContent};
 
+/// A captured touch becomes a drag only after moving this far. Until then
+/// taps on views inside the scroll work; after, the drag claims the touch.
+const DRAG_SLOP: f32 = 10.0;
+
 #[view]
 pub struct ScrollView {
     inertia:            f32,
+    began_touch:        Point,
     previous_touch:     Point,
+    dragging:           bool,
     pub on_scroll:      Event<f32>,
     pub bottom_reached: UIEvent,
 
@@ -34,7 +40,7 @@ impl ScrollView {
         (self.content.content_size.height - self.height()).neg().min(0.0)
     }
 
-    pub fn set_content_offset(&mut self, offset: impl ToF32) -> &mut Self {
+    pub(crate) fn set_content_offset(&mut self, offset: impl ToF32) -> &mut Self {
         self.content.__base_view().__content_offset = offset.to_f32();
 
         if self.content.__base_view().__content_offset < self.max_offset() {
@@ -44,17 +50,17 @@ impl ScrollView {
         self
     }
 
-    pub fn set_content_size(&mut self, size: impl Into<Size>) -> &mut Self {
+    pub(crate) fn set_content_size(&mut self, size: impl Into<Size>) -> &mut Self {
         self.content.content_size = size.into();
         self
     }
 
-    pub fn set_content_width(&mut self, width: impl ToF32) -> &mut Self {
+    pub(crate) fn set_content_width(&mut self, width: impl ToF32) -> &mut Self {
         self.content.content_size.width = width.to_f32();
         self
     }
 
-    pub fn set_content_height(&mut self, height: impl ToF32) -> &mut Self {
+    pub(crate) fn set_content_height(&mut self, height: impl ToF32) -> &mut Self {
         self.content.content_size.height = height.to_f32();
 
         if self.content.__base_view().__content_offset < self.max_offset() {
@@ -64,7 +70,7 @@ impl ScrollView {
         self
     }
 
-    pub fn get_scroll_content_offset(&self) -> f32 {
+    pub(crate) fn get_scroll_content_offset(&self) -> f32 {
         self.content.content_offset()
     }
 }
@@ -73,10 +79,6 @@ impl Setup for ScrollView {
     fn setup(mut self: Weak<Self>) {
         self.content.__base_view().dont_hide_off_screen = true;
         self.content.place().back();
-
-        UIManager::on_scroll(self, move |scroll| {
-            self.on_scroll(scroll.y);
-        });
 
         self.size_changed().sub(move || {
             self.on_scroll(0.0);
@@ -99,11 +101,16 @@ impl ViewSubviews for ScrollView {
 impl Scrollable for ScrollView {
     fn __process_scroll_touch(&mut self, touch: Touch) -> bool {
         if touch.is_ended() {
-            if touch.id == self.__view_base.__touch_id {
+            if touch.id == self.__base_view().__touch_id {
                 self.add_inertia_animation();
             }
 
-            self.__view_base.__touch_id = NO_TOUCH_ID;
+            self.__base_view().__touch_id = NO_TOUCH_ID;
+            self.dragging = false;
+            return false;
+        }
+
+        if self.is_hidden_in_tree() {
             return false;
         }
 
@@ -111,12 +118,25 @@ impl Scrollable for ScrollView {
         target_frame.origin.y -= self.content.__base_view().__content_offset;
 
         if touch.is_began() && target_frame.contains(touch.position) {
-            self.__view_base.__touch_id = touch.id;
+            self.__base_view().__touch_id = touch.id;
+            self.began_touch = touch.position;
             self.previous_touch = touch.position;
             return true;
         }
 
-        if touch.is_moved() && self.__view_base.__touch_id == touch.id {
+        if touch.is_moved() && self.__base_view().__touch_id == touch.id {
+            if !self.dragging {
+                if (touch.position.y - self.began_touch.y).abs() < DRAG_SLOP {
+                    return true;
+                }
+                self.dragging = true;
+                self.previous_touch = self.began_touch;
+                TouchStack::cancel_touch(touch.id);
+                // cancel_touch clears every capture, including this scroll's
+                // if it is also a touch listener
+                self.__base_view().__touch_id = touch.id;
+            }
+
             let delta = -(self.previous_touch.y - touch.position.y);
             self.previous_touch = touch.position;
 
@@ -130,6 +150,10 @@ impl Scrollable for ScrollView {
         }
 
         false
+    }
+
+    fn __process_wheel_scroll(&mut self, delta: Point) {
+        self.on_scroll(delta.y);
     }
 }
 

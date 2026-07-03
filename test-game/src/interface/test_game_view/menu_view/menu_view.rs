@@ -21,6 +21,8 @@ use test_engine::{
     },
 };
 
+#[cfg(feature = "bench")]
+use crate::interface::test_game_view::UIBenchmarkView;
 use crate::{
     api::TEST_REST_REQUEST,
     interface::{
@@ -29,7 +31,7 @@ use crate::{
         polygon_view::PolygonView,
         render_view::RenderView,
         root_layout_view::RootLayoutView,
-        test_game_view::{MenuEntry, Node, NodeCell, ScaleCell, TestGameView, UIBenchmarkView},
+        test_game_view::{MenuEntry, Node, NodeCell, ScaleCell, TestGameView},
     },
     levels::{BenchmarkLevel, TestLevel},
     no_physics::NoPhysicsView,
@@ -112,6 +114,7 @@ impl Setup for MenuView {
                 Node::new(
                     MenuEntry::new("UI"),
                     vec![
+                        #[cfg(feature = "bench")]
                         MenuEntry::new("ui bench")
                             .action(|| {
                                 LevelManager::stop_level();
@@ -143,7 +146,7 @@ impl Setup for MenuView {
                         MenuEntry::new("scroll")
                             .action(|| {
                                 let view = InfiniteScrollTest::new();
-                                let view = view.after_setup(|v| {
+                                let view = view.after_setup(|mut v| {
                                     v.add_view::<Button>()
                                         .set_text("Back")
                                         .on_tap(|| {
@@ -152,6 +155,7 @@ impl Setup for MenuView {
                                         .place()
                                         .size(100, 20);
                                     v.table.place().clear().back();
+                                    v.table.set_columns(4);
                                 });
 
                                 LevelManager::stop_level();

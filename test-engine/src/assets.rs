@@ -17,9 +17,9 @@ impl Assets {
 
         let paths = crate::assets_paths::AssetsPaths::new(root_path);
 
-        window::image::Image::set_root_path(&paths.images);
-        audio::Sound::set_root_path(&paths.sounds);
-        window::Font::set_root_path(&paths.fonts);
+        crate::window::image::Image::set_root_path(&paths.images);
+        crate::audio::Sound::set_root_path(&paths.sounds);
+        crate::window::Font::set_root_path(&paths.fonts);
     }
 
     pub fn path() -> PathBuf {

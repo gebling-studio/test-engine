@@ -1,7 +1,9 @@
+use crate::gm::{LossyConvert, ToF32, flat::Point};
 use netrun::Function;
 use refs::{Own, Weak};
-use ui::{Setup, UIEvent, View, ViewData, ViewFrame, view};
+use crate::ui::{Setup, UIEvent, View, ViewData, ViewFrame, ViewTouch, view};
 
+use super::layout::LayoutMode;
 use crate::{
     self as test_engine,
     ui::{CellRegistry, ScrollView, TableData, struct_name},
@@ -13,6 +15,8 @@ pub struct TableView {
 
     #[educe(Default = 1)]
     pub(super) columns: usize,
+
+    pub(super) cell_spacing: f32,
 
     pub(super) registry: CellRegistry,
 
@@ -27,11 +31,16 @@ impl Setup for TableView {
         self.scroll.place().back();
 
         self.scroll.on_scroll.sub(move || {
-            self.layout_cells();
+            self.layout_cells(LayoutMode::Scroll);
         });
 
         self.size_changed().sub(move || {
-            self.layout_cells();
+            self.layout_cells(LayoutMode::Resize);
+        });
+
+        self.enable_touch_low_priority();
+        self.touch().up_inside.val(weak, move |touch| {
+            self.select_at(touch.position);
         });
     }
 }
@@ -65,22 +74,62 @@ impl TableView {
     }
 
     pub fn reload_data(&mut self) {
-        self.layout_cells();
+        self.layout_cells(LayoutMode::Full);
     }
 
     pub fn set_columns(&mut self, columns: usize) -> &mut Self {
         self.columns = columns;
-        self.layout_cells();
+        self.layout_cells(LayoutMode::Full);
         self
     }
 
-    pub fn bottom_reached(&self) -> &UIEvent {
+    pub(crate) fn set_cell_spacing(&mut self, spacing: impl ToF32) -> &mut Self {
+        self.cell_spacing = spacing.to_f32();
+        self.layout_cells(LayoutMode::Full);
+        self
+    }
+
+    pub(crate) fn bottom_reached(&self) -> &UIEvent {
         &self.scroll.bottom_reached
     }
 }
 
 impl TableView {
-    fn layout_cells(&mut self) {
+    // The whole table maps a tap to a cell index, so a tap in a
+    // spacing gap selects the nearest cell instead of dying on a
+    // pixel gap between touch areas. Taps past the last row are
+    // ignored.
+    fn select_at(mut self: Weak<Self>, pos: Point) {
+        if self.data.is_null() {
+            return;
+        }
+
+        let number_of_cells = self.data.number_of_cells();
+
+        if number_of_cells == 0 {
+            return;
+        }
+
+        let columns: f32 = self.columns.lossy_convert();
+        let cell_height = self.data.cell_height(0);
+        let spacing = self.cell_spacing;
+        let cell_width = (self.width() - spacing * (columns - 1.0)) / columns;
+
+        let col = ((pos.x - cell_width / 2.0) / (cell_width + spacing)).round().clamp(0.0, columns - 1.0);
+
+        let y = pos.y - self.scroll.get_scroll_content_offset();
+        let row = ((y - cell_height / 2.0) / (cell_height + spacing)).round().max(0.0);
+
+        let index: usize = (row * columns + col).lossy_convert();
+
+        if index >= number_of_cells {
+            return;
+        }
+
+        self.data.cell_selected(index);
+    }
+
+    fn layout_cells(&mut self, mode: LayoutMode) {
         if self.height() <= 0.0 {
             return;
         }
@@ -104,11 +153,7 @@ impl TableView {
             unimplemented!()
             // layout_variable_sized_cells(self, number_of_cells);
         } else {
-            match self.columns {
-                1 => self.layout_single_column_cells(number_of_cells),
-                2 => self.layout_two_column_cells(number_of_cells),
-                _ => unimplemented!("More than TableView 2 columns is not supported yet"),
-            }
+            self.layout_fixed_cells(number_of_cells, self.columns, mode);
         }
     }
 }
@@ -117,11 +162,11 @@ mod test {
     use std::ops::Deref;
 
     use anyhow::Result;
-    use gm::color::Color;
+    use crate::gm::color::Color;
     use hreads::from_main;
     use parking_lot::Mutex;
     use refs::Weak;
-    use ui::{Label, Setup, View, ViewData, ViewTest, view_test};
+    use crate::ui::{Label, Setup, View, ViewData, ViewTest, view_test};
 
     use crate::{
         self as test_engine,

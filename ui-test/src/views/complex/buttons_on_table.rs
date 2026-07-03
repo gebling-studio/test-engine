@@ -60,7 +60,7 @@ pub async fn test_buttons_on_table_view() -> Result<()> {
         TouchStack::dump(),
         vec![vec![
             "Layer: Root view".to_string(),
-            "Container".to_string(),
+            "ButtonsOnTableView.table: TableView".to_string(),
             "Button".to_string(),
         ]],
     );

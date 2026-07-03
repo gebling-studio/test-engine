@@ -1,5 +1,5 @@
 use test_engine::{
-    dispatch::{from_main, wait_for_next_frame},
+    dispatch::from_main,
     refs::Weak,
     ui::{
         Anchor::{Right, Top},
@@ -142,8 +142,6 @@ pub async fn test_cell_layout() -> anyhow::Result<()> {
 
         view.table.place().clear().lrb(10).anchor(Top, view.title, 10);
     });
-
-    wait_for_next_frame();
 
     check_colors(
         r#"

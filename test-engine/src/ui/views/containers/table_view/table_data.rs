@@ -1,5 +1,5 @@
 use refs::Weak;
-use ui::View;
+use crate::ui::View;
 
 use crate::ui::CellRegistry;
 

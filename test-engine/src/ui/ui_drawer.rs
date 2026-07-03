@@ -1,0 +1,378 @@
+use std::ops::{Deref, DerefMut};
+
+use crate::gm::{
+    LossyConvert,
+    color::{CLEAR, TURQUOISE},
+    flat::{CornerRadii, Rect, Size},
+};
+use refs::{Weak, main_lock::MainLock};
+use crate::render::{
+    UIBackdropPipeline, UIBlurPipeline, UIGradientPipeline, UIImageRectPipeline, UIRectPipeline,
+    UIShadowPipeline,
+    data::{RectView, UIGradientInstance, UIImageInstance, UIRectInstance, UIShadowInstance},
+};
+use crate::ui::{
+    BlurView, ImageView, Label, ScrimView, TextAlignment, UIManager, View, ViewData, ViewFrame,
+    ViewLayout, ViewSubviews,
+};
+use wgpu::RenderPass;
+use wgpu_text::glyph_brush::{HorizontalAlign, Section, Text};
+use crate::window::{Font, RenderFrame, ShapedParams};
+
+use crate::pipelines::Pipelines;
+
+static GRADIENT_DRAWER: MainLock<UIGradientPipeline> = MainLock::new();
+static IMAGE_RECT_DRAWER: MainLock<UIImageRectPipeline> = MainLock::new();
+static SHADOW_DRAWER: MainLock<UIShadowPipeline> = MainLock::new();
+static SCRIM_DRAWER: MainLock<UIRectPipeline> = MainLock::new();
+static BLUR_DRAWER: MainLock<UIBlurPipeline> = MainLock::new();
+static BACKDROP_DRAWER: MainLock<UIBackdropPipeline> = MainLock::new();
+
+/// Set during update when a visible `BlurView` wants a blur, read by
+/// the window before it picks the frame's render target.
+static NEEDS_SAMPLING: MainLock<bool> = MainLock::new();
+
+type TextSections<'a> = Vec<(Weak<Font>, Vec<(Section<'a>, ShapedParams)>)>;
+
+struct DrawContext<'a> {
+    text_sections: TextSections<'a>,
+    debug_frames:  bool,
+    scale:         f32,
+    resolution:    Size,
+    /// What the current pass has set, reapplied after a blur barrier
+    /// reopens the pass.
+    scissor:       Rect<u32>,
+    display:       Rect<u32>,
+}
+
+pub struct UIDrawer;
+
+impl UIDrawer {
+    pub(crate) fn update() {
+        UIManager::commit_animations();
+        *NEEDS_SAMPLING.get_mut() = false;
+        Self::update_view(UIManager::root_view().deref_mut());
+    }
+
+    pub(crate) fn needs_sampleable_frame() -> bool {
+        *NEEDS_SAMPLING
+    }
+
+    pub fn draw(render_frame: &mut RenderFrame) {
+        let resolution = UIManager::window_resolution();
+        let display_rect: Rect<u32> = Size::<u32>::new(
+            resolution.width.lossy_convert(),
+            resolution.height.lossy_convert(),
+        )
+        .into();
+
+        let mut ctx = DrawContext {
+            text_sections: vec![],
+            debug_frames: UIManager::should_draw_debug_frames(),
+            scale: UIManager::scale(),
+            resolution,
+            scissor: display_rect,
+            display: display_rect,
+        };
+
+        Self::draw_view(render_frame, UIManager::root_view_static(), &mut ctx);
+
+        Self::flush_pipelines(render_frame.pass(), resolution);
+        scissor(render_frame.pass(), display_rect);
+
+        Self::flush_text(render_frame.pass(), &mut ctx.text_sections);
+
+        // The scrim flushes after everything including text, so its
+        // translucent color dims the whole frame drawn so far. The
+        // modal above it owns the depth buffer and stays untouched.
+        SCRIM_DRAWER.get_mut().draw(
+            render_frame.pass(),
+            RectView {
+                resolution,
+                _padding: 0,
+            },
+        );
+
+        // When the frame rendered into the intermediate scene texture,
+        // copy the finished scene to the real surface.
+        let scene = render_frame.scene_view().clone();
+        if let Some(pass) = render_frame.present_pass() {
+            BLUR_DRAWER.get_mut().present(pass, &scene);
+        }
+    }
+
+    fn flush_pipelines(pass: &mut RenderPass, resolution: Size) {
+        let rect_view = RectView {
+            resolution,
+            _padding: 0,
+        };
+
+        Pipelines::rect().draw(pass, rect_view);
+        IMAGE_RECT_DRAWER.get_mut().draw(pass, rect_view);
+        GRADIENT_DRAWER.get_mut().draw(pass, rect_view);
+
+        // Shadows go last. A shadow shares its view's z, so the view
+        // drawn above already owns the depth buffer inside its shape
+        // and masks the shadow there. Everything farther is already
+        // drawn, so the soft band blends over it.
+        SHADOW_DRAWER.get_mut().draw(pass, rect_view);
+    }
+
+    fn flush_text(pass: &mut RenderPass, text_sections: &mut TextSections) {
+        for (mut font, sections) in text_sections.drain(..) {
+            for (section, params) in sections {
+                font.queue_shaped(section, params);
+            }
+            font.process_queued().unwrap();
+            font.brush.draw(pass);
+        }
+    }
+
+    /// Everything drawn so far flushes into the scene texture and gets
+    /// blurred, then the pass reopens and the blurred backdrop draws
+    /// at the view's frame. Subviews and later views draw on top.
+    fn blur_barrier(render_frame: &mut RenderFrame, view: &BlurView, frame: &Rect, ctx: &mut DrawContext) {
+        Self::flush_pipelines(render_frame.pass(), ctx.resolution);
+        Self::flush_text(render_frame.pass(), &mut ctx.text_sections);
+
+        let (encoder, scene) = render_frame.split();
+        BLUR_DRAWER.get_mut().blur(
+            encoder,
+            scene,
+            ctx.resolution.lossy_convert(),
+            view.blur_radius() * ctx.scale,
+        );
+
+        let pass = render_frame.pass();
+        scissor(pass, ctx.scissor);
+
+        BACKDROP_DRAWER.get_mut().draw(
+            pass,
+            RectView {
+                resolution: ctx.resolution,
+                _padding:   0,
+            },
+            UIRectInstance::new(
+                *frame,
+                *view.color(),
+                *view.border_color(),
+                view.border_width(),
+                view.corner_radii(),
+                view.z_position(),
+                ctx.scale,
+            ),
+            BLUR_DRAWER.output_bind(),
+        );
+    }
+
+    fn update_view(view: &mut dyn View) {
+        if view.is_hidden() {
+            return;
+        }
+        view.layout();
+        view.calculate_absolute_frame();
+        view.update();
+        view.trigger_events();
+
+        if let Some(blur) = view.as_any().downcast_ref::<BlurView>()
+            && blur.blur_radius() > 0.0
+        {
+            *NEEDS_SAMPLING.get_mut() = true;
+        }
+
+        // A child's update() may add views to this list, reallocating it.
+        // Indexing re-borrows the list on every step, so only the Weak is
+        // held while child code runs. An iterator would dangle.
+        let mut i = 0;
+        while i < view.subviews().len() {
+            let mut child = view.subviews()[i].weak();
+            Self::update_view(child.deref_mut());
+            i += 1;
+        }
+    }
+
+    #[allow(clippy::too_many_lines)]
+    fn draw_view<'a>(render_frame: &mut RenderFrame, view: &'a dyn View, ctx: &mut DrawContext<'a>) {
+        let frame = *view.absolute_frame();
+
+        if view.is_hidden() || frame.size.has_no_area() {
+            return;
+        }
+
+        view.before_render(render_frame.pass());
+
+        let clips = view.clips_to_bounds();
+
+        if clips {
+            Self::flush_pipelines(render_frame.pass(), ctx.resolution);
+            let mut frame = frame * ctx.scale;
+            frame.origin.clip_positive();
+
+            if frame.max_x() > ctx.resolution.width {
+                frame.size.width -= frame.max_x() - ctx.resolution.width;
+            }
+
+            if frame.max_y() > ctx.resolution.height {
+                frame.size.height -= frame.max_y() - ctx.resolution.height;
+            }
+
+            let clip_rect: Rect<u32> = frame.lossy_convert();
+            scissor(render_frame.pass(), clip_rect);
+            ctx.scissor = clip_rect;
+        }
+
+        if let Some(shadow) = view.shadow()
+            && shadow.radius > 0.0
+            && shadow.color.a > 0.0
+        {
+            SHADOW_DRAWER.get_mut().add(UIShadowInstance {
+                position: frame.origin + shadow.offset,
+                size: frame.size,
+                color: shadow.color,
+                corner_radii: view.corner_radii(),
+                blur: shadow.radius,
+                z_position: view.z_position(),
+                scale: ctx.scale,
+            });
+        }
+
+        if let Some(blur) = view.as_any().downcast_ref::<BlurView>()
+            && blur.blur_radius() > 0.0
+        {
+            Self::blur_barrier(render_frame, blur, &frame, ctx);
+        } else if view.as_any().downcast_ref::<ScrimView>().is_some() {
+            if view.color().a > 0.0 {
+                SCRIM_DRAWER.get_mut().add(UIRectInstance::new(
+                    frame,
+                    *view.color(),
+                    *view.border_color(),
+                    view.border_width(),
+                    view.corner_radii(),
+                    view.z_position(),
+                    ctx.scale,
+                ));
+            }
+        } else if view.end_gradient_color().a > 0.0 {
+            GRADIENT_DRAWER.get_mut().add(UIGradientInstance {
+                position: frame.origin,
+                size: frame.size,
+                start_color: *view.color(),
+                end_color: *view.end_gradient_color(),
+                corner_radii: view.corner_radii(),
+                z_position: view.z_position(),
+                scale: ctx.scale,
+            });
+        } else if view.color().a > 0.0 || view.border_color().a > 0.0 {
+            Pipelines::rect().add(UIRectInstance::new(
+                frame,
+                *view.color(),
+                *view.border_color(),
+                view.border_width(),
+                view.corner_radii(),
+                view.z_position(),
+                ctx.scale,
+            ));
+        }
+
+        if let Some(image_view) = view.as_any().downcast_ref::<ImageView>() {
+            if image_view.image().is_ok() {
+                let image = image_view.image();
+
+                IMAGE_RECT_DRAWER.get_mut().add_with_image(
+                    UIImageInstance::new(
+                        image_view.image_frame(),
+                        *view.border_color(),
+                        view.border_width(),
+                        view.corner_radii(),
+                        view.z_position(),
+                        image_view.flip_x,
+                        image_view.flip_y,
+                        ctx.scale,
+                    ),
+                    image,
+                );
+            }
+        } else if let Some(label) = view.as_any().downcast_ref::<Label>()
+            && !label.text.is_empty()
+        {
+            Self::draw_label(&frame, label, &mut ctx.text_sections, ctx.scale);
+        }
+
+        if ctx.debug_frames {
+            for rect in frame.to_borders(2.0) {
+                Pipelines::rect().add(UIRectInstance::new(
+                    rect,
+                    TURQUOISE,
+                    CLEAR,
+                    0.0,
+                    CornerRadii::default(),
+                    view.z_position() - 0.2,
+                    ctx.scale,
+                ));
+            }
+        }
+
+        let root_frame = UIManager::root_view_static().frame();
+
+        for view in view.subviews() {
+            if view.dont_hide() || view.absolute_frame().intersects(root_frame) {
+                Self::draw_view(render_frame, view.deref(), ctx);
+            }
+        }
+
+        if clips {
+            Self::flush_pipelines(render_frame.pass(), ctx.resolution);
+            scissor(render_frame.pass(), ctx.display);
+            ctx.scissor = ctx.display;
+        }
+    }
+
+    fn draw_label<'a>(frame: &Rect, label: &'a Label, sections: &mut TextSections<'a>, scale: f32) {
+        let frame = frame * scale;
+
+        let center = frame.center();
+
+        let margin = 16.0;
+
+        let font = label.font();
+
+        let params = ShapedParams {
+            tracking:  label.letter_spacing() * scale,
+            multiline: label.is_multiline(),
+            h_align:   match label.alignment {
+                TextAlignment::Left => HorizontalAlign::Left,
+                TextAlignment::Center => HorizontalAlign::Center,
+                TextAlignment::Right => HorizontalAlign::Right,
+            },
+        };
+
+        let section = Section::default()
+            .add_text(
+                Text::new(&label.text)
+                    .with_scale(label.text_size() * scale * font.em_scale())
+                    .with_color(label.text_color().as_slice())
+                    .with_z(label.z_position() - UIManager::additional_z_offset()),
+            )
+            .with_bounds((
+                frame.width() - if label.alignment.center() { 0.0 } else { margin },
+                frame.height(),
+            ))
+            .with_screen_position((
+                match label.alignment {
+                    TextAlignment::Left => frame.x() + margin,
+                    TextAlignment::Center => center.x,
+                    TextAlignment::Right => frame.max_x() - margin,
+                },
+                center.y,
+            ));
+
+        match sections.iter_mut().find(|(f, _)| f.name == font.name) {
+            Some((_, list)) => list.push((section, params)),
+            None => sections.push((font, vec![(section, params)])),
+        }
+    }
+}
+
+fn scissor(pass: &mut RenderPass, rect: Rect<u32>) {
+    pass.set_scissor_rect(rect.x(), rect.y(), rect.width(), rect.height());
+}

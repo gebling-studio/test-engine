@@ -1,17 +1,18 @@
-use std::{any::type_name, path::PathBuf, sync::Once};
+use std::{path::PathBuf, sync::Once};
 
 use anyhow::Result;
-use gm::{
+use crate::gm::{
     LossyConvert,
     flat::{Point, Size},
 };
-use hreads::{from_main, invoke_dispatched, wait_for_next_frame};
-use level::{LevelBase, LevelManager};
+#[cfg(desktop)]
+use hreads::{is_main_thread, wait_for_next_frame};
+use hreads::{from_main, invoke_dispatched};
+use crate::level::LevelManager;
 use log::debug;
 use refs::{Own, main_lock::MainLock};
-use ui::{Touch, TouchEvent, UIEvents, UIManager, View, ViewData, ViewSubviews, WeakView};
-use wgpu::RenderPass;
-use window::{ElementState, MouseButton, Screenshot, Window};
+use crate::ui::{Hover, Theme, Touch, TouchEvent, UIEvents, UIManager, View, ViewData, ViewSubviews, WeakView};
+use crate::window::{ElementState, MouseButton, RenderFrame, Screenshot, Theme as OsTheme, Window};
 use winit::{
     event::{KeyEvent, TouchPhase},
     keyboard::Key,
@@ -21,13 +22,17 @@ use crate::{
     App,
     level_drawer::LevelDrawer,
     pipelines::Pipelines,
-    ui::{Input, UIDrawer},
+    ui::{Input, UIDrawer, ui_test::human_pause},
 };
 
 #[cfg(not_wasm)]
 static WINDOW_READY: parking_lot::Mutex<vents::OnceEvent> =
     parking_lot::Mutex::new(vents::OnceEvent::const_default());
 static CURSOR_POSITION: MainLock<Point> = MainLock::new();
+
+/// Scroll sensitivity. Mouse wheel line deltas are already converted to
+/// pixels by `LINE_SCROLL_PIXELS` in the window crate, then scaled by this.
+const SCROLL_SPEED: f32 = 0.25;
 
 pub struct AppRunner {
     pub(crate) app:        Box<dyn App>,
@@ -40,7 +45,7 @@ impl AppRunner {
         Window::close();
     }
 
-    pub fn cursor_position() -> Point {
+    pub(crate) fn cursor_position() -> Point {
         *CURSOR_POSITION
     }
 
@@ -92,11 +97,11 @@ impl AppRunner {
     }
 
     #[cfg(not_wasm)]
-    pub async fn setup_sentry(app: &dyn App) -> Option<sentry::ClientInitGuard> {
+    pub(crate) async fn setup_sentry(app: &dyn App) -> Option<sentry::ClientInitGuard> {
         let sentry_url = crate::config::Config::sentry_url(app).await?;
 
         let client = sentry::init((
-            dbg!(sentry_url),
+            sentry_url,
             sentry::ClientOptions {
                 release: sentry::release_name!(),
                 // Capture user IPs and potentially sensitive headers when using HTTP server integrations
@@ -111,14 +116,9 @@ impl AppRunner {
         Some(client)
     }
 
-    #[cfg(wasm)]
-    pub fn setup_sentry(_app: &dyn App) -> Option<()> {
-        None
-    }
-
     pub fn new(app: Box<dyn App>) -> Self {
         #[cfg(desktop)]
-        crate::assets::Assets::init(filesystem::Paths::git_root().expect("git_root()"));
+        crate::assets::Assets::init(crate::filesystem::Paths::git_root().expect("git_root()"));
         #[cfg(mobile)]
         crate::assets::Assets::init(std::path::PathBuf::default());
 
@@ -132,19 +132,12 @@ impl AppRunner {
     }
 
     #[cfg(target_os = "android")]
-    pub(crate) async fn start(first_view: Own<dyn View>, app: crate::AndroidApp) -> Result<()> {
-        dbg!("PENIJEE");
-
+    pub async fn start(first_view: Own<dyn View>, app: crate::AndroidApp) -> Result<()> {
         std::panic::set_hook(Box::new(|pan| {
             let backtrace = std::backtrace::Backtrace::force_capture();
-            println!("Custom panic hook");
-            dbg!(&pan);
-            dbg!(&pan.payload_as_str());
-            dbg!(&backtrace);
-            eprintln!("Backtrace: {}", backtrace);
+            eprintln!("{pan}");
+            eprintln!("Backtrace: {backtrace}");
         }));
-
-        dbg!("Panic hook set");
 
         use winit::platform::android::EventLoopBuilderExtAndroid;
 
@@ -155,12 +148,8 @@ impl AppRunner {
 
         android_logger::init_once(android_logger::Config::default().with_max_level(log::LevelFilter::Warn));
 
-        log::error!("AAAASOOOOOO");
-
         let event_loop: crate::EventLoop =
             crate::EventLoop::with_user_event().with_android_app(app).build().unwrap();
-
-        log::error!("EVANTO");
 
         Window::start(Self::new(first_view), event_loop).await
     }
@@ -169,14 +158,33 @@ impl AppRunner {
     pub fn start_with_actor(
         actions: impl std::future::Future<Output = Result<()>> + Send + 'static,
     ) -> Result<()> {
-        use ui::Setup;
+        Self::start_with_actor_impl(actions, false);
+        Ok(())
+    }
+
+    /// Run without a window or a display. Frames render to an offscreen
+    /// texture. Screenshots and `check_colors` still work.
+    #[cfg(not_wasm)]
+    pub fn start_headless_with_actor(
+        actions: impl std::future::Future<Output = Result<()>> + Send + 'static,
+    ) -> Result<()> {
+        Self::start_with_actor_impl(actions, true);
+        Ok(())
+    }
+
+    #[cfg(not_wasm)]
+    fn start_with_actor_impl(
+        actions: impl std::future::Future<Output = Result<()>> + Send + 'static,
+        headless: bool,
+    ) {
+        use crate::ui::Setup;
 
         #[derive(Default)]
         struct ActorApp;
 
         impl App for ActorApp {
             fn make_root_view(&self) -> Own<dyn View> {
-                ui::Container::new()
+                crate::ui::Container::new()
             }
         }
 
@@ -184,23 +192,46 @@ impl AppRunner {
             hreads::unasync(actions).unwrap();
         });
 
-        crate::app_starter::test_engine_start_with_app(Box::new(ActorApp));
-
-        Ok(())
+        if headless {
+            crate::app_starter::test_engine_start_with_app_headless(Box::new(ActorApp));
+        } else {
+            crate::app_starter::test_engine_start_with_app(Box::new(ActorApp));
+        }
     }
 
     pub fn set_window_title(title: impl Into<String>) {
         Window::set_title(title);
     }
 
+    #[cfg(desktop)]
     pub fn set_window_size(size: impl Into<Size<u32>> + Send + 'static) {
-        from_main(|| {
+        let size = size.into();
+
+        from_main(move || {
             Window::current().set_size(size);
         });
-        wait_for_next_frame();
+
+        if is_main_thread() {
+            return;
+        }
+
+        // In windowed mode the OS applies the resize later. A touch injected
+        // before it lands is processed against the old layout and misses
+        // every view. Wait until the new size is real.
+        for _ in 0..100 {
+            let current: Size<u32> = from_main(Window::inner_size).lossy_convert();
+            if current == size {
+                return;
+            }
+            wait_for_next_frame();
+        }
+
+        panic!("Window did not resize to {size:?}");
     }
 
     pub fn take_screenshot() -> Result<Screenshot> {
+        human_pause();
+
         let recv = from_main(|| Window::current().request_screenshot());
         let screenshot = recv.recv()?;
         Ok(screenshot)
@@ -211,13 +242,11 @@ impl AppRunner {
     }
 }
 
-impl window::WindowEvents for AppRunner {
+impl crate::window::WindowEvents for AppRunner {
     fn window_ready(&mut self) {
         static INIT: Once = Once::new();
 
         INIT.call_once(|| {
-            debug!("window ready");
-
             Pipelines::initialize();
 
             let mut root = UIManager::root_view();
@@ -231,7 +260,7 @@ impl window::WindowEvents for AppRunner {
             self.update();
             *LevelManager::update_interval() = 1.0 / Window::display_refresh_rate().lossy_convert();
 
-            window::state::State::resize();
+            crate::window::state::State::resize();
 
             self.resize(
                 Window::inner_position(),
@@ -240,12 +269,20 @@ impl window::WindowEvents for AppRunner {
                 Window::outer_size(),
             );
 
+            debug!("UI initialized");
+
+            if let Some(theme) = Window::system_theme() {
+                Theme::set_system(theme.into());
+            }
+
             #[cfg(not_wasm)]
             {
-                Window::current().set_size(self.app.initial_size().lossy_convert());
-                if self.app.enable_inspection() {
-                    crate::inspect::InspectService::start_listening();
+                #[cfg(desktop)]
+                {
+                    Window::current().set_size(self.app.initial_size().lossy_convert());
                 }
+                #[cfg(debug_assertions)]
+                crate::inspect::InspectService::start_listening();
             }
 
             UIManager::keymap().add(UIManager::root_view(), 'i', || {
@@ -263,6 +300,7 @@ impl window::WindowEvents for AppRunner {
 
             #[cfg(not_wasm)]
             hreads::spawn(async {
+                debug!("window ready");
                 WINDOW_READY.lock().trigger(());
             });
         });
@@ -275,13 +313,17 @@ impl window::WindowEvents for AppRunner {
         UIDrawer::update();
     }
 
-    fn render<'a>(&'a mut self, pass: &mut RenderPass<'a>) {
+    fn render(&mut self, frame: &mut RenderFrame) {
         if UIManager::window_resolution().has_no_area() {
             return;
         }
 
-        LevelDrawer::draw(pass);
-        UIDrawer::draw(pass);
+        LevelDrawer::draw(frame.pass());
+        UIDrawer::draw(frame);
+    }
+
+    fn needs_sampleable_frame(&self) -> bool {
+        UIDrawer::needs_sampleable_frame()
     }
 
     fn resize(&mut self, inner_pos: Point, outer_pos: Point, inner_size: Size, outer_size: Size) {
@@ -314,7 +356,11 @@ impl window::WindowEvents for AppRunner {
     }
 
     fn mouse_scroll(&mut self, delta: Point) {
-        Input::on_scroll(delta * 0.25);
+        Input::on_scroll(delta * SCROLL_SPEED);
+    }
+
+    fn cursor_left(&mut self) {
+        Hover::clear();
     }
 
     fn touch_event(&mut self, touch: winit::event::Touch) -> bool {
@@ -345,7 +391,10 @@ impl window::WindowEvents for AppRunner {
     }
 
     fn dropped_file(&mut self, path: PathBuf) {
-        dbg!(type_name::<LevelBase>());
         UIManager::trigger_drop_file(path);
+    }
+
+    fn theme_changed(&mut self, theme: OsTheme) {
+        Theme::set_system(theme.into());
     }
 }

@@ -1,0 +1,110 @@
+# Engine gaps
+
+Missing engine features, found by porting a real app. Each entry lists the current state
+in code, what is needed, and what it blocks. When one of these lands it needs UI tests
+like any other engine change.
+
+The driver app is skaityk-te at `~/dev/apps/skaityk-te`, github.com/gebling-studio/skaityk-te.
+It is a rewrite of skaityk, a Tauri and Vue reader app for Lithuanian learners at
+`~/dev/apps/skaityk`. Full visual and functional parity with the original is the
+acceptance bar. The news feed part is done with the engine as is. The reader and the
+app-wide look need the features below.
+
+Already proven sufficient during the port, for reference: `TableView` with columns and
+`bottom_reached` paging, `ImageMode::AspectFill`, `Image::download`, SVG in textures,
+`size_changed`, `ModalView`, `OnDisk` storage, `NavigationView` push and pop,
+`Window::set_title`.
+
+Landed from this list already, each with UI tests: font wiring, an app-wide default via
+`Font::set_default` plus per-label `Label::set_font`, named keys in `Keymap`, arrows,
+enter and friends via `NamedKey`, and label content measurement, `Label::content_size`
+and `size_for_width` on top of `Font::measure`, with fit-to-text placer rules
+`fit_text_width`, `fit_text_height` and `fit_text` that compose with anchors and
+min and max clamps. Flow-wrap layout landed as the `all_wrap` placer tiling rule.
+Subviews flow left to right in declaration order and wrap into rows, children keep
+their own sizes including fit-to-text, hidden children take no space, and the
+container height follows the content. Row and item gaps come from `all(margin)`.
+This unblocked the skaityk reader word grid. Runtime theming landed as `DynamicColor`
+light and dark pairs accepted by every color setter. `Theme` picks the effective look,
+`ThemeMode` follows the OS or forces one. A switch re-resolves bound colors on the
+live view tree in one walk and fires `UIEvents::theme_changed`, the draw path keeps
+reading plain resolved colors. The OS theme arrives through winit `ThemeChanged` and
+is read once at startup. This unblocked dark mode. Hover events landed as opt-in
+`enable_hover` plus a `hovered` event that fires true on enter and false on exit. Only
+the topmost hover enabled view under the cursor is hovered, desktop only, and modal
+layers block hover like they block touches. Hover follows mouse moves and wheel scroll,
+and clears when the cursor leaves the window. Everything runs on input events, nothing
+per frame. This unblocked card lift and button hover colors. Drop shadows landed as an
+opt-in `Shadow { offset, radius, color }` set through `set_shadow`. A dedicated shadow
+pipeline draws a blurred rounded rect under the view, following its corner radii. The
+view masks the shadow inside its own shape and hidden views cast nothing. Per-corner
+radius landed as `CornerRadii` with `set_corner_radii`, honored by the rect, image and
+gradient pipelines, while `set_corner_radius` keeps the uniform shortcut. Together
+these unblocked card elevation and top-only rounded card images. TableView cell
+spacing landed as `set_cell_spacing`, gaps between rows and columns, no gap after the
+last row. Gaps are purely visual for touch, the table maps a tap to the nearest cell
+index instead of per cell touch areas. The modal backdrop landed as an opt-in
+`modal_scrim_color` override on `ModalView`, transparent by default. The scrim is a
+dedicated `ScrimView` drawn after every other pipeline including text, so it dims
+images, gradients and glyphs behind it, while the modal above keeps the depth buffer
+and stays bright. A plain translucent rect could not do this, it erased later
+pipelines through the depth test instead of dimming them. These unblocked the reader
+card grid spacing and the dialog dim. Backdrop blur landed as `BlurView` with
+`set_blur_radius`, its color acting as a tint over the blur. It shows a blurred copy
+of everything drawn before it in tree order inside its frame and corner radii, while
+its subviews stay crisp on top. The frame splits into several render passes at the
+blur view, the scene downsamples to quarter resolution, gets a separable gaussian
+blur, and composites back through a dedicated backdrop pipeline. A frame without a
+blur view keeps the old single pass path. This unblocked the frosted sticky header.
+The modal scrim blur landed as an opt-in `modal_blur` override on `ModalView`, zero
+by default. With a radius the modal wrapper is a `BlurView` tinted by
+`modal_scrim_color` instead of a plain scrim, so the whole scene behind the dialog
+blurs and dims while the dialog stays crisp. This closed the last visual parity gap
+of the skaityk port.
+
+## Text stack rework
+
+Found by the FontZoo emoji page. Parked until a real need.
+
+- Landed since: shaping through rustybuzz via `ShapedLayout`, so GPOS kerning,
+  GSUB and variable font axes apply like in browsers. Em based text sizing,
+  per label letter spacing, variable font instances via `Font::with_variations`.
+  See [text.md](text.md).
+- Current: rasterization still goes through wgpu_text, glyph_brush and ab_glyph —
+  outline glyphs only, a single channel atlas tinted by the text color. Color emoji
+  tables, CBDT, sbix and COLR, are ignored, so emoji render monochrome via the
+  bundled `NotoEmoji.ttf`. No font fallback chains.
+- Needed for the rest: migrate label rendering to cosmic-text with swash. Brings
+  font fallback chains and color emoji in every format. Large: replaces the glyph
+  atlas and `draw_label`, and invalidates every recorded text expectation in the UI
+  tests.
+- Blocks: colorful emoji. Nothing in the driver app today.
+- Also parked: gamma aware text blending in the wgpu_text pipeline. The engine
+  blends glyph coverage in linear space, browsers perceptually, so ports tune
+  weight per text polarity. Perceptual blending would remove that workaround.
+
+## Shape edge anti-aliasing
+
+Found by jagged rounded corners in the corner radius test.
+
+- Landed: analytic one pixel coverage anti-aliasing on the four rounded box SDF
+  pipelines, rect, image, gradient and backdrop. Each fragment turns its signed
+  distance into an alpha ramp via `fwidth`, so the ramp stays one pixel wide at any
+  scale, and blends over what is already drawn. Border to fill boundaries ramp the
+  same way. The shadow pipeline was already soft through its own `smoothstep`. Covered
+  by the re-recorded `CornerRadius`, `Gradient` and `Outline` tests.
+- Current: `ui_path` and `polygon` fill arbitrary triangulated geometry, so there is
+  no distance field to ramp and their edges stay hard. `sprite_textured` hard discards
+  on zero texture alpha, so sprite cutout edges are aliased too.
+- Needed: MSAA on the render pass. All pipelines in one pass must share the sample
+  count, so this is count 4 for the whole UI pass plus a multisampled color target and
+  a resolve step, or a separate multisampled pass just for the geometry pipelines. It
+  has a real per frame cost, so it needs an A/B per [benchmark.md](benchmark.md) before
+  it lands.
+- Blocks: smooth vector path and polygon edges. Nothing in the driver app today.
+
+## Suggested order
+
+The text stack remainder waits for a real need for color emoji or font fallback.
+Shape MSAA waits for a real need for smooth path or polygon edges, since the SDF UI
+shapes people actually use are already anti-aliased.

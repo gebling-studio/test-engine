@@ -1,6 +1,6 @@
 use anyhow::Result;
 use test_engine::{
-    dispatch::{on_main, wait_for_next_frame},
+    dispatch::on_main,
     refs::Own,
     ui::{UIManager, view},
     ui_test::{UITest, inject_key},
@@ -39,7 +39,6 @@ pub async fn test_keymap() -> Result<()> {
     assert_eq!(*pr, 2);
 
     UITest::start::<Keymap>();
-    wait_for_next_frame();
 
     inject_key('g');
     assert_eq!(*pr, 2);

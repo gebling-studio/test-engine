@@ -1,6 +1,6 @@
-use gm::{LossyConvert, Toggle, color::WHITE, flat::Size};
+use crate::gm::{LossyConvert, Toggle, color::WHITE, flat::Size};
 use refs::Weak;
-use ui::{Button, Label, Setup, ToLabel, View, ViewData, ViewFrame, ViewSubviews, view};
+use crate::ui::{Button, Label, Setup, ToLabel, View, ViewData, ViewFrame, ViewSubviews, view};
 use vents::Event;
 
 use crate::{
@@ -27,6 +27,10 @@ pub struct DropDown<T: 'static> {
 impl<T: ToLabel + Clone + 'static> DropDown<T> {
     pub fn on_changed(&self, action: impl FnMut(T) + Send + 'static) {
         self.changed.val(action);
+    }
+
+    pub fn try_get_value(&self) -> Option<&T> {
+        self.values.get(self.selected_index)
     }
 
     pub fn value(&self) -> &T {

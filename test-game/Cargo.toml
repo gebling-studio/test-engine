@@ -16,6 +16,10 @@ default = []
 
 webgl = ["test-engine/webgl"]
 
+# Compiles in the UI benchmark (benchmark_view, its system-load guard and GPU
+# timing). Off in shipped builds. `make bench` builds test-game with it.
+bench = ["dep:sysinfo", "dep:serde_json", "test-engine/bench"]
+
 [dependencies]
 anyhow = { workspace = true }
 fastrand = { workspace = true }
@@ -23,6 +27,8 @@ log = { workspace = true }
 netrun = { workspace = true }
 parking_lot = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true, optional = true }
+sysinfo = { workspace = true, optional = true }
 
 test-engine = { workspace = true }
 

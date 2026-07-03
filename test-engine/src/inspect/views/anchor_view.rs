@@ -1,18 +1,11 @@
-use gm::color::{GRAY, U8Color, WHITE};
+use crate::gm::color::{GRAY, U8Color, WHITE};
 use refs::Weak;
-use ui::{Anchor, Container, Label, Setup, ViewData, ViewSubviews};
+use crate::ui::{Anchor, Container, Label, Setup, ViewData, ViewSubviews};
 use ui_proc::view;
-
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate::ui;
-}
 
 const BORDER_WIDTH: f32 = 2.0;
 
-#[view]
+#[view(crate = crate)]
 pub struct AnchorView {
     anchor: Anchor,
 }

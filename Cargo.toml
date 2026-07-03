@@ -3,12 +3,14 @@
 
 default-members = ["test-game"]
 members = [
-  "deps/ui/ui-proc-test",
+  "bench",
+  "deps/ui-proc-test",
   "example-app",
   "fuzz",
   "inspector",
   "render-test",
   "test-engine",
+  "te-inspect",
   "test-game",
   "test-game-android",
   "ui-test",
@@ -29,20 +31,22 @@ anyhow = "1.0"
 arbitrary = { version = "1.4", features = ["derive"] }
 async-std = "1.13"
 atomic_float = "1.1"
+base64 = "0.22"
 bit_ops = "0.2"
 bytemuck = { version = "1.25", features = ["derive"] }
 cgmath = "0.18"
 chrono = "0.4"
-clap = { version = "4.5", features = ["derive"] }
+clap = { version = "4.6", features = ["derive"] }
 console_error_panic_hook = "0.1"
 console_log = "1.0"
-ctor = "0.6"
+contour = { version = "0.12", features = ["f32"] }
+ctor = "0.8"
 dirs = "6.0"
 dotenvy = "0.15"
 educe = "0.6"
 fastrand = "2.3"
 fern = "0.7"
-gloo-timers = { version = "0.3", features = ["futures"] }
+gloo-timers = { version = "0.4", features = ["futures"] }
 gltf = "1.4"
 hex = "0.4"
 image = "0.25"
@@ -52,6 +56,8 @@ jni = "0.21"
 kira = "0.12"
 log = "0.4"
 lyon = "1.0"
+mdns-sd = "0.20"
+noise = "0.8"
 nonempty = "0.12"
 parking_lot = "0.12"
 paste = "1.0"
@@ -61,55 +67,42 @@ quote = "1.0"
 rapier2d = { version = "0.32" }
 resvg = "0.47"
 rfd = "0.17"
-rust_decimal = "1.40"
-sentry = { version = "0.46", default-features = false, features = ["reqwest", "rustls"] }
+rust_decimal = "1.41"
+rustybuzz = "0.20"
+sentry = { version = "0.47", default-features = false, features = ["reqwest", "rustls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 syn = { version = "2.0", features = ["extra-traits", "full"] }
+sysinfo = "0.39"
 tiny-skia = "0.12"
 tokio = { version = "1.50", features = ["full"] }
 usvg = "0.47"
 wasm-bindgen-futures = "0.4"
 web-time = "1.1"
-wgpu = "28.0"
-wgpu_text = "28.0"
+wgpu = "29.0"
+wgpu_text = "29.0"
 winit = "0.30"
 
 # hreads = { path = "../deps/hreads" }
-hreads = "0.13"
+hreads = "0.14"
 
-netrun = "0.32"
+netrun = "0.35"
 # refs = { path = "../deps/refs/refs" }
-refs = { version = "0.50", default-features = true }
+refs = { version = "0.53", default-features = true }
 # netrun = { path = "../deps/netrun/netrun" }
 plat = "0.9"
-reflected = "0.29"
+reflected = "0.30"
 vents = "0.15"
 
-audio = { path = "deps/audio" }
-filesystem = { path = "deps/filesystem" }
-game = { path = "deps/game" }
-game2d = { path = "deps/game2d" }
-game3d = { path = "deps/game3d" }
-generate = { path = "deps/generate" }
-gm = { path = "deps/gm" }
-inspect = { path = "deps/inspect" }
-level = { path = "deps/level" }
-level-proc = { path = "deps/level/level-proc" }
-render = { path = "deps/render" }
-scene = { path = "deps/scene" }
-store = { path = "deps/store" }
+level-proc = { path = "deps/level-proc" }
 test-engine = { path = "test-engine" }
 test-game = { path = "test-game" }
-ui = { path = "deps/ui" }
-ui-proc = { path = "deps/ui/ui-proc" }
-utils = { path = "deps/utils" }
-window = { path = "deps/window" }
+ui-proc = { path = "deps/ui-proc" }
 
 [patch.crates-io]
 #wgpu = { git = "https://github.com/VladasZ/wgpu", rev = "31ef1f08d238c2a092be1186f7133f1928b34a8a" }
 #wgpu = { path = "../3/wgpu/wgpu" }
 #vents = { path = "../deps/vents/vents" }
 #reflected = { path = "../deps/reflected/reflected" }
-#wgpu_text = { git = "https://github.com/VladasZ/wgpu-text", rev = "0f25a5fa912cafd6161158fce16f0ae5236047ca" }
+wgpu_text = { git = "https://github.com/VladasZ/wgpu-text", rev = "e1f8d4c95bb91fad8c26fe23150c2373047013bb" }
 #hreads = { path = "../deps/hreads" }

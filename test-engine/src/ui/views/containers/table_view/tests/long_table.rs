@@ -1,13 +1,13 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use anyhow::Result;
-use gm::color::GRAY;
-use hreads::{from_main, wait_for_next_frame};
+use crate::gm::color::GRAY;
+use hreads::from_main;
 use refs::Weak;
-use ui::{Container, Label, Setup, View, ViewData, ViewSubviews, ViewTest, view_test};
+use crate::ui::{Container, Label, Setup, View, ViewData, ViewSubviews, ViewTest, view_test};
 
 use crate::{
-    self as test_engine, AppRunner,
+    self as test_engine,
     ui::{CellRegistry, TableData, TableView},
     ui_test::inject_touches,
 };
@@ -61,11 +61,10 @@ impl ViewTest for LongTableTest {
     fn perform_test(mut view: Weak<Self>) -> Result<()> {
         N_CELLS.store(2_000_000, Ordering::Relaxed);
 
-        AppRunner::set_window_size((1000, 1000));
-
-        wait_for_next_frame();
-        wait_for_next_frame();
-        wait_for_next_frame();
+        #[cfg(desktop)]
+        {
+            crate::AppRunner::set_window_size((1000, 1000));
+        }
 
         inject_touches(
             "

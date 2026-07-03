@@ -1,5 +1,6 @@
-use refs::{Rglica, ToRglica, Weak};
-use ui::{Placer, Setup, UIEvent, View, ViewData};
+use crate::inspect::protocol::{UIRequest, ui::ViewRepr};
+use refs::Weak;
+use crate::ui::{Setup, UIEvent, View, ViewData};
 use ui_proc::view;
 
 use crate::{
@@ -7,20 +8,11 @@ use crate::{
     ui::{CellRegistry, TableData, TableView},
 };
 
-mod test_engine {
-    pub(crate) use educe;
-    pub(crate) use refs;
-
-    pub(crate) use crate::ui;
-}
-
-#[view]
+#[view(crate = crate)]
 pub struct PlacerView {
-    pub rule_changed: UIEvent,
+    pub rule_changed: UIEvent<UIRequest>,
 
-    placer: Rglica<Placer>,
-
-    view_id: String,
+    view: Weak<ViewRepr>,
 
     #[init]
     table: TableView,
@@ -34,9 +26,8 @@ impl Setup for PlacerView {
 }
 
 impl PlacerView {
-    pub fn set_placer(mut self: Weak<Self>, id: &str, placer: &Placer) {
-        self.placer = placer.to_rglica();
-        self.view_id = id.to_string();
+    pub fn set_view(mut self: Weak<Self>, view: Weak<ViewRepr>) {
+        self.view = view;
         self.table.reload_data();
     }
 }
@@ -47,23 +38,23 @@ impl TableData for PlacerView {
     }
 
     fn number_of_cells(&self) -> usize {
-        if self.placer.is_null() {
+        let Some(view) = self.view.get() else {
             return 0;
-        }
-        self.placer.get_rules().len()
+        };
+        view.placer.get_rules().len()
     }
 
     fn setup_cell(&mut self, index: usize, registry: &mut CellRegistry) -> Weak<dyn View> {
         let cell = registry.cell::<LayoutRuleCell>();
 
-        if self.placer.is_null() {
+        if !self.view.is_ok() {
             return cell;
         }
 
-        cell.set_rule(&self.placer.get_rules()[index]);
+        cell.set_data(self.view, index);
         let this = self.weak();
-        cell.editing_ended.sub(this, move || {
-            this.rule_changed.trigger(());
+        cell.rule_edited.val(this, move |request| {
+            this.rule_changed.trigger(request);
         });
 
         cell

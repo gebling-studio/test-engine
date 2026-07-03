@@ -2,7 +2,7 @@ use std::{any::type_name, collections::HashMap};
 
 use netrun::Function;
 use refs::{Own, Weak};
-use ui::{View, ViewData, ViewSubviews};
+use crate::ui::{View, ViewData, ViewSubviews};
 
 use crate::ui::TableView;
 

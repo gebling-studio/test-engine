@@ -11,4 +11,4 @@ pub(crate) struct User {
 
 pub(crate) static TEST_REST_API: RestAPI = RestAPI::new("https://jsonplaceholder.typicode.com/");
 
-pub(crate) static TEST_REST_REQUEST: Request<(), Vec<User>> = TEST_REST_API.request("users");
+pub(crate) static TEST_REST_REQUEST: Request<(), Vec<User>> = TEST_REST_API.get("users");
