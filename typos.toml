@@ -6,3 +6,5 @@ extend-exclude = ["*.pbxproj", "profile.json"]
 lod = "lod"
 # FULL HD
 hd = "hd"
+# trak - OpenType tracking table
+trak = "trak"
