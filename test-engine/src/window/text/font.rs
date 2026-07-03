@@ -150,7 +150,7 @@ static DEFAULT_FONT: MainLock<Option<Weak<Font>>> = MainLock::new();
 
 impl Font {
     #[allow(clippy::should_implement_trait)]
-    pub(crate) fn default() -> Weak<Font> {
+    pub fn default() -> Weak<Font> {
         if let Some(font) = *DEFAULT_FONT
             && font.is_ok()
         {
