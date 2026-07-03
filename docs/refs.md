@@ -42,6 +42,11 @@ Methods take `self: Weak<Self>`, so closures capture `self` by copy.
 them. So a long-lived `Weak` to a managed resource never dangles. Render pipelines rely
 on this: `RectPipeline` keys instance batches by `Weak<Image>` and never removes entries.
 
+Storage access is race-safe. Concurrent `download` calls for the same name share one HTTP
+request: the first caller fetches, the rest wait and get the same `Weak`. If the fetch
+fails, all of them get an error. The sync paths `get`, `load` and `store_with_name`
+insert atomically. When two threads race, the losing duplicate is dropped on the main thread.
+
 ## Rules
 
 - Objects live and die on the main thread. Dropping `Own` on another thread panics.

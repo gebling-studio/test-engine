@@ -4859,11 +4859,12 @@ dependencies = [
 
 [[package]]
 name = "refs"
-version = "0.52.1"
+version = "0.53.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19110228ca5a1526b2a92874bd29692a4d4cc845e7d5781724beaa114134ade0"
+checksum = "78d04c0132acd7a8cfcd295988b7e98e89026e8e9433ac47eb5b751d2739c5d6"
 dependencies = [
  "anyhow",
+ "event-listener 5.4.1",
  "hreads",
  "log",
  "parking_lot",
