@@ -37,9 +37,30 @@ jobs:
       - name: Build
         run: make wasm
 
+  ui-tests:
+    name: UI Tests
+    needs: [typos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          submodules: recursive
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake pkg-config libssl-dev xorg-dev libasound2-dev \
+            mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev mesa-vulkan-drivers
+
+      - name: Run UI tests
+        run: cargo run -p ui-test --profile=ci -- --stop-on-failure --headless
+
   build:
     name: Build
     needs: [typos]
+    env:
+      SKIP_UI_TESTS: 1
     strategy:
       fail-fast: false
       matrix:
@@ -79,6 +100,8 @@ jobs:
   linux:
     name: Build Linux
     needs: [typos]
+    env:
+      SKIP_UI_TESTS: 1
     strategy:
       fail-fast: false
       matrix:

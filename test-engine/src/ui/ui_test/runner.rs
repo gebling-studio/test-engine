@@ -17,6 +17,14 @@ fn no_display() -> bool {
 pub fn run_test_app(manifest_dir: &str, test_name: &str) -> Result<()> {
     // `cargo test` runs tests in parallel - run one app at a time.
     static LOCK: Mutex<()> = Mutex::new(());
+
+    // The CI build jobs set this. UI tests have their own headless job on Linux,
+    // where the software renderer matches the recorded pixel expectations. Other
+    // renderers produce different pixels, so the build jobs skip these.
+    if var("SKIP_UI_TESTS").is_ok() {
+        return Ok(());
+    }
+
     let _guard = LOCK.lock();
 
     let target_dir = Path::new(manifest_dir).join("../target/ui_tests");
