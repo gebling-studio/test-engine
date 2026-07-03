@@ -83,7 +83,28 @@ Found by the FontZoo emoji page. Parked until a real need.
   blends glyph coverage in linear space, browsers perceptually, so ports tune
   weight per text polarity. Perceptual blending would remove that workaround.
 
+## Shape edge anti-aliasing
+
+Found by jagged rounded corners in the corner radius test.
+
+- Landed: analytic one pixel coverage anti-aliasing on the four rounded box SDF
+  pipelines, rect, image, gradient and backdrop. Each fragment turns its signed
+  distance into an alpha ramp via `fwidth`, so the ramp stays one pixel wide at any
+  scale, and blends over what is already drawn. Border to fill boundaries ramp the
+  same way. The shadow pipeline was already soft through its own `smoothstep`. Covered
+  by the re-recorded `CornerRadius`, `Gradient` and `Outline` tests.
+- Current: `ui_path` and `polygon` fill arbitrary triangulated geometry, so there is
+  no distance field to ramp and their edges stay hard. `sprite_textured` hard discards
+  on zero texture alpha, so sprite cutout edges are aliased too.
+- Needed: MSAA on the render pass. All pipelines in one pass must share the sample
+  count, so this is count 4 for the whole UI pass plus a multisampled color target and
+  a resolve step, or a separate multisampled pass just for the geometry pipelines. It
+  has a real per frame cost, so it needs an A/B per [benchmark.md](benchmark.md) before
+  it lands.
+- Blocks: smooth vector path and polygon edges. Nothing in the driver app today.
+
 ## Suggested order
 
-Only the text stack remainder is left, and it waits for a real need for color
-emoji or font fallback.
+The text stack remainder waits for a real need for color emoji or font fallback.
+Shape MSAA waits for a real need for smooth path or polygon edges, since the SDF UI
+shapes people actually use are already anti-aliased.

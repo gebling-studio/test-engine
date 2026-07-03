@@ -91,16 +91,24 @@ fn rounded_box_sdf(p: vec2<f32>, half_size: vec2<f32>, radius: f32) -> f32 {
     return length(max(q, vec2<f32>(0.0, 0.0))) + min(max(q.x, q.y), 0.0) - radius;
 }
 
+// One pixel wide analytic edge coverage. See ui_rect.wgsl.
+fn edge_coverage(dist: f32) -> f32 {
+    return clamp(0.5 - dist / fwidth(dist), 0.0, 1.0);
+}
+
 @fragment
 fn f_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    let mix = mix(in.start_color, in.end_color, in.gradient_pos);
+    let color = mix(in.start_color, in.end_color, in.gradient_pos);
 
     let local_pos: vec2<f32> = in.uv * in.size;
     let radius: f32 = pick_radius(local_pos, in.corner_radii);
+    let dist: f32 = rounded_box_sdf(local_pos, in.size * 0.5, radius);
 
-    if rounded_box_sdf(local_pos, in.size * 0.5, radius) > 0.0 {
+    let alpha: f32 = color.a * edge_coverage(dist);
+
+    if alpha < 0.004 {
         discard;
     }
 
-    return mix;
+    return vec4<f32>(color.rgb, alpha);
 }
