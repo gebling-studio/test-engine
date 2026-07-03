@@ -31,6 +31,7 @@ gm = { workspace = true }
 plat = { workspace = true }
 
 wgpu_text = { workspace = true }
+rustybuzz = { workspace = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = { workspace = true }

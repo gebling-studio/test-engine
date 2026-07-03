@@ -1,6 +1,6 @@
 use std::fs::read;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow, bail};
 use gm::{LossyConvert, ToF32, flat::Size};
 use log::error;
 use refs::{
@@ -9,26 +9,69 @@ use refs::{
     manage::{DataManager, ResourceLoader},
     managed,
 };
+use rustybuzz::{Face, ttf_parser::Tag};
 use wgpu::{CompareFunction, DepthBiasState, DepthStencilState, StencilState, TextureFormat};
 use wgpu_text::{
     BrushBuilder, TextBrush,
-    glyph_brush::{BuiltInLineBreaker, Layout, Section, Text, ab_glyph::FontArc},
+    glyph_brush::{
+        Section, Text,
+        ab_glyph::{Font as AbGlyphFont, FontArc, FontRef, VariableFont},
+    },
 };
 
-use crate::{SURFACE_TEXTURE_FORMAT, window::Window};
+use crate::{
+    SURFACE_TEXTURE_FORMAT,
+    text::{ShapedLayout, ShapedParams},
+    window::Window,
+};
 
 pub struct Font {
     pub name:  String,
     pub brush: TextBrush,
+    face:      Face<'static>,
+    /// `ab_glyph` `PxScale` is ascent minus descent in pixels, while text
+    /// sizes everywhere else, CSS included, mean pixels per em. This
+    /// factor converts an em size into the `PxScale` that renders it.
+    em_scale:  f32,
 }
 
 impl Font {
     fn new(name: impl ToString, data: &[u8]) -> Result<Self> {
+        Self::new_with_variations(name, data, &[])
+    }
+
+    fn new_with_variations(
+        name: impl ToString,
+        data: &[u8],
+        variations: &[([u8; 4], f32)],
+    ) -> Result<Self> {
         let window = Window::current();
 
         let render_size = Window::render_size();
 
-        let font = FontArc::try_from_vec(data.to_vec())?;
+        // Managed fonts live until process exit, leaking gives the raster
+        // font and the shaping face one shared 'static copy of the data.
+        let data: &'static [u8] = Vec::leak(data.to_vec());
+
+        let mut font = FontRef::try_from_slice(data)?;
+        let mut face = Face::from_slice(data, 0)
+            .ok_or_else(|| anyhow!("Failed to parse font '{}' for shaping", name.to_string()))?;
+
+        for (tag, value) in variations {
+            let axis = String::from_utf8_lossy(tag);
+            if !font.set_variation(tag, *value) {
+                bail!("Font '{}' has no {axis} axis", name.to_string());
+            }
+            face.set_variation(Tag::from_bytes(tag), *value)
+                .ok_or_else(|| anyhow!("Shaping face of '{}' rejected {axis} axis", name.to_string()))?;
+        }
+
+        let font = FontArc::new(font);
+
+        let units_per_em = font
+            .units_per_em()
+            .ok_or_else(|| anyhow!("Font '{}' has no units per em", name.to_string()))?;
+        let em_scale = font.height_unscaled() / units_per_em;
 
         let brush = BrushBuilder::using_font(font).with_depth_stencil( DepthStencilState {
             format:              TextureFormat::Depth32Float,
@@ -42,34 +85,60 @@ impl Font {
         Ok(Self {
             name: name.to_string(),
             brush,
+            face,
+            em_scale,
         })
+    }
+
+    /// Converts a pixels per em text size into the `ab_glyph` `PxScale`
+    /// that renders it.
+    pub fn em_scale(&self) -> f32 {
+        self.em_scale
     }
 
     /// Size the text takes when drawn at `size`. `width` bounds wrapping,
     /// `None` measures a single unbounded line. Layout params must mirror
     /// `draw_label` or measured sizes will not match rendering.
-    pub fn measure(&mut self, text: &str, size: impl ToF32, width: Option<f32>) -> Size {
+    pub fn measure(&mut self, text: &str, size: impl ToF32, width: Option<f32>, tracking: f32) -> Size {
         if text.is_empty() {
             return Size::default();
         }
 
         let section = Section::default()
-            .add_text(Text::new(text).with_scale(size.to_f32()))
-            .with_bounds((width.unwrap_or(f32::INFINITY), f32::INFINITY))
-            .with_layout(
-                if width.is_some() {
-                    Layout::default_wrap()
-                } else {
-                    Layout::default_single_line()
-                }
-                .line_breaker(BuiltInLineBreaker::UnicodeLineBreaker),
-            );
+            .add_text(Text::new(text).with_scale(size.to_f32() * self.em_scale))
+            .with_bounds((width.unwrap_or(f32::INFINITY), f32::INFINITY));
 
-        let Some(bounds) = self.brush.glyph_bounds(section) else {
+        let layout = ShapedLayout {
+            face:      &self.face,
+            font_name: &self.name,
+            params:    ShapedParams {
+                tracking,
+                multiline: width.is_some(),
+                h_align: wgpu_text::glyph_brush::HorizontalAlign::Left,
+            },
+        };
+
+        let Some(bounds) = self.brush.glyph_bounds_with_layout(section, &layout) else {
             return Size::default();
         };
 
         Size::new(bounds.width(), bounds.height())
+    }
+
+    /// Queues a section shaped with this font's face. Call
+    /// [`Font::process_queued`] once per frame after all sections.
+    pub fn queue_shaped(&mut self, section: Section, params: ShapedParams) {
+        let layout = ShapedLayout {
+            face: &self.face,
+            font_name: &self.name,
+            params,
+        };
+        self.brush.queue_section_with_layout(section, &layout);
+    }
+
+    pub fn process_queued(&mut self) -> Result<()> {
+        self.brush.process_queued(&Window::current().device, Window::queue())?;
+        Ok(())
     }
 }
 
@@ -92,6 +161,18 @@ impl Font {
 
     pub fn reset_default() {
         *DEFAULT_FONT.get_mut() = None;
+    }
+
+    /// Loads a variable font with the given axis values, for example
+    /// weight `(*b"wght", 600.0)`, optical size `(*b"opsz", 17.0)` or
+    /// grade `(*b"GRAD", 430.0)`. Each combination is a separate managed
+    /// instance, cache it under a name that includes the values.
+    pub fn with_variations(
+        name: &str,
+        data: &[u8],
+        variations: &[([u8; 4], f32)],
+    ) -> Result<Weak<Font>> {
+        Self::store_with_name(name, || Self::new_with_variations(name, data, variations))
     }
 
     pub fn helvetica() -> Weak<Font> {

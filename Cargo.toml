@@ -66,6 +66,7 @@ rapier2d = { version = "0.32" }
 resvg = "0.47"
 rfd = "0.17"
 rust_decimal = "1.41"
+rustybuzz = "0.20"
 sentry = { version = "0.47", default-features = false, features = ["reqwest", "rustls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -114,5 +115,5 @@ window = { path = "deps/window" }
 #wgpu = { path = "../3/wgpu/wgpu" }
 #vents = { path = "../deps/vents/vents" }
 #reflected = { path = "../deps/reflected/reflected" }
-wgpu_text = { git = "https://github.com/VladasZ/wgpu-text", rev = "e6660d338c93e009ceab0a5b2299409bac69d809" }
+wgpu_text = { git = "https://github.com/VladasZ/wgpu-text", rev = "e1f8d4c95bb91fad8c26fe23150c2373047013bb" }
 #hreads = { path = "../deps/hreads" }

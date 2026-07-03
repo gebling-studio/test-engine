@@ -7287,7 +7287,7 @@ dependencies = [
 [[package]]
 name = "wgpu_text"
 version = "29.0.0"
-source = "git+https://github.com/VladasZ/wgpu-text?rev=e6660d338c93e009ceab0a5b2299409bac69d809#e6660d338c93e009ceab0a5b2299409bac69d809"
+source = "git+https://github.com/VladasZ/wgpu-text?rev=e1f8d4c95bb91fad8c26fe23150c2373047013bb#e1f8d4c95bb91fad8c26fe23150c2373047013bb"
 dependencies = [
  "bytemuck",
  "glyph_brush",
@@ -7356,6 +7356,7 @@ dependencies = [
  "plat 0.9.0",
  "refs",
  "resvg",
+ "rustybuzz",
  "tiny-skia 0.12.0",
  "usvg",
  "web-time",

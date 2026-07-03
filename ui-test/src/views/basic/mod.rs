@@ -3,7 +3,8 @@ use crate::views::basic::{
     corner_radii::test_corner_radii, custom_text_field::test_custom_text_field, font_zoo::test_font_zoo,
     gradient::test_gradient, hover::test_hover, inject_touch::test_inject_touch, label::test_label,
     label_fit_text::test_label_fit_text, label_font::test_label_font, label_image::test_label_image,
-    label_measure::test_label_measure, multiline_label::test_multiline, nine_segment::test_nine_segment,
+    label_measure::test_label_measure, letter_spacing::test_letter_spacing,
+    multiline_label::test_multiline, nine_segment::test_nine_segment,
     shadow::test_shadow, slider::test_slider, switch::test_switch, text_field::test_text_field,
     theme_switch::test_theme_switch,
 };
@@ -23,6 +24,7 @@ mod label_fit_text;
 mod label_font;
 mod label_image;
 mod label_measure;
+mod letter_spacing;
 mod multiline_label;
 mod nine_segment;
 mod shadow;
@@ -40,6 +42,7 @@ pub async fn test_base_views() -> anyhow::Result<()> {
     test_label_font().await?;
     test_label_measure().await?;
     test_label_fit_text().await?;
+    test_letter_spacing().await?;
     test_font_zoo().await?;
     test_nine_segment().await?;
     test_gradient().await?;

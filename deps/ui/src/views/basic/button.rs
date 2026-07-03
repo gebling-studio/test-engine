@@ -6,7 +6,7 @@ use gm::{
 };
 use refs::{Weak, weak_from_ref};
 use ui_proc::view;
-use window::image::ToImage;
+use window::{Font, image::ToImage};
 
 use crate::{
     ImageView, Label, Setup, Style, ToLabel, UIColor, UIEvent, UIManager, View, ViewSubviews, ViewTransition,
@@ -49,6 +49,16 @@ impl Button {
 
     pub fn set_text_size(&self, size: impl ToF32) -> &Self {
         weak_from_ref(self).label.set_text_size(size);
+        self
+    }
+
+    pub fn set_letter_spacing(&self, spacing: impl ToF32) -> &Self {
+        weak_from_ref(self).label.set_letter_spacing(spacing);
+        self
+    }
+
+    pub fn set_font(&self, font: Weak<Font>) -> &Self {
+        weak_from_ref(self).label.set_font(font);
         self
     }
 }

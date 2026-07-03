@@ -16,8 +16,8 @@ use ui::{
     ViewLayout, ViewSubviews,
 };
 use wgpu::RenderPass;
-use wgpu_text::glyph_brush::{BuiltInLineBreaker, HorizontalAlign, Layout, Section, Text, VerticalAlign};
-use window::{Font, RenderFrame, Window};
+use wgpu_text::glyph_brush::{HorizontalAlign, Section, Text};
+use window::{Font, RenderFrame, ShapedParams};
 
 use crate::pipelines::Pipelines;
 
@@ -32,7 +32,7 @@ static BACKDROP_DRAWER: MainLock<UIBackdropPipeline> = MainLock::new();
 /// the window before it picks the frame's render target.
 static NEEDS_SAMPLING: MainLock<bool> = MainLock::new();
 
-type TextSections<'a> = Vec<(Weak<Font>, Vec<Section<'a>>)>;
+type TextSections<'a> = Vec<(Weak<Font>, Vec<(Section<'a>, ShapedParams)>)>;
 
 struct DrawContext<'a> {
     text_sections: TextSections<'a>,
@@ -120,7 +120,10 @@ impl UIDrawer {
 
     fn flush_text(pass: &mut RenderPass, text_sections: &mut TextSections) {
         for (mut font, sections) in text_sections.drain(..) {
-            font.brush.queue(Window::device(), Window::queue(), sections).unwrap();
+            for (section, params) in sections {
+                font.queue_shaped(section, params);
+            }
+            font.process_queued().unwrap();
             font.brush.draw(pass);
         }
     }
@@ -331,10 +334,22 @@ impl UIDrawer {
 
         let margin = 16.0;
 
+        let font = label.font();
+
+        let params = ShapedParams {
+            tracking:  label.letter_spacing() * scale,
+            multiline: label.is_multiline(),
+            h_align:   match label.alignment {
+                TextAlignment::Left => HorizontalAlign::Left,
+                TextAlignment::Center => HorizontalAlign::Center,
+                TextAlignment::Right => HorizontalAlign::Right,
+            },
+        };
+
         let section = Section::default()
             .add_text(
                 Text::new(&label.text)
-                    .with_scale(label.text_size() * scale)
+                    .with_scale(label.text_size() * scale * font.em_scale())
                     .with_color(label.text_color().as_slice())
                     .with_z(label.z_position() - UIManager::additional_z_offset()),
             )
@@ -342,20 +357,6 @@ impl UIDrawer {
                 frame.width() - if label.alignment.center() { 0.0 } else { margin },
                 frame.height(),
             ))
-            .with_layout(
-                if label.is_multiline() {
-                    Layout::default_wrap()
-                } else {
-                    Layout::default_single_line()
-                }
-                .v_align(VerticalAlign::Center)
-                .h_align(match label.alignment {
-                    TextAlignment::Left => HorizontalAlign::Left,
-                    TextAlignment::Center => HorizontalAlign::Center,
-                    TextAlignment::Right => HorizontalAlign::Right,
-                })
-                .line_breaker(BuiltInLineBreaker::UnicodeLineBreaker),
-            )
             .with_screen_position((
                 match label.alignment {
                     TextAlignment::Left => frame.x() + margin,
@@ -365,11 +366,9 @@ impl UIDrawer {
                 center.y,
             ));
 
-        let font = label.font();
-
         match sections.iter_mut().find(|(f, _)| f.name == font.name) {
-            Some((_, list)) => list.push(section),
-            None => sections.push((font, vec![section])),
+            Some((_, list)) => list.push((section, params)),
+            None => sections.push((font, vec![(section, params)])),
         }
     }
 }

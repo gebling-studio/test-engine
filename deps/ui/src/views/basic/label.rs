@@ -47,6 +47,11 @@ pub struct Label {
     #[educe(Default = DEFAULT_TEXT_SIZE.load(Ordering::Relaxed))]
     text_size: f32,
 
+    /// Extra points between glyphs, CoreText style tracking. Negative
+    /// tightens. Needed to match fonts whose tracking the platform
+    /// applies from the trak table, like SF Pro on macOS.
+    letter_spacing: f32,
+
     font: Weak<Font>,
 }
 
@@ -88,6 +93,15 @@ impl Label {
         self
     }
 
+    pub fn letter_spacing(&self) -> f32 {
+        self.letter_spacing
+    }
+
+    pub fn set_letter_spacing(&self, spacing: impl ToF32) -> &Self {
+        weak_from_ref(self).letter_spacing = spacing.to_f32();
+        self
+    }
+
     pub fn font(&self) -> Weak<Font> {
         if self.font.is_ok() {
             self.font
@@ -112,7 +126,7 @@ impl Label {
     pub fn size_for_width(&self, width: f32) -> Size {
         let margin = self.alignment_margin();
         let bound = self.multiline.then_some(width - margin);
-        let measured = self.font().measure(&self.text, self.text_size, bound);
+        let measured = self.font().measure(&self.text, self.text_size, bound, self.letter_spacing);
 
         if measured.has_no_area() {
             return measured;

@@ -66,18 +66,24 @@ of the skaityk port.
 
 Found by the FontZoo emoji page. Parked until a real need.
 
-- Current: text renders through wgpu_text, glyph_brush and ab_glyph — outline glyphs
-  only, a single channel atlas tinted by the text color. Color emoji tables, CBDT, sbix
-  and COLR, are ignored, so emoji render monochrome via the bundled `NotoEmoji.ttf`.
-  There is no shaping, multi codepoint emoji and ligatures do not combine.
-- Needed: migrate label rendering to cosmic-text with swash. Brings shaping, font
-  fallback chains, color emoji in every format, and native text measurement, which
-  would replace the `glyph_bounds` based `Font::measure`. Large: replaces the glyph
+- Landed since: shaping through rustybuzz via `ShapedLayout`, so GPOS kerning,
+  GSUB and variable font axes apply like in browsers. Em based text sizing,
+  per label letter spacing, variable font instances via `Font::with_variations`.
+  See [text.md](text.md).
+- Current: rasterization still goes through wgpu_text, glyph_brush and ab_glyph —
+  outline glyphs only, a single channel atlas tinted by the text color. Color emoji
+  tables, CBDT, sbix and COLR, are ignored, so emoji render monochrome via the
+  bundled `NotoEmoji.ttf`. No font fallback chains.
+- Needed for the rest: migrate label rendering to cosmic-text with swash. Brings
+  font fallback chains and color emoji in every format. Large: replaces the glyph
   atlas and `draw_label`, and invalidates every recorded text expectation in the UI
   tests.
-- Blocks: colorful emoji, complex scripts. Nothing in the driver app today.
+- Blocks: colorful emoji. Nothing in the driver app today.
+- Also parked: gamma aware text blending in the wgpu_text pipeline. The engine
+  blends glyph coverage in linear space, browsers perceptually, so ports tune
+  weight per text polarity. Perceptual blending would remove that workaround.
 
 ## Suggested order
 
-Only the text stack rework remains, and it waits for a real need for color emoji
-or complex scripts.
+Only the text stack remainder is left, and it waits for a real need for color
+emoji or font fallback.

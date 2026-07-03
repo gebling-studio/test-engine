@@ -131,9 +131,11 @@ fn run(args: Args) -> Result<()> {
             let test = match te_tests.get(&test_name) {
                 Some(test) => test,
                 None => {
+                    // Exit directly. Erroring out of here panics the worker
+                    // and the stop_on_failure hook then deadlocks collecting
+                    // a report from the already stopped main loop.
                     println!("Test: {test_name} not found");
-                    AppRunner::stop();
-                    bail!("Test: {test_name} not found");
+                    exit(1);
                 }
             };
             test()?;
