@@ -1,5 +1,5 @@
 use anyhow::Result;
-use inspect::ui::ViewRepr;
+use test_engine::inspect::protocol::ui::ViewRepr;
 use pretty_assertions::assert_eq;
 use test_engine::{
     dispatch::{from_main, on_main},

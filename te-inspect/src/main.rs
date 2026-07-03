@@ -10,8 +10,8 @@ use std::{
 use anyhow::{Result, bail};
 use base64::{Engine, engine::general_purpose::STANDARD};
 use clap::{Parser, Subcommand};
-use gm::color::Color;
-use inspect::{AppCommand, Client, InspectorCommand, SERVICE_TYPE, UIRequest, UIResponse, ui::ViewRepr};
+use test_engine::gm::color::Color;
+use test_engine::inspect::protocol::{AppCommand, Client, InspectorCommand, SERVICE_TYPE, UIRequest, UIResponse, ui::ViewRepr};
 use mdns_sd::{ScopedIp, ServiceDaemon, ServiceEvent};
 use refs::{Own, hreads::set_current_thread_as_main};
 use serde_json::{Value, from_str, json, to_string, to_string_pretty, to_value};

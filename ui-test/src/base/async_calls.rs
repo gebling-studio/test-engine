@@ -4,7 +4,7 @@
 // use test_engine::{
 //     dispatch::{from_main, ok_main, on_back},
 //     refs::Weak,
-//     ui::{
+//     test_engine::ui::{
 //         Anchor::{Size, Top, X},
 //         BLUE, Button,  Label, Setup, Spinner, TableData, TableView,
 // UI, ViewData, link_button, view,     },

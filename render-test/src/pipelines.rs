@@ -1,5 +1,5 @@
 use refs::main_lock::MainLock;
-use render::{UIImageRectPipeline, UIPathPipeline, UIRectPipeline};
+use test_engine::render::{UIImageRectPipeline, UIPathPipeline, UIRectPipeline};
 
 pub(crate) static UI_RECT: MainLock<UIRectPipeline> = MainLock::new();
 pub(crate) static IMAGE_DRAWER: MainLock<UIImageRectPipeline> = MainLock::new();

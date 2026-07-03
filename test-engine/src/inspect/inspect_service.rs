@@ -1,17 +1,17 @@
 #![cfg(not_wasm)]
 
 use anyhow::Result;
-use audio::Sound;
+use crate::audio::Sound;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use chrono::Local;
 use hreads::{from_main, log_spawn, on_main};
 use image::{ExtendedColorType, ImageEncoder, codecs::png::PngEncoder};
-use inspect::{AppCommand, EditEntry, InspectorCommand, SERVICE_TYPE, UIRequest, UIResponse, serve};
+use crate::inspect::protocol::{AppCommand, EditEntry, InspectorCommand, SERVICE_TYPE, UIRequest, UIResponse, serve};
 use log::info;
 use mdns_sd::{ServiceDaemon, ServiceInfo};
 use refs::manage::DataManager;
 use tokio::net::TcpListener;
-use ui::{Button, Label, TextField, UIManager, ViewData, ViewSubviews, WeakView};
+use crate::ui::{Button, Label, TextField, UIManager, ViewData, ViewSubviews, WeakView};
 
 use crate::inspect::{
     edit_log,
@@ -21,7 +21,7 @@ use crate::inspect::{
 pub struct InspectService;
 
 impl InspectService {
-    pub fn start_listening() {
+    pub(crate) fn start_listening() {
         log_spawn(async {
             let listener = TcpListener::bind("0.0.0.0:0").await?;
             let port = listener.local_addr()?.port();

@@ -1,8 +1,8 @@
 use anyhow::{Result, bail};
-use gm::{color::U8Color, flat::Point};
+use crate::gm::{color::U8Color, flat::Point};
 use hreads::from_main;
-use ui::{HighlightView, Setup, UIManager, ViewFrame, ViewSubviews};
-use window::Screenshot;
+use crate::ui::{HighlightView, Setup, UIManager, ViewFrame, ViewSubviews};
+use crate::window::Screenshot;
 
 use crate::{
     AppRunner,
@@ -12,7 +12,7 @@ use crate::{
 pub(super) fn check_pixel_color(screenshot: &Screenshot, pos: Point, color: U8Color) -> Result<()> {
     let pixel: U8Color = screenshot.get_pixel(pos);
 
-    let diff = pixel.diff_u8(&color);
+    let diff = pixel.diff_u8(color);
 
     let max_diff = 45;
 

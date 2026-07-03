@@ -8,15 +8,15 @@ use hreads::{from_main, wait_for_next_frame};
 use log::{debug, trace};
 use parking_lot::Mutex;
 use refs::{Own, Weak};
-use ui::{Setup, UIManager, View, ViewData, ViewTest};
-use window::Window;
+use crate::ui::{Setup, UIManager, View, ViewData, ViewTest};
+use crate::window::Window;
 
 use crate::{
     gm::LossyConvert,
     ui_test::{clear_state, hold_for_human, human_mode, reset_record_probe_count},
 };
 
-pub static TEST_NAME: Mutex<String> = Mutex::new(String::new());
+pub(crate) static TEST_NAME: Mutex<String> = Mutex::new(String::new());
 
 struct FpsRecord {
     name:    String,

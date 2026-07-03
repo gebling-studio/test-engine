@@ -1,10 +1,10 @@
 #![allow(clippy::float_cmp)]
 
-use ::ui::view_test;
+use crate::ui::view_test;
 use anyhow::Result;
 use hreads::from_main;
 use refs::Weak;
-use ui::{Button, Setup, ViewData, ViewSubviews, ViewTest};
+use crate::ui::{Button, Setup, ViewData, ViewSubviews, ViewTest};
 
 use crate::{self as test_engine, ui::ScrollView, ui_test::inject_touches};
 

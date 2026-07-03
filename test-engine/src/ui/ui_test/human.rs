@@ -9,15 +9,15 @@ use std::{
     time::Duration,
 };
 
-use gm::{
+use crate::gm::{
     LossyConvert,
     color::{BLACK, CLEAR, WHITE},
 };
 use hreads::from_main;
 use log::warn;
 use parking_lot::Mutex;
-use ui::{Container, Setup, UIManager, ViewData, ViewFrame, ViewSubviews, WeakView};
-use window::Window;
+use crate::ui::{Container, Setup, UIManager, ViewData, ViewFrame, ViewSubviews, WeakView};
+use crate::window::Window;
 
 use crate::ui_test::TEST_NAME;
 

@@ -1,8 +1,8 @@
 use anyhow::Result;
-use gm::color::BLACK;
+use crate::gm::color::BLACK;
 use hreads::{from_main, on_main, sleep, spawn};
 use refs::Weak;
-use ui::{Setup, View, ViewData, ViewTest, view_test};
+use crate::ui::{Setup, View, ViewData, ViewTest, view_test};
 
 use crate::{
     self as test_engine,

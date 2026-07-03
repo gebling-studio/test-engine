@@ -6,8 +6,8 @@ use std::{
 };
 
 use anyhow::Result;
-use filesystem::Paths;
-use inspect::EditEntry;
+use crate::filesystem::Paths;
+use crate::inspect::protocol::EditEntry;
 use log::error;
 use parking_lot::Mutex;
 
@@ -25,7 +25,7 @@ pub(crate) fn record(entry: EditEntry) {
     EDITS.lock().push(entry);
 }
 
-pub(crate) fn all() -> Vec<EditEntry> {
+pub fn all() -> Vec<EditEntry> {
     EDITS.lock().clone()
 }
 

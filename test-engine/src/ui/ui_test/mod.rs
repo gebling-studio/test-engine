@@ -14,7 +14,7 @@ use std::{
 };
 
 use anyhow::{Result, bail};
-use gm::drop_on_main;
+use crate::gm::drop_on_main;
 pub use helpers::*;
 use hreads::{from_main, is_main_thread, on_main, wait_for_next_frame};
 pub use human::{enable_human_mode, human_mode};
@@ -28,8 +28,8 @@ pub use report::failure_report;
 pub use runner::run_test_app;
 use serde::de::DeserializeOwned;
 pub use state::*;
-pub use ui_test::*;
-use window::Window;
+pub use self::ui_test::*;
+use crate::window::Window;
 
 use crate::{
     AppRunner,
@@ -142,12 +142,12 @@ pub fn inject_named_key(key: NamedKey) {
 }
 
 #[allow(dead_code)]
-pub fn record_touches() {
+pub(crate) fn record_touches() {
     record_touches_internal(true);
 }
 
 #[allow(dead_code)]
-pub fn record_moved_touches() {
+pub(crate) fn record_moved_touches() {
     record_touches_internal(false);
 }
 
@@ -208,7 +208,7 @@ fn record_touches_internal(skip_moved: bool) {
 }
 
 #[allow(dead_code)]
-pub fn record_ui_test() {
+pub(crate) fn record_ui_test() {
     if is_main_thread() {
         panic!("record_ui_test is blocking function. It shouldn't be called on main thread.");
     }
@@ -222,7 +222,7 @@ pub fn record_ui_test() {
 }
 
 #[allow(dead_code)]
-pub fn record_colors() -> Result<()> {
+pub(crate) fn record_colors() -> Result<()> {
     let touch_lock = Touch::lock();
 
     let screenshot = AppRunner::take_screenshot()?;

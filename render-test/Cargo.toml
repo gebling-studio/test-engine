@@ -13,6 +13,4 @@ log = { workspace = true }
 
 refs = { workspace = true }
 
-render = { workspace = true }
 test-engine = { workspace = true }
-window = { workspace = true }

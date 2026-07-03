@@ -1,6 +1,6 @@
-use gm::color::{GRAY, U8Color, WHITE};
+use crate::gm::color::{GRAY, U8Color, WHITE};
 use refs::Weak;
-use ui::{Anchor, Container, Label, Setup, ViewData, ViewSubviews};
+use crate::ui::{Anchor, Container, Label, Setup, ViewData, ViewSubviews};
 use ui_proc::view;
 
 const BORDER_WIDTH: f32 = 2.0;

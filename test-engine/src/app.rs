@@ -1,9 +1,9 @@
 use std::pin::Pin;
 
 use anyhow::bail;
-use gm::flat::Size;
+use crate::gm::flat::Size;
 use refs::Own;
-use ui::View;
+use crate::ui::View;
 
 use crate::app_starter::test_engine_start_with_app;
 
@@ -31,7 +31,7 @@ pub trait App {
 unsafe extern "C" {
     #[allow(improper_ctypes_definitions)]
     #[allow(improper_ctypes)]
-    pub fn test_engine_create_app() -> Box<dyn App>;
+    pub(crate) fn test_engine_create_app() -> Box<dyn App>;
 }
 
 #[cfg(not(ios))]

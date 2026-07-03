@@ -1,9 +1,8 @@
 use refs::Weak;
-use ui::{Setup, UIEvents, ViewCallbacks, ViewData};
+use crate::ui::{Setup, UIEvents, ViewCallbacks, ViewData};
 use ui_proc::view;
-use window::Screenshot;
+use crate::window::Screenshot;
 
-use crate as test_engine;
 use crate::AppRunner;
 
 #[view]
@@ -32,7 +31,7 @@ impl ViewCallbacks for ColorMeter {
 
 impl ColorMeter {
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn update_screenshot(mut self: Weak<Self>) {
+    pub(crate) fn update_screenshot(mut self: Weak<Self>) {
         hreads::spawn(async move {
             let Some(screenshot) = AppRunner::take_screenshot().ok() else {
                 return;
@@ -49,5 +48,5 @@ impl ColorMeter {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub fn update_screenshot(self: Weak<Self>) {}
+    pub(crate) fn update_screenshot(self: Weak<Self>) {}
 }

@@ -1,13 +1,13 @@
-use gm::{LossyConvert, color::LIGHT_GRAY};
-use inspect::{UIRequest, ui::ViewRepr};
+use crate::gm::{LossyConvert, color::LIGHT_GRAY};
+use crate::inspect::protocol::{UIRequest, ui::ViewRepr};
 use refs::Weak;
-use ui::{CheckBox, Setup, TextField, UIEvent, ViewData, ViewFrame};
+use crate::ui::{CheckBox, Setup, TextField, UIEvent, ViewData, ViewFrame};
 use ui_proc::view;
 
 use crate::inspect::views::AnchorView;
 
 #[view(crate = crate)]
-pub struct LayoutRuleCell {
+pub(crate) struct LayoutRuleCell {
     pub rule_edited: UIEvent<UIRequest>,
 
     view:  Weak<ViewRepr>,
@@ -51,7 +51,7 @@ impl Setup for LayoutRuleCell {
 }
 
 impl LayoutRuleCell {
-    pub fn set_data(mut self: Weak<Self>, view: Weak<ViewRepr>, index: usize) {
+    pub(crate) fn set_data(mut self: Weak<Self>, view: Weak<ViewRepr>, index: usize) {
         let rule = &view.placer.get_rules()[index];
 
         if let Some(anchor) = rule.side() {

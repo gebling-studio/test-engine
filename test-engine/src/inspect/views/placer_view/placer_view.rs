@@ -1,6 +1,6 @@
-use inspect::{UIRequest, ui::ViewRepr};
+use crate::inspect::protocol::{UIRequest, ui::ViewRepr};
 use refs::Weak;
-use ui::{Setup, UIEvent, View, ViewData};
+use crate::ui::{Setup, UIEvent, View, ViewData};
 use ui_proc::view;
 
 use crate::{

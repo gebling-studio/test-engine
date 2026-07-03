@@ -1,10 +1,10 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use anyhow::Result;
-use gm::color::GRAY;
+use crate::gm::color::GRAY;
 use hreads::from_main;
 use refs::Weak;
-use ui::{Container, Label, Setup, View, ViewData, ViewSubviews, ViewTest, view_test};
+use crate::ui::{Container, Label, Setup, View, ViewData, ViewSubviews, ViewTest, view_test};
 
 use crate::{
     self as test_engine,

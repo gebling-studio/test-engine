@@ -1,6 +1,6 @@
 use log::debug;
 use refs::main_lock::MainLock;
-use render::UIRectPipeline;
+use crate::render::UIRectPipeline;
 
 static PIPELINES: MainLock<Pipelines> = MainLock::new();
 
@@ -9,7 +9,7 @@ pub(crate) struct Pipelines {
 }
 
 impl Pipelines {
-    pub fn initialize() {
+    pub(crate) fn initialize() {
         assert!(!PIPELINES.is_set(), "Double pipelines init");
 
         PIPELINES.set(Pipelines {

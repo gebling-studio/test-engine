@@ -1,11 +1,11 @@
 use std::ops::{DerefMut, Neg};
 
-use gm::{
+use crate::gm::{
     ToF32,
     flat::{Point, Size},
 };
 use refs::{Own, Weak, weak_from_ref};
-use ui::{
+use crate::ui::{
     NO_TOUCH_ID, Scrollable, Setup, Touch, TouchStack, UIAnimation, UIEvent, View, ViewData, ViewFrame,
     ViewSubviews, view,
 };
@@ -40,7 +40,7 @@ impl ScrollView {
         (self.content.content_size.height - self.height()).neg().min(0.0)
     }
 
-    pub fn set_content_offset(&mut self, offset: impl ToF32) -> &mut Self {
+    pub(crate) fn set_content_offset(&mut self, offset: impl ToF32) -> &mut Self {
         self.content.__base_view().__content_offset = offset.to_f32();
 
         if self.content.__base_view().__content_offset < self.max_offset() {
@@ -50,17 +50,17 @@ impl ScrollView {
         self
     }
 
-    pub fn set_content_size(&mut self, size: impl Into<Size>) -> &mut Self {
+    pub(crate) fn set_content_size(&mut self, size: impl Into<Size>) -> &mut Self {
         self.content.content_size = size.into();
         self
     }
 
-    pub fn set_content_width(&mut self, width: impl ToF32) -> &mut Self {
+    pub(crate) fn set_content_width(&mut self, width: impl ToF32) -> &mut Self {
         self.content.content_size.width = width.to_f32();
         self
     }
 
-    pub fn set_content_height(&mut self, height: impl ToF32) -> &mut Self {
+    pub(crate) fn set_content_height(&mut self, height: impl ToF32) -> &mut Self {
         self.content.content_size.height = height.to_f32();
 
         if self.content.__base_view().__content_offset < self.max_offset() {
@@ -70,7 +70,7 @@ impl ScrollView {
         self
     }
 
-    pub fn get_scroll_content_offset(&self) -> f32 {
+    pub(crate) fn get_scroll_content_offset(&self) -> f32 {
         self.content.content_offset()
     }
 }

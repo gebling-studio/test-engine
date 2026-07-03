@@ -3,6 +3,12 @@
 Cross platform game engine and UI framework in Rust. Rendering on WGPU.
 Supports: Windows Linux Mac iOS and Android.
 
+The engine is one library crate, `test-engine`, with modules like `gm`, `ui`, `window`,
+`render`, `level` under `test-engine/src/`. `deps/` holds only the proc macro crates.
+Apps and test binaries are separate crates on top. Internals are `pub(crate)`, the
+app-facing API is `pub` — keep new items `pub(crate)` unless apps need them, so the
+`dead_code` lint stays meaningful.
+
 No proof, no merge. A performance claim needs an A/B per [docs/benchmark.md](docs/benchmark.md)
 acceptance criteria, a correctness claim needs a reproduced failure. Unproved ideas go to
 [docs/guesses.md](docs/guesses.md), not into the code.
@@ -21,15 +27,15 @@ Do not read these upfront. Read the matching file only when the task touches tha
 - [docs/ui-tests.md](docs/ui-tests.md) — how UI tests work and how to run a single one.
   Read before writing or debugging UI tests.
 - [docs/inspect.md](docs/inspect.md) — the remote UI inspector, its protocol and debug-only
-  gating. Read before touching `deps/inspect`, `test-engine/src/inspect`, the `inspector`
-  app, or the `te-inspect` CLI.
+  gating. Read before touching `test-engine/src/inspect`, the `inspector` app, or the
+  `te-inspect` CLI.
 - [docs/benchmark.md](docs/benchmark.md) — the UI benchmark, its consistency guard, and the
   results history in `bench/`. Read before touching the benchmark or measuring performance.
 - [docs/guesses.md](docs/guesses.md) — parked changes that lacked proof. Read before
   proposing an optimization or a speculative fix; add new unproved ideas there, not to code.
 - [docs/text.md](docs/text.md) — the text pipeline: rustybuzz shaping, em sizing, variable
   font instances, letter spacing, line handling. Read before touching label rendering,
-  fonts, or `deps/window/src/text`.
+  fonts, or `test-engine/src/window/text`.
 - [docs/roadmap.md](docs/roadmap.md) — missing engine features found by porting a real app,
   with current state, design notes, and order. Read before planning or starting a new
   engine capability, and update it when one lands.

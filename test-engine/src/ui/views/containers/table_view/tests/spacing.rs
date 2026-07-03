@@ -1,10 +1,10 @@
 use std::ops::Deref;
 
 use anyhow::Result;
-use gm::color::{BLUE, Color, GREEN, PURPLE, RED, YELLOW};
+use crate::gm::color::{BLUE, Color, GREEN, PURPLE, RED, YELLOW};
 use parking_lot::Mutex;
 use refs::Weak;
-use ui::{Container, Setup, View, ViewData, ViewTest, view_test};
+use crate::ui::{Container, Setup, View, ViewData, ViewTest, view_test};
 
 use crate::{
     self as test_engine,

@@ -5,9 +5,9 @@ use std::{
 };
 
 use anyhow::Result;
-use gm::flat::Rect;
+use crate::gm::flat::Rect;
 use hreads::{from_main, is_main_thread, wait_for_next_frame};
-use ui::{UIManager, View, ViewData, ViewFrame, ViewSubviews};
+use crate::ui::{UIManager, View, ViewData, ViewFrame, ViewSubviews};
 
 use crate::{AppRunner, ui_test::TEST_NAME};
 

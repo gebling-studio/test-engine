@@ -61,8 +61,7 @@ CLIPPY_FLAGS = -- \
       -A clippy::unnecessary_box_returns \
       -A clippy::return_self_not_must_use \
       -A clippy::struct_field_names \
-      -A clippy::manual_assert \
-      -A dead_code
+      -A clippy::manual_assert
 
 fix-lint:
 	cargo clippy --fix --allow-dirty --allow-staged $(CLIPPY_FLAGS)

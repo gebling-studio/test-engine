@@ -1,7 +1,7 @@
 #![no_main]
 
 use colors_transform::Rgb;
-use gm::color::{Color, U8Color};
+use test_engine::gm::color::{Color, U8Color};
 use libfuzzer_sys::fuzz_target;
 use palette::{LinSrgb, Srgb};
 

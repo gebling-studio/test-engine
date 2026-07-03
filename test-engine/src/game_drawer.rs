@@ -1,9 +1,9 @@
-use game::{Game, Shape};
-use gm::flat::Point;
+use crate::game::{Game, Shape};
+use crate::gm::flat::Point;
 use refs::main_lock::MainLock;
-use render::{BackgroundPipeline, SpriteView, TexturedSpriteBoxPipeline, data::TexturedSpriteInstance};
-use ui::UIManager;
-use window::RenderPass;
+use crate::render::{BackgroundPipeline, SpriteView, TexturedSpriteBoxPipeline, data::TexturedSpriteInstance};
+use crate::ui::UIManager;
+use crate::window::RenderPass;
 
 static OBJECT_DRAWER: MainLock<TexturedSpriteBoxPipeline> = MainLock::new();
 static BACKGROUND: MainLock<BackgroundPipeline> = MainLock::new();

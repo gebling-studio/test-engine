@@ -8,7 +8,7 @@ added while making the skaityk port pixel identical to its WebKit original.
 `draw_label` in `ui_drawer.rs` builds a `Section` per label and queues it on the
 label's `Font`. Each `Font` owns a `wgpu_text::TextBrush` for rasterization and a
 `rustybuzz::Face` for shaping. Glyphs are positioned by `ShapedLayout`
-(`deps/window/src/text/shaped_layout.rs`), a custom `GlyphPositioner` that shapes
+(`test-engine/src/window/text/shaped_layout.rs`), a custom `GlyphPositioner` that shapes
 every line with rustybuzz and hands pre-positioned glyphs to glyph_brush.
 
 Shaping through rustybuzz exists because ab_glyph reads only the legacy `kern`

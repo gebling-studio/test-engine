@@ -4,7 +4,7 @@
 default-members = ["test-game"]
 members = [
   "bench",
-  "deps/ui/ui-proc-test",
+  "deps/ui-proc-test",
   "example-app",
   "fuzz",
   "inspector",
@@ -39,6 +39,7 @@ chrono = "0.4"
 clap = { version = "4.6", features = ["derive"] }
 console_error_panic_hook = "0.1"
 console_log = "1.0"
+contour = { version = "0.12", features = ["f32"] }
 ctor = "0.8"
 dirs = "6.0"
 dotenvy = "0.15"
@@ -56,6 +57,7 @@ kira = "0.12"
 log = "0.4"
 lyon = "1.0"
 mdns-sd = "0.20"
+noise = "0.8"
 nonempty = "0.12"
 parking_lot = "0.12"
 paste = "1.0"
@@ -92,23 +94,10 @@ plat = "0.9"
 reflected = "0.30"
 vents = "0.15"
 
-audio = { path = "deps/audio" }
-filesystem = { path = "deps/filesystem" }
-game = { path = "deps/game" }
-generate = { path = "deps/generate" }
-gm = { path = "deps/gm" }
-inspect = { path = "deps/inspect" }
-level = { path = "deps/level" }
-level-proc = { path = "deps/level/level-proc" }
-render = { path = "deps/render" }
-scene = { path = "deps/scene" }
-store = { path = "deps/store" }
+level-proc = { path = "deps/level-proc" }
 test-engine = { path = "test-engine" }
 test-game = { path = "test-game" }
-ui = { path = "deps/ui" }
-ui-proc = { path = "deps/ui/ui-proc" }
-utils = { path = "deps/utils" }
-window = { path = "deps/window" }
+ui-proc = { path = "deps/ui-proc" }
 
 [patch.crates-io]
 #wgpu = { git = "https://github.com/VladasZ/wgpu", rev = "31ef1f08d238c2a092be1186f7133f1928b34a8a" }

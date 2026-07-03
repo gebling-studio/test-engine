@@ -1,8 +1,8 @@
 use std::ops::DerefMut;
 
-use gm::LossyConvert;
+use crate::gm::LossyConvert;
 use refs::weak_from_ref;
-use ui::{ViewData, ViewFrame, ViewSubviews};
+use crate::ui::{ViewData, ViewFrame, ViewSubviews};
 
 use crate::ui::TableView;
 

@@ -1,10 +1,10 @@
 use refs::Weak;
-use ui::{Label, Setup, ToLabel, ViewData, view};
+use crate::ui::{Label, Setup, ToLabel, ViewData, view};
 
 use crate::{self as test_engine};
 
 #[view]
-pub struct InfiniteCell {
+pub(crate) struct InfiniteCell {
     #[init]
     label: Label,
 }

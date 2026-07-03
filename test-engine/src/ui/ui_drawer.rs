@@ -1,23 +1,23 @@
 use std::ops::{Deref, DerefMut};
 
-use gm::{
+use crate::gm::{
     LossyConvert,
     color::{CLEAR, TURQUOISE},
     flat::{CornerRadii, Rect, Size},
 };
 use refs::{Weak, main_lock::MainLock};
-use render::{
+use crate::render::{
     UIBackdropPipeline, UIBlurPipeline, UIGradientPipeline, UIImageRectPipeline, UIRectPipeline,
     UIShadowPipeline,
     data::{RectView, UIGradientInstance, UIImageInstance, UIRectInstance, UIShadowInstance},
 };
-use ui::{
+use crate::ui::{
     BlurView, ImageView, Label, ScrimView, TextAlignment, UIManager, View, ViewData, ViewFrame,
     ViewLayout, ViewSubviews,
 };
 use wgpu::RenderPass;
 use wgpu_text::glyph_brush::{HorizontalAlign, Section, Text};
-use window::{Font, RenderFrame, ShapedParams};
+use crate::window::{Font, RenderFrame, ShapedParams};
 
 use crate::pipelines::Pipelines;
 
@@ -58,7 +58,7 @@ impl UIDrawer {
         *NEEDS_SAMPLING
     }
 
-    pub(crate) fn draw(render_frame: &mut RenderFrame) {
+    pub fn draw(render_frame: &mut RenderFrame) {
         let resolution = UIManager::window_resolution();
         let display_rect: Rect<u32> = Size::<u32>::new(
             resolution.width.lossy_convert(),

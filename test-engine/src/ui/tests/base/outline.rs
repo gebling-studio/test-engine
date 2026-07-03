@@ -1,10 +1,9 @@
 use anyhow::Result;
-use gm::color::{BLUE, GREEN, RED, YELLOW};
+use crate::gm::color::{BLUE, GREEN, RED, YELLOW};
 use hreads::from_main;
 use refs::Weak;
-use ui::{Anchor::Left, Container, ImageView, Setup, ViewData, ViewTest, view_test};
+use crate::ui::{Anchor::Left, Container, ImageView, Setup, ViewData, ViewTest, view_test};
 
-use crate as test_engine;
 use crate::ui_test::check_colors;
 
 #[view_test]

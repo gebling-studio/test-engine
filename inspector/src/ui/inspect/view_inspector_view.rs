@@ -1,4 +1,4 @@
-use inspect::ui::ViewRepr;
+use test_engine::inspect::protocol::ui::ViewRepr;
 use test_engine::{
     inspect::views::PlacerView,
     refs::Weak,

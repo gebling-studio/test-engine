@@ -1,10 +1,10 @@
-use level::LevelManager;
+use crate::level::LevelManager;
 use refs::{main_lock::MainLock, manage::ExistsManaged};
-use render::{
+use crate::render::{
     BackgroundPipeline, PolygonPipeline, SpriteBoxPipeline, SpriteView, TexturedSpriteBoxPipeline,
     data::{SpriteInstance, TexturedSpriteInstance},
 };
-use ui::UIManager;
+use crate::ui::UIManager;
 use wgpu::RenderPass;
 
 static SPRITE_DRAWER: MainLock<SpriteBoxPipeline> = MainLock::new();
@@ -19,7 +19,7 @@ impl LevelDrawer {
         LevelManager::update();
     }
 
-    pub(crate) fn draw(pass: &mut RenderPass) {
+    pub fn draw(pass: &mut RenderPass) {
         if LevelManager::no_level() {
             return;
         }

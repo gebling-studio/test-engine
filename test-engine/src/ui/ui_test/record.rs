@@ -4,9 +4,9 @@ use std::{
 };
 
 use anyhow::Result;
-use gm::color::U8Color;
+use crate::gm::color::U8Color;
 use parking_lot::Mutex;
-use window::Screenshot;
+use crate::window::Screenshot;
 
 use crate::{
     AppRunner,
@@ -245,7 +245,7 @@ fn cluster_by_color(candidates: Vec<Probe>) -> Vec<Vec<Probe>> {
     let mut clusters: Vec<Vec<Probe>> = vec![];
 
     for candidate in candidates {
-        match clusters.iter_mut().find(|c| c[0].1.diff_u8(&candidate.1) <= CLUSTER_TOLERANCE) {
+        match clusters.iter_mut().find(|c| c[0].1.diff_u8(candidate.1) <= CLUSTER_TOLERANCE) {
             Some(cluster) => cluster.push(candidate),
             None => clusters.push(vec![candidate]),
         }
@@ -292,7 +292,7 @@ fn directional_run(shot: &Screenshot, probe: &Probe, (dx, dy): (i64, i64)) -> u3
             return step;
         }
 
-        if shot.get_pixel((px, py)).diff_u8(color) > CLUSTER_TOLERANCE {
+        if shot.get_pixel((px, py)).diff_u8(*color) > CLUSTER_TOLERANCE {
             return step;
         }
     }
@@ -305,7 +305,7 @@ fn stable_color(shot: &Screenshot, x: u32, y: u32) -> Option<U8Color> {
 
     for py in y - STABLE_RADIUS..=y + STABLE_RADIUS {
         for px in x - STABLE_RADIUS..=x + STABLE_RADIUS {
-            if shot.get_pixel((px, py)).diff_u8(&center) > STABLE_TOLERANCE {
+            if shot.get_pixel((px, py)).diff_u8(center) > STABLE_TOLERANCE {
                 return None;
             }
         }

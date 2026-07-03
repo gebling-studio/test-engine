@@ -1,10 +1,9 @@
 use anyhow::Result;
-use gm::color::{BLUE, RED};
+use crate::gm::color::{BLUE, RED};
 use hreads::from_main;
 use refs::Weak;
-use ui::{Container, Setup, ViewData, ViewSubviews, ViewTest, ViewTouch, view_test};
+use crate::ui::{Container, Setup, ViewData, ViewSubviews, ViewTest, ViewTouch, view_test};
 
-use crate as test_engine;
 use crate::ui_test::inject_touches;
 
 #[view_test]

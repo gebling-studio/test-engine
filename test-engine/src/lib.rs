@@ -1,7 +1,16 @@
 #![allow(incomplete_features)]
+#![allow(clippy::single_component_path_imports)]
 #![feature(specialization)]
 #![feature(arbitrary_self_types)]
-#![feature(linkage)]
+#![cfg_attr(not(ios), feature(linkage))]
+#![feature(adt_const_params)]
+#![feature(unsized_const_params)]
+#![feature(generic_const_exprs)]
+#![feature(const_type_name)]
+
+// The #[view] and #[level] macros emit `test_engine::` paths. This alias
+// makes them resolve inside the crate itself.
+extern crate self as test_engine;
 
 mod app_runner;
 mod assets;
@@ -13,28 +22,24 @@ mod app_starter;
 mod config;
 mod dispatch_tools;
 mod game_drawer;
-pub mod inspect;
 mod pipelines;
+
+pub mod audio;
+pub mod filesystem;
+pub mod game;
+pub mod generate;
+pub mod gm;
+pub mod inspect;
+pub mod level;
+pub mod render;
+pub mod store;
 pub mod ui;
+pub mod window;
 
 pub use app::*;
 pub use app_starter::*;
 pub use educe;
-pub use ui::{ui_proc::launch_app, ui_test};
-
-pub mod game {
-    pub use ::game::*;
-
-    pub use crate::game_drawer::GameDrawer;
-}
-
-pub mod level {
-    pub use ::level::{
-        Banner, Body, CoefficientCombineRule, Control, Level, LevelBase, LevelCreation, LevelInternal,
-        LevelManager, LevelSetup, LevelTemplates, MovingWall, Player, Sensor, Sprite, SpriteData,
-        SpriteTemplates, Wall, level,
-    };
-}
+pub use crate::ui::{launch_app, ui_test};
 
 pub mod refs {
 
@@ -49,36 +54,13 @@ pub mod reflected {
     pub use ::reflected::{Field, Reflected, ToReflectedString, ToReflectedVal, Type};
 }
 
-pub mod gm {
-    pub use gm::{
-        Animation, Apply, LossyConvert, Random, ToF32, Toggle,
-        flat::{Direction, Shape},
-        sign::Sign,
-        volume::GyroData,
-    };
-}
-
-pub mod store {
-    pub(crate) use store;
-    // pub use store::{EncryptionKey, OnDisk, OnDiskEncrypted, Paths};
-    pub use store::OnDisk;
-}
-
-pub mod filesystem {
-    pub use filesystem::Paths;
-
-    pub use crate::assets::Assets;
-}
-
 pub mod time {
     pub use web_time::*;
 }
 
 pub use app_runner::AppRunner;
-pub use audio;
-pub use generate;
 pub use vents::{Event, OnceEvent};
-pub use window::{RenderPass, VertexBuffer, Window, cast_slice, image::ToImage};
+pub use crate::window::{RenderPass, VertexBuffer, Window, cast_slice, image::ToImage};
 
 pub mod net {
     pub use netrun::rest::*;
@@ -87,14 +69,12 @@ pub mod net {
 }
 
 pub mod dispatch {
-    pub use ::gm::drop_on_main;
     #[cfg(not_wasm)]
     pub use ::hreads::first_ok;
     pub use ::hreads::{after, from_main, ok_main, on_main, sleep, spawn, wait_async, wait_for_next_frame};
 
     pub use crate::dispatch_tools::*;
-
-    // pub use crate::ui::ui_dispatch::on_back;
+    pub use crate::gm::drop_on_main;
 }
 
 pub mod __internal_macro_deps {
@@ -107,7 +87,7 @@ pub use plat::Platform;
 #[cfg(target_os = "android")]
 pub type AndroidApp = winit::platform::android::activity::AndroidApp;
 #[cfg(target_os = "android")]
-pub type EventLoop = winit::event_loop::EventLoop<window::Events>;
+pub type EventLoop = winit::event_loop::EventLoop<crate::window::Events>;
 
 #[allow(clippy::type_complexity)]
 pub static UI_TESTS: __internal_macro_deps::Mutex<

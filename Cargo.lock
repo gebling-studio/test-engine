@@ -432,17 +432,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "628d228f918ac3b82fe590352cc719d30664a0c13ca3a60266fe02c7132d480a"
 
 [[package]]
-name = "audio"
-version = "0.1.0"
-dependencies = [
- "kira",
- "log",
- "parking_lot",
- "plat 0.9.0",
- "refs",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1622,18 +1611,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "filesystem"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "dirs",
- "log",
- "parking_lot",
- "plat 0.9.0",
- "rfd",
-]
-
-[[package]]
 name = "find-msvc-tools"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1867,31 +1844,9 @@ name = "fuzz"
 version = "0.0.0"
 dependencies = [
  "colors-transform",
- "gm",
  "libfuzzer-sys",
  "palette",
  "test-engine",
-]
-
-[[package]]
-name = "game"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "gltf",
- "gm",
- "refs",
- "window",
-]
-
-[[package]]
-name = "generate"
-version = "0.1.0"
-dependencies = [
- "contour",
- "fastrand",
- "gm",
- "noise",
 ]
 
 [[package]]
@@ -2251,22 +2206,6 @@ dependencies = [
  "ab_glyph",
  "approx",
  "xi-unicode",
-]
-
-[[package]]
-name = "gm"
-version = "0.1.0"
-dependencies = [
- "arbitrary",
- "bytemuck",
- "chrono",
- "educe",
- "fastrand",
- "hreads",
- "lyon",
- "parking_lot",
- "refs",
- "serde",
 ]
 
 [[package]]
@@ -2756,28 +2695,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a257582fdcde896fd96463bf2d40eefea0580021c0712a0e2b028b60b47a837a"
 
 [[package]]
-name = "inspect"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "gm",
- "hreads",
- "log",
- "plat 0.9.0",
- "refs",
- "serde",
- "serde_json",
- "tokio",
- "ui",
-]
-
-[[package]]
 name = "inspector"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "hreads",
- "inspect",
  "log",
  "mdns-sd",
  "parking_lot",
@@ -3014,21 +2936,6 @@ name = "lebe"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a79a3332a6609480d7d0c9eab957bca6b455b91bb84e66d19f5ff66294b85b8"
-
-[[package]]
-name = "level"
-version = "0.1.0"
-dependencies = [
- "educe",
- "gm",
- "level-proc",
- "plat 0.9.0",
- "rapier2d",
- "refs",
- "utils",
- "vents",
- "window",
-]
 
 [[package]]
 name = "level-proc"
@@ -4912,29 +4819,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "render"
-version = "0.1.0"
-dependencies = [
- "bit_ops",
- "bytemuck",
- "educe",
- "gm",
- "indexmap",
- "refs",
- "wgpu",
- "window",
-]
-
-[[package]]
 name = "render-test"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "log",
  "refs",
- "render",
  "test-engine",
- "window",
 ]
 
 [[package]]
@@ -5777,18 +5668,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
-name = "store"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "filesystem",
- "parking_lot",
- "plat 0.9.0",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "strict-num"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6024,11 +5903,10 @@ dependencies = [
  "anyhow",
  "base64 0.22.1",
  "clap",
- "gm",
- "inspect",
  "mdns-sd",
  "refs",
  "serde_json",
+ "test-engine",
  "tokio",
 ]
 
@@ -6047,43 +5925,53 @@ version = "0.1.0"
 dependencies = [
  "android_logger",
  "anyhow",
- "audio",
+ "arbitrary",
+ "atomic_float",
  "base64 0.22.1",
+ "bit_ops",
+ "bytemuck",
  "chrono",
  "console_error_panic_hook",
  "console_log",
+ "contour",
  "ctor",
+ "dirs",
  "educe",
+ "fastrand",
  "fern",
- "filesystem",
- "game",
- "generate",
- "gm",
+ "gltf",
  "hex",
  "hreads",
  "image",
- "inspect",
- "level",
+ "indexmap",
+ "kira",
+ "level-proc",
  "log",
+ "lyon",
  "mdns-sd",
  "netrun",
+ "noise",
+ "nonempty",
  "parking_lot",
  "plat 0.9.0",
+ "rapier2d",
  "reflected",
  "refs",
- "render",
+ "resvg",
+ "rfd",
+ "rust_decimal",
+ "rustybuzz",
  "sentry",
  "serde",
  "serde_json",
- "store",
+ "tiny-skia 0.12.0",
  "tokio",
- "ui",
  "ui-proc",
+ "usvg",
  "vents",
  "web-time",
  "wgpu",
  "wgpu_text",
- "window",
  "winit",
 ]
 
@@ -6518,31 +6406,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
 
 [[package]]
-name = "ui"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "atomic_float",
- "chrono",
- "educe",
- "gm",
- "hreads",
- "log",
- "netrun",
- "nonempty",
- "parking_lot",
- "plat 0.9.0",
- "reflected",
- "refs",
- "render",
- "rust_decimal",
- "serde",
- "ui-proc",
- "vents",
- "window",
-]
-
-[[package]]
 name = "ui-proc"
 version = "0.1.0"
 dependencies = [
@@ -6555,7 +6418,7 @@ dependencies = [
 name = "ui-proc-test"
 version = "0.1.0"
 dependencies = [
- "ui",
+ "test-engine",
  "ui-proc",
 ]
 
@@ -6565,7 +6428,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
- "inspect",
  "instant",
  "log",
  "parking_lot",
@@ -6749,14 +6611,6 @@ name = "utf8parse"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
-
-[[package]]
-name = "utils"
-version = "0.1.0"
-dependencies = [
- "parking_lot",
- "web-time",
-]
 
 [[package]]
 name = "uuid"
@@ -7341,29 +7195,6 @@ name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
-
-[[package]]
-name = "window"
-version = "0.1.0"
-dependencies = [
- "android_logger",
- "anyhow",
- "bytemuck",
- "gm",
- "hreads",
- "image",
- "log",
- "plat 0.9.0",
- "refs",
- "resvg",
- "rustybuzz",
- "tiny-skia 0.12.0",
- "usvg",
- "web-time",
- "wgpu",
- "wgpu_text",
- "winit",
-]
 
 [[package]]
 name = "windows"

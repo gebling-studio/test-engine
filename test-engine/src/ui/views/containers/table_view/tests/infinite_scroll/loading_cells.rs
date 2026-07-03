@@ -1,10 +1,10 @@
 use anyhow::Result;
-use gm::{
+use crate::gm::{
     color::{BLACK, TURQUOISE},
     test_state::TestState,
 };
 use refs::Weak;
-use ui::{CellCallbacks, Container, Label, Setup, View, ViewData, ViewFrame, ViewTest, view, view_test};
+use crate::ui::{CellCallbacks, Container, Label, Setup, View, ViewData, ViewFrame, ViewTest, view, view_test};
 
 use crate::{
     self as test_engine,
@@ -52,7 +52,7 @@ impl CellCallbacks for LoadingCell {
 }
 
 #[view_test]
-pub struct LoadingCellsTest {
+pub(crate) struct LoadingCellsTest {
     pub(super) test_string: String,
 
     #[init]

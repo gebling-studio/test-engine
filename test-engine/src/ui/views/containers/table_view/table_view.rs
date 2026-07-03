@@ -1,7 +1,7 @@
-use gm::{LossyConvert, ToF32, flat::Point};
+use crate::gm::{LossyConvert, ToF32, flat::Point};
 use netrun::Function;
 use refs::{Own, Weak};
-use ui::{Setup, UIEvent, View, ViewData, ViewFrame, ViewTouch, view};
+use crate::ui::{Setup, UIEvent, View, ViewData, ViewFrame, ViewTouch, view};
 
 use super::layout::LayoutMode;
 use crate::{
@@ -83,13 +83,13 @@ impl TableView {
         self
     }
 
-    pub fn set_cell_spacing(&mut self, spacing: impl ToF32) -> &mut Self {
+    pub(crate) fn set_cell_spacing(&mut self, spacing: impl ToF32) -> &mut Self {
         self.cell_spacing = spacing.to_f32();
         self.layout_cells(LayoutMode::Full);
         self
     }
 
-    pub fn bottom_reached(&self) -> &UIEvent {
+    pub(crate) fn bottom_reached(&self) -> &UIEvent {
         &self.scroll.bottom_reached
     }
 }
@@ -162,11 +162,11 @@ mod test {
     use std::ops::Deref;
 
     use anyhow::Result;
-    use gm::color::Color;
+    use crate::gm::color::Color;
     use hreads::from_main;
     use parking_lot::Mutex;
     use refs::Weak;
-    use ui::{Label, Setup, View, ViewData, ViewTest, view_test};
+    use crate::ui::{Label, Setup, View, ViewData, ViewTest, view_test};
 
     use crate::{
         self as test_engine,

@@ -1,10 +1,10 @@
 use anyhow::Result;
-use gm::{
+use crate::gm::{
     LossyConvert,
     color::{LIGHT_GRAY, U8Color},
     flat::Point,
 };
-use ui::{Button, Setup, UIManager, View, ViewData};
+use crate::ui::{Button, Setup, UIManager, View, ViewData};
 
 use crate::ui_test::{
     TEST_NAME,
@@ -14,7 +14,7 @@ use crate::ui_test::{
 };
 
 #[allow(dead_code)]
-pub fn add_action(action: impl FnMut() + Send + 'static) {
+pub(crate) fn add_action(action: impl FnMut() + Send + 'static) {
     let button = UIManager::root_view()
         .add_subview_to_root(Button::new())
         .downcast::<Button>()

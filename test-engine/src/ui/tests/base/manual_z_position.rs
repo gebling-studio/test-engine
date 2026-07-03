@@ -1,9 +1,8 @@
 use anyhow::{Result, ensure};
 use hreads::from_main;
 use refs::Weak;
-use ui::{Container, Setup, UIManager, ViewFrame, ViewSubviews, ViewTest, view_test};
+use crate::ui::{Container, Setup, UIManager, ViewFrame, ViewSubviews, ViewTest, view_test};
 
-use crate as test_engine;
 
 // Regression test. Auto z assignment used to treat z == 0.5 as "not set",
 // so a manually set 0.5 was silently overwritten when the view was added.

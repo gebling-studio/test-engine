@@ -1,10 +1,9 @@
 use anyhow::Result;
-use gm::color::{BLUE, RED};
+use crate::gm::color::{BLUE, RED};
 use hreads::from_main;
 use refs::Weak;
-use ui::{Container, Setup, ViewData, ViewTest, ViewTouch, view_test};
+use crate::ui::{Container, Setup, ViewData, ViewTest, ViewTouch, view_test};
 
-use crate as test_engine;
 use crate::ui_test::inject_touches;
 
 /// A view hidden during an active press must lose the touch capture.

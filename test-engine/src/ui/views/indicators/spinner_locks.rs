@@ -1,7 +1,7 @@
 use hreads::on_main;
 use log::trace;
 use refs::Weak;
-use ui::ViewSubviews;
+use crate::ui::ViewSubviews;
 
 use crate::ui::Spinner;
 

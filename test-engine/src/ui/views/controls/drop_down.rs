@@ -1,6 +1,6 @@
-use gm::{LossyConvert, Toggle, color::WHITE, flat::Size};
+use crate::gm::{LossyConvert, Toggle, color::WHITE, flat::Size};
 use refs::Weak;
-use ui::{Button, Label, Setup, ToLabel, View, ViewData, ViewFrame, ViewSubviews, view};
+use crate::ui::{Button, Label, Setup, ToLabel, View, ViewData, ViewFrame, ViewSubviews, view};
 use vents::Event;
 
 use crate::{

@@ -21,8 +21,8 @@ Two clients exist:
 
 ## Protocol
 
-Lives in `deps/inspect`. Length-prefixed JSON frames over TCP (`transport.rs`), request in,
-response out:
+Lives in `test-engine/src/inspect/protocol/`. Length-prefixed JSON frames over TCP
+(`transport.rs`), request in, response out:
 
 - `GetUI` — returns scale and the whole view tree as `ViewRepr`: labels, ids, frames,
   colors, texts and placer rules.
@@ -50,10 +50,12 @@ on a device for example, only the in-memory list works.
 
 ## Release builds
 
-The whole module is `cfg(debug_assertions)` and does not exist in release builds.
+The server parts — `inspect_service`, `edit_log`, `view_conversion` and the `serve`
+transport — are `cfg(debug_assertions)` and do not exist in release builds.
 `test-engine/build.rs` fails any release-profile build that enables debug-assertions, so
-the server can never ship. Consequence: the `inspector` app itself builds only in debug.
-`te-inspect` is a host-side tool and is excluded from default workspace members.
+the server can never ship. The protocol and the `inspect::views` widgets stay available
+in release, so the host-side tools `inspector` and `te-inspect` build in release like any
+other crate. `te-inspect` is excluded from default workspace members.
 
 ## Local hook
 

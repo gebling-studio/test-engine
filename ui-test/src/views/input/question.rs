@@ -3,7 +3,7 @@
 // use anyhow::Result;
 // use test_engine::{
 //     dispatch::from_main,
-//     ui::{Question, UI, view},
+//     test_engine::ui::{Question, UI, view},
 //     ui_test::inject_touches,
 // };
 // use tokio::{spawn, sync::oneshot::channel, time::sleep};

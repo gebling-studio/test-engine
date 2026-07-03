@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use chrono::Utc;
-use gm::{
+use crate::gm::{
     Animation, LossyConvert,
     color::{BLACK, Color, GRAY, LIGHT_BLUE},
     flat::{Size, point_on_circle},
@@ -10,7 +10,7 @@ use hreads::{from_main, on_main};
 use log::{trace, warn};
 use parking_lot::{Mutex, MutexGuard};
 use refs::Weak;
-use ui::{
+use crate::ui::{
     Container, ModalView, Setup, TouchStack, UIAnimation, View, ViewCallbacks, ViewData, ViewFrame,
     ViewSubviews, WeakView,
 };
@@ -171,7 +171,7 @@ impl Spinner {
         });
     }
 
-    pub fn instant_stop() {
+    pub(crate) fn instant_stop() {
         trace!("Instant stop spinner");
 
         let mut spinner = Self::current();
@@ -184,7 +184,7 @@ impl Spinner {
         *spinner = Weak::default();
     }
 
-    pub fn start_on(view: WeakView) -> SpinnerLockOnView {
+    pub(crate) fn start_on(view: WeakView) -> SpinnerLockOnView {
         from_main(move || {
             if view.is_null() {
                 return SpinnerLockOnView {
@@ -211,10 +211,10 @@ impl ModalView for Spinner {
 mod test {
 
     use anyhow::Result;
-    use gm::color::{BLACK, LIGHTER_GRAY, WHITE};
+    use crate::gm::color::{BLACK, LIGHTER_GRAY, WHITE};
     use hreads::from_main;
     use refs::Weak;
-    use ui::{Container, Setup, ViewData, ViewFrame, ViewSubviews, ViewTest, view_test};
+    use crate::ui::{Container, Setup, ViewData, ViewFrame, ViewSubviews, ViewTest, view_test};
 
     use crate::{self as test_engine, ui::Spinner, ui_test::check_colors};
 

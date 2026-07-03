@@ -1,16 +1,18 @@
 use std::{path::PathBuf, sync::Once};
 
 use anyhow::Result;
-use gm::{
+use crate::gm::{
     LossyConvert,
     flat::{Point, Size},
 };
-use hreads::{from_main, invoke_dispatched, is_main_thread, wait_for_next_frame};
-use level::LevelManager;
+#[cfg(desktop)]
+use hreads::{is_main_thread, wait_for_next_frame};
+use hreads::{from_main, invoke_dispatched};
+use crate::level::LevelManager;
 use log::debug;
 use refs::{Own, main_lock::MainLock};
-use ui::{Hover, Theme, Touch, TouchEvent, UIEvents, UIManager, View, ViewData, ViewSubviews, WeakView};
-use window::{ElementState, MouseButton, RenderFrame, Screenshot, Theme as OsTheme, Window};
+use crate::ui::{Hover, Theme, Touch, TouchEvent, UIEvents, UIManager, View, ViewData, ViewSubviews, WeakView};
+use crate::window::{ElementState, MouseButton, RenderFrame, Screenshot, Theme as OsTheme, Window};
 use winit::{
     event::{KeyEvent, TouchPhase},
     keyboard::Key,
@@ -43,7 +45,7 @@ impl AppRunner {
         Window::close();
     }
 
-    pub fn cursor_position() -> Point {
+    pub(crate) fn cursor_position() -> Point {
         *CURSOR_POSITION
     }
 
@@ -95,7 +97,7 @@ impl AppRunner {
     }
 
     #[cfg(not_wasm)]
-    pub async fn setup_sentry(app: &dyn App) -> Option<sentry::ClientInitGuard> {
+    pub(crate) async fn setup_sentry(app: &dyn App) -> Option<sentry::ClientInitGuard> {
         let sentry_url = crate::config::Config::sentry_url(app).await?;
 
         let client = sentry::init((
@@ -114,14 +116,9 @@ impl AppRunner {
         Some(client)
     }
 
-    #[cfg(wasm)]
-    pub fn setup_sentry(_app: &dyn App) -> Option<()> {
-        None
-    }
-
     pub fn new(app: Box<dyn App>) -> Self {
         #[cfg(desktop)]
-        crate::assets::Assets::init(filesystem::Paths::git_root().expect("git_root()"));
+        crate::assets::Assets::init(crate::filesystem::Paths::git_root().expect("git_root()"));
         #[cfg(mobile)]
         crate::assets::Assets::init(std::path::PathBuf::default());
 
@@ -135,7 +132,7 @@ impl AppRunner {
     }
 
     #[cfg(target_os = "android")]
-    pub(crate) async fn start(first_view: Own<dyn View>, app: crate::AndroidApp) -> Result<()> {
+    pub async fn start(first_view: Own<dyn View>, app: crate::AndroidApp) -> Result<()> {
         std::panic::set_hook(Box::new(|pan| {
             let backtrace = std::backtrace::Backtrace::force_capture();
             eprintln!("{pan}");
@@ -180,14 +177,14 @@ impl AppRunner {
         actions: impl std::future::Future<Output = Result<()>> + Send + 'static,
         headless: bool,
     ) {
-        use ui::Setup;
+        use crate::ui::Setup;
 
         #[derive(Default)]
         struct ActorApp;
 
         impl App for ActorApp {
             fn make_root_view(&self) -> Own<dyn View> {
-                ui::Container::new()
+                crate::ui::Container::new()
             }
         }
 
@@ -245,7 +242,7 @@ impl AppRunner {
     }
 }
 
-impl window::WindowEvents for AppRunner {
+impl crate::window::WindowEvents for AppRunner {
     fn window_ready(&mut self) {
         static INIT: Once = Once::new();
 
@@ -263,7 +260,7 @@ impl window::WindowEvents for AppRunner {
             self.update();
             *LevelManager::update_interval() = 1.0 / Window::display_refresh_rate().lossy_convert();
 
-            window::state::State::resize();
+            crate::window::state::State::resize();
 
             self.resize(
                 Window::inner_position(),

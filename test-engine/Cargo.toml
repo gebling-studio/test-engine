@@ -9,25 +9,46 @@ crate-type = ["rlib", "staticlib"]
 name = "test_engine"
 
 [features]
-bench = ["window/bench"]
-default = []
+bench = []
+default = ["2d"]
 webgl = ["wgpu/webgl"]
+
+2d = []
+3d = []
 
 [dependencies]
 anyhow = { workspace = true }
+arbitrary = { workspace = true }
+atomic_float = { workspace = true }
+bit_ops = { workspace = true }
+bytemuck = { workspace = true }
 chrono = { workspace = true }
+contour = { workspace = true }
 ctor = { workspace = true }
+dirs = { workspace = true }
 educe = { workspace = true }
+fastrand = { workspace = true }
 fern = { workspace = true }
+gltf = { workspace = true }
 hex = { workspace = true }
+image = { workspace = true }
+indexmap = { workspace = true }
+kira = { workspace = true }
 log = { workspace = true }
+lyon = { workspace = true }
+noise = { workspace = true }
+nonempty = { workspace = true }
 parking_lot = { workspace = true }
+resvg = { workspace = true }
+rust_decimal = { workspace = true }
+rustybuzz = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+tiny-skia = { workspace = true }
+usvg = { workspace = true }
 web-time = { workspace = true }
 wgpu = { workspace = true }
 wgpu_text = { workspace = true }
-winit = { workspace = true }
 
 hreads = { workspace = true }
 netrun = { workspace = true }
@@ -36,29 +57,20 @@ reflected = { workspace = true }
 refs = { workspace = true }
 vents = { workspace = true }
 
-audio = { workspace = true }
-filesystem = { workspace = true }
-game = { workspace = true }
-generate = { workspace = true }
-gm = { workspace = true }
-level = { workspace = true }
-render = { workspace = true }
-store = { workspace = true }
-ui = { workspace = true }
+level-proc = { workspace = true }
 ui-proc = { workspace = true }
-window = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 base64 = { workspace = true }
-image = { workspace = true }
-inspect = { workspace = true }
 mdns-sd = { workspace = true }
+rapier2d = { workspace = true, features = ["parallel"] } # simd can crash if there are too many active objects
 sentry = { workspace = true }
 tokio = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = { workspace = true }
 console_log = { workspace = true }
+rapier2d = { workspace = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = { workspace = true }
@@ -66,6 +78,9 @@ winit = { workspace = true, features = ["android-game-activity"] }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 winit = { workspace = true }
+
+[target.'cfg(not(target_os = "ios"))'.dependencies]
+rfd = { workspace = true }
 
 [build-dependencies]
 plat = { workspace = true }

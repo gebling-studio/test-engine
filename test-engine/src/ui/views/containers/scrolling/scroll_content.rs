@@ -1,5 +1,5 @@
-use gm::flat::Size;
-use ui::{View, ViewCallbacks, view};
+use crate::gm::flat::Size;
+use crate::ui::{View, ViewCallbacks, view};
 
 use crate::{self as test_engine};
 
