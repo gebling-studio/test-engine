@@ -1,9 +1,11 @@
 use refs::Weak;
-use crate::ui::{Setup, UIEvents, ViewCallbacks, ViewData};
 use ui_proc::view;
-use crate::window::Screenshot;
 
-use crate::AppRunner;
+use crate::{
+    AppRunner,
+    ui::{Setup, UIEvents, ViewCallbacks, ViewData},
+    window::Screenshot,
+};
 
 #[view]
 pub struct ColorMeter {

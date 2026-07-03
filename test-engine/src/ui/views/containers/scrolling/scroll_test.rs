@@ -1,18 +1,16 @@
 #![allow(clippy::float_cmp)]
 
-use crate::ui::view_test;
 use anyhow::Result;
-use crate::gm::{
-    Apply,
-    color::{Color, TURQUOISE},
-};
 use hreads::from_main;
 use refs::Weak;
-use crate::ui::{Container, Setup, ViewData, ViewSubviews, ViewTest};
 
 use crate::{
     self as test_engine,
-    ui::ScrollView,
+    gm::{
+        Apply,
+        color::{Color, TURQUOISE},
+    },
+    ui::{Container, ScrollView, Setup, ViewData, ViewSubviews, ViewTest, view_test},
     ui_test::{check_colors, inject_scroll, inject_touches},
 };
 

@@ -1,16 +1,18 @@
 use std::ops::{Deref, DerefMut};
 
 use educe::Educe;
-use crate::gm::flat::{Point, Size};
 use plat::Platform;
 use rapier2d::{
     dynamics::{RigidBody, RigidBodyHandle},
     prelude::{Collider, ColliderHandle},
 };
 use refs::{Own, Weak, main_lock::MainLock};
-use crate::window::Window;
 
-use crate::level::{Level, level::LevelPhysics};
+use crate::{
+    gm::flat::{Point, Size},
+    level::{Level, level::LevelPhysics},
+    window::Window,
+};
 
 static SELF: MainLock<LevelManager> = MainLock::new();
 

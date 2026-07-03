@@ -1,11 +1,13 @@
 use std::fmt::Display;
 
-use crate::gm::flat::Rect;
 use refs::{Weak, weak_from_ref};
 use ui_proc::view;
-use crate::window::image::{Image, ToImage};
 
-use crate::ui::{NineSegmentImageView, ViewCallbacks, ViewData, ViewFrame, ViewSubviews};
+use crate::{
+    gm::flat::Rect,
+    ui::{NineSegmentImageView, ViewCallbacks, ViewData, ViewFrame, ViewSubviews},
+    window::image::{Image, ToImage},
+};
 
 #[derive(Default)]
 pub enum ImageMode {

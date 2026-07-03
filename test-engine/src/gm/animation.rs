@@ -1,6 +1,6 @@
 use chrono::Utc;
 
-use crate::gm::LossyConvert;
+use crate::gm::{LossyConvert, ToF32};
 
 const SEC: f32 = 1_000.0;
 
@@ -13,15 +13,15 @@ pub struct Animation {
 }
 
 impl Animation {
-    pub fn new(start: impl Into<f32>, end: impl Into<f32>, duration: impl Into<f32>) -> Self {
-        let start = start.into() * SEC;
-        let end = end.into() * SEC;
+    pub fn new(start: impl ToF32, end: impl ToF32, duration: impl ToF32) -> Self {
+        let start = start.to_f32() * SEC;
+        let end = end.to_f32() * SEC;
         let span = end - start;
         assert_ne!(span.to_bits(), 0);
         Self {
             start,
             span,
-            duration: duration.into() * SEC,
+            duration: duration.to_f32() * SEC,
             stamp: Utc::now().timestamp_millis(),
         }
     }

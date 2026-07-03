@@ -1,18 +1,20 @@
 use std::{fmt::Display, sync::atomic::Ordering};
 
 use atomic_float::AtomicF32;
-use crate::gm::{
-    ToF32,
-    color::{BLACK, Color},
-    flat::Size,
-};
 use refs::{Weak, weak_from_ref};
 use ui_proc::view;
-use crate::window::{Font, image::ToImage};
 
-use crate::ui::{
-    DynamicColor, ImageView, Setup, Style, ToLabel, UIColor, UIManager, View, ViewCallbacks, ViewFrame,
-    view::{ViewData, ViewSubviews},
+use crate::{
+    gm::{
+        ToF32,
+        color::{BLACK, Color},
+        flat::Size,
+    },
+    ui::{
+        DynamicColor, ImageView, Setup, Style, ToLabel, UIColor, UIManager, View, ViewCallbacks, ViewFrame,
+        view::{ViewData, ViewSubviews},
+    },
+    window::{Font, image::ToImage},
 };
 
 static DEFAULT_TEXT_SIZE: AtomicF32 = AtomicF32::new(16.0);

@@ -3,9 +3,11 @@ use wgpu::{
     BindGroup, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType,
     BufferBindingType, ShaderStages,
 };
-use crate::window::{BufferUsages, Window};
 
-use crate::render::device_helper::DeviceHelper;
+use crate::{
+    render::device_helper::DeviceHelper,
+    window::{BufferUsages, Window},
+};
 
 pub(crate) fn make_bind<T: Pod>(data: &T, layout: &BindGroupLayout) -> BindGroup {
     let device = Window::device();

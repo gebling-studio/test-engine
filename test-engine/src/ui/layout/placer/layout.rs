@@ -1,20 +1,22 @@
 use std::ops::Deref;
 
-use crate::gm::{
-    LossyConvert,
-    axis::Axis,
-    flat::{Rect, Size},
-};
 use refs::{Own, ToRglica};
 
 use super::Placer;
-use crate::ui::{
-    Label, View, ViewSubviews, WeakView,
-    layout::{
-        Anchor, Tiling,
-        layout_rule::{LayoutRule, Placement},
+use crate::{
+    gm::{
+        LossyConvert,
+        axis::Axis,
+        flat::{Rect, Size},
     },
-    view::{ViewData, ViewFrame, ViewLayout},
+    ui::{
+        Label, View, ViewSubviews, WeakView,
+        layout::{
+            Anchor, Tiling,
+            layout_rule::{LayoutRule, Placement},
+        },
+        view::{ViewData, ViewFrame, ViewLayout},
+    },
 };
 
 type RMut<'a> = &'a mut Rect;

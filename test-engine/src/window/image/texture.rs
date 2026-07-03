@@ -1,7 +1,6 @@
 use std::path::Path;
 
 use anyhow::{Result, anyhow};
-use crate::gm::{LossyConvert, flat::Size};
 use image::{GenericImageView, ImageBuffer, Rgba};
 use plat::Platform;
 use usvg::{ImageRendering, ShapeRendering, TextRendering, Transform};
@@ -11,7 +10,10 @@ use wgpu::{
     TextureFormat, TextureUsages, TextureView, TextureViewDescriptor,
 };
 
-use crate::window::Window;
+use crate::{
+    gm::{LossyConvert, flat::Size},
+    window::Window,
+};
 
 #[derive(Debug)]
 pub struct Texture {

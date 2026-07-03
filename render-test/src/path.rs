@@ -1,7 +1,9 @@
 use refs::main_lock::MainLock;
-use test_engine::render::data::{PathData, RectView, UIRectInstance};
-use test_engine::ui::{BLUE, CLEAR, CornerRadii, RED};
-use test_engine::window::{RenderPass, Window};
+use test_engine::{
+    render::data::{PathData, RectView, UIRectInstance},
+    ui::{BLUE, CLEAR, CornerRadii, RED},
+    window::{RenderPass, Window},
+};
 
 use crate::pipelines::{PATH, UI_RECT};
 

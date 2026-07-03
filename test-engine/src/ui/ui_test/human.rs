@@ -9,17 +9,19 @@ use std::{
     time::Duration,
 };
 
-use crate::gm::{
-    LossyConvert,
-    color::{BLACK, CLEAR, WHITE},
-};
 use hreads::from_main;
 use log::warn;
 use parking_lot::Mutex;
-use crate::ui::{Container, Setup, UIManager, ViewData, ViewFrame, ViewSubviews, WeakView};
-use crate::window::Window;
 
-use crate::ui_test::TEST_NAME;
+use crate::{
+    gm::{
+        LossyConvert,
+        color::{BLACK, CLEAR, WHITE},
+    },
+    ui::{Container, Setup, UIManager, ViewData, ViewFrame, ViewSubviews, WeakView},
+    ui_test::TEST_NAME,
+    window::Window,
+};
 
 static HUMAN_MODE: AtomicBool = AtomicBool::new(false);
 static ADVANCE: OnceLock<Mutex<Receiver<()>>> = OnceLock::new();

@@ -1,11 +1,13 @@
-use crate::gm::{Animation, color::WHITE};
 use hreads::assert_main_thread;
 use refs::{Own, Weak};
 use ui_proc::view;
 
-use crate::ui::{
-    Setup, Touch, TouchStack, UIAnimation, View, ViewData, WeakView,
-    view::{ViewFrame, ViewSubviews},
+use crate::{
+    gm::{Animation, color::WHITE},
+    ui::{
+        Setup, Touch, TouchStack, UIAnimation, View, ViewData, WeakView,
+        view::{ViewFrame, ViewSubviews},
+    },
 };
 
 #[view]

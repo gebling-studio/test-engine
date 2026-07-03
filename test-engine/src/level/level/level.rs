@@ -1,13 +1,15 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::gm::{
-    color::Color,
-    flat::{Point, Shape},
-};
 use refs::{AsAny, Own, Weak};
 
 use super::LevelInternal;
-use crate::level::{Body, LevelBase, LevelCreation, LevelManager, Sprite, SpriteTemplates};
+use crate::{
+    gm::{
+        color::Color,
+        flat::{Point, Shape},
+    },
+    level::{Body, LevelBase, LevelCreation, LevelManager, Sprite, SpriteTemplates},
+};
 
 pub trait Level: AsAny + Deref<Target = LevelBase> + DerefMut + LevelInternal {
     fn add_touch(&mut self, pos: Point) -> bool {

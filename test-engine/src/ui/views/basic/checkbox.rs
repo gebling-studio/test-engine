@@ -1,11 +1,13 @@
-use crate::gm::color::LIGHT_GRAY;
 use refs::Weak;
 use ui_proc::view;
 use vents::Event;
 
-use crate::ui::{
-    Container, Setup, ViewFrame,
-    view::{ViewData, ViewTouch},
+use crate::{
+    gm::color::LIGHT_GRAY,
+    ui::{
+        Container, Setup, ViewFrame,
+        view::{ViewData, ViewTouch},
+    },
 };
 #[view]
 pub struct CheckBox {

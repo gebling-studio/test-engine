@@ -1,12 +1,14 @@
 use std::path::PathBuf;
 
-use crate::gm::flat::{Point, Size};
 use winit::{
     event::{ElementState, KeyEvent, MouseButton, Touch},
     window::Theme,
 };
 
-use crate::window::RenderFrame;
+use crate::{
+    gm::flat::{Point, Size},
+    window::RenderFrame,
+};
 
 pub trait WindowEvents {
     fn window_ready(&mut self) {}

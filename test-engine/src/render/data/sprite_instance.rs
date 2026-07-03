@@ -1,11 +1,13 @@
 use bytemuck::{Pod, Zeroable};
-use crate::gm::{
-    color::Color,
-    flat::{Point, Size},
-};
 use wgpu::{BufferAddress, VertexBufferLayout, VertexStepMode};
 
-use crate::render::vertex_layout::VertexLayout;
+use crate::{
+    gm::{
+        color::Color,
+        flat::{Point, Size},
+    },
+    render::vertex_layout::VertexLayout,
+};
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Zeroable, Pod)]
@@ -17,8 +19,7 @@ pub(crate) struct SpriteInstance {
     pub z_position: f32,
 }
 
-impl SpriteInstance {
-}
+impl SpriteInstance {}
 
 impl VertexLayout for SpriteInstance {
     const ATTRIBS: &'static [wgpu::VertexAttribute] =

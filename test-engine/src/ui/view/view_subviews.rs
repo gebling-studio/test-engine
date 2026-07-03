@@ -1,10 +1,12 @@
 use std::{any::type_name, ops::DerefMut};
 
-use crate::gm::{LossyConvert, color::Color};
 use refs::{Own, Weak, weak_from_ref};
 
-use crate::ui::{
-    Container, DELETED_VIEWS, UIManager, View, ViewData, ViewFrame, WeakView, view::view_callbacks::Setup,
+use crate::{
+    gm::{LossyConvert, color::Color},
+    ui::{
+        Container, DELETED_VIEWS, UIManager, View, ViewData, ViewFrame, WeakView, view::view_callbacks::Setup,
+    },
 };
 
 pub trait ViewSubviews {

@@ -1,8 +1,9 @@
-use crate::gm::flat::Rect;
-
-use crate::ui::{
-    View,
-    view::{ViewFrame, view_subviews::ViewSubviews},
+use crate::{
+    gm::flat::Rect,
+    ui::{
+        View,
+        view::{ViewFrame, view_subviews::ViewSubviews},
+    },
 };
 
 pub(crate) trait ViewInternal {

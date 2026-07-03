@@ -9,11 +9,7 @@ mod object;
 mod primitives;
 mod shape;
 
-pub use self::game::*;
-pub use self::object::*;
-pub use self::primitives::*;
-pub use self::shape::*;
-
+pub use self::{game::*, object::*, primitives::*, shape::*};
 pub use crate::game_drawer::GameDrawer;
 
 #[cfg(test)]

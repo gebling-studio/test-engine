@@ -4,27 +4,29 @@ use std::sync::{
     mpsc::Receiver,
 };
 
-use crate::gm::{
-    LossyConvert,
-    color::Color,
-    flat::{Point, Size},
-};
 use hreads::on_main;
 use log::{info, warn};
 use plat::Platform;
 use wgpu::{
     Adapter, CompositeAlphaMode, Device, DeviceDescriptor, ExperimentalFeatures, Features, Instance, Limits,
-    MemoryHints, PowerPreference, PresentMode, Queue, RequestAdapterOptions, SurfaceConfiguration,
-    TextureUsages, Trace,
+    MemoryHints, PowerPreference, PresentMode, Queue, RequestAdapterOptions, SurfaceColorSpace,
+    SurfaceConfiguration, TextureUsages, Trace,
 };
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
-use crate::window::{
-    Screenshot,
-    app_handler::AppHandler,
-    screen::Screen,
-    state::{SURFACE_TEXTURE_FORMAT, State},
-    surface::Surface,
+use crate::{
+    gm::{
+        LossyConvert,
+        color::Color,
+        flat::{Point, Size},
+    },
+    window::{
+        Screenshot,
+        app_handler::AppHandler,
+        screen::Screen,
+        state::{SURFACE_TEXTURE_FORMAT, State},
+        surface::Surface,
+    },
 };
 
 static VSYNC: AtomicBool = AtomicBool::new(true);
@@ -220,14 +222,15 @@ impl Window {
                 power_preference:       PowerPreference::HighPerformance,
                 force_fallback_adapter: false,
 
-                compatible_surface: Some(&surface),
+                compatible_surface:  Some(&surface),
+                apply_limit_buckets: false,
             })
             .await
             .expect("Could not get an adapter (GPU).");
 
         let info = adapter.get_info();
 
-        info!("Backend: {}", &info.backend);
+        info!("Backend: {}", info.backend);
 
         let (device, queue) = Self::request_device(&adapter).await;
 
@@ -273,14 +276,15 @@ impl Window {
                 power_preference:       PowerPreference::HighPerformance,
                 force_fallback_adapter: false,
 
-                compatible_surface: None,
+                compatible_surface:  None,
+                apply_limit_buckets: false,
             })
             .await
             .expect("Could not get an adapter (GPU).");
 
         let info = adapter.get_info();
 
-        info!("Backend: {} (headless)", &info.backend);
+        info!("Backend: {} (headless)", info.backend);
 
         HEADLESS.store(true, Ordering::Relaxed);
 
@@ -436,6 +440,7 @@ pub(crate) fn surface_config_with_size(size: impl Into<Size<u32>>) -> SurfaceCon
             TextureUsages::RENDER_ATTACHMENT
         },
         format:       SURFACE_TEXTURE_FORMAT,
+        color_space:  SurfaceColorSpace::Auto,
         width:        size.width,
         height:       size.height,
         present_mode: if VSYNC.load(Ordering::Relaxed) || Platform::MOBILE {

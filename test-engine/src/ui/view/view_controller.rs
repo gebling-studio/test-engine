@@ -1,10 +1,12 @@
 use std::sync::mpsc::{Receiver, channel};
 
-use crate::gm::{Animation, color::WHITE};
 use hreads::on_main;
 use refs::Own;
 
-use crate::ui::{NavigationView, Touch, UIAnimation, UIManager, View, ViewData, ViewFrame, ViewSubviews};
+use crate::{
+    gm::{Animation, color::WHITE},
+    ui::{NavigationView, Touch, UIAnimation, UIManager, View, ViewData, ViewFrame, ViewSubviews},
+};
 
 pub trait ViewController {
     fn navigation(&self) -> Weak<NavigationView>;

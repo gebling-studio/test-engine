@@ -1,13 +1,15 @@
-use crate::gm::{
-    axis::Axis,
-    color::Color,
-    flat::{Point, Size},
-};
-use crate::render::data::PathData;
 use ui_proc::view;
-use crate::window::Window;
 
-use crate::ui::{ViewCallbacks, view::ViewFrame};
+use crate::{
+    gm::{
+        axis::Axis,
+        color::Color,
+        flat::{Point, Size},
+    },
+    render::data::PathData,
+    ui::{ViewCallbacks, view::ViewFrame},
+    window::Window,
+};
 
 /// Path rendering is currently disconnected. `UIDrawer` does not draw paths,
 /// so this view and everything built on it produces no visuals.

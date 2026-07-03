@@ -2,8 +2,8 @@ use anyhow::Result;
 use test_engine::{
     refs::Weak,
     ui::{
-        BLUE, BROWN, Container, CornerRadii, GRAY, GREEN, ImageView, ORANGE, PURPLE, RED, Setup,
-        TURQUOISE, ViewData, ViewTest, YELLOW, view_test,
+        BLUE, BROWN, Container, CornerRadii, GRAY, GREEN, ImageView, ORANGE, PURPLE, RED, Setup, TURQUOISE,
+        ViewData, ViewTest, YELLOW, view_test,
     },
     ui_test::{check_colors, set_record_probe_count},
 };
@@ -46,7 +46,7 @@ impl Setup for CornerRadiiTest {
         self.mixed.set_color(YELLOW);
         self.mixed.place().t(20).l(180).size(140, 140);
         self.mixed.set_corner_radii(CornerRadii {
-            top_left:     60.0,
+            top_left: 60.0,
             bottom_right: 60.0,
             ..CornerRadii::default()
         });

@@ -1,8 +1,10 @@
 use bytemuck::{Pod, Zeroable};
-use crate::gm::flat::{Point, Size};
 use wgpu::{BufferAddress, VertexBufferLayout, VertexStepMode};
 
-use crate::render::vertex_layout::VertexLayout;
+use crate::{
+    gm::flat::{Point, Size},
+    render::vertex_layout::VertexLayout,
+};
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Zeroable, Pod)]
@@ -14,8 +16,7 @@ pub(crate) struct TexturedSpriteInstance {
     pub z_position: f32,
 }
 
-impl TexturedSpriteInstance {
-}
+impl TexturedSpriteInstance {}
 
 impl VertexLayout for TexturedSpriteInstance {
     const ATTRIBS: &'static [wgpu::VertexAttribute] =

@@ -3,8 +3,7 @@ use test_engine::{
     dispatch::from_main,
     refs::Weak,
     ui::{
-        BlurView, Container, ImageView, Label, RED, Setup, ViewData, ViewSubviews, ViewTest, WHITE,
-        view_test,
+        BlurView, Container, ImageView, Label, RED, Setup, ViewData, ViewSubviews, ViewTest, WHITE, view_test,
     },
     ui_test::{check_colors, set_record_probe_count},
 };

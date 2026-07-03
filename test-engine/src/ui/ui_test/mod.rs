@@ -14,7 +14,6 @@ use std::{
 };
 
 use anyhow::{Result, bail};
-use crate::gm::drop_on_main;
 pub use helpers::*;
 use hreads::{from_main, is_main_thread, on_main, wait_for_next_frame};
 pub use human::{enable_human_mode, human_mode};
@@ -28,13 +27,13 @@ pub use report::failure_report;
 pub use runner::run_test_app;
 use serde::de::DeserializeOwned;
 pub use state::*;
-pub use self::ui_test::*;
-use crate::window::Window;
 
+pub use self::ui_test::*;
 use crate::{
     AppRunner,
-    gm::{LossyConvert, ToF32},
+    gm::{LossyConvert, ToF32, drop_on_main},
     ui::{Input, NamedKey, Touch, U8Color, UIEvents, UIManager},
+    window::Window,
 };
 
 pub fn test_combinations<const A: usize, Val>(comb: [(&'static str, Val); A]) -> Result<()>

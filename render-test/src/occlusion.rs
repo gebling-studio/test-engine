@@ -1,9 +1,9 @@
-use test_engine::render::data::{RectView, UIImageInstance, UIRectInstance};
 use test_engine::{
     RenderPass,
+    render::data::{RectView, UIImageInstance, UIRectInstance},
     ui::{BLUE, CLEAR, CornerRadii, GREEN, RED, UIImages},
+    window::Window,
 };
-use test_engine::window::Window;
 
 use crate::pipelines::{IMAGE_DRAWER, UI_RECT};
 

@@ -1,7 +1,9 @@
 use refs::Weak;
-use crate::ui::{Label, Setup, ToLabel, ViewData, view};
 
-use crate::{self as test_engine};
+use crate::{
+    ui::{Label, Setup, ToLabel, ViewData, view},
+    {self as test_engine},
+};
 
 #[view]
 pub(crate) struct InfiniteCell {

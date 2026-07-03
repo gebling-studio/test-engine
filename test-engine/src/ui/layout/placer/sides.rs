@@ -1,10 +1,11 @@
 // Letter order in combos doesn't matter: lrt == ltr == tlr.
 // Every permutation exists on purpose so any order you type just works.
 
-use crate::gm::ToF32;
-
 use super::Placer;
-use crate::ui::layout::{Anchor, layout_rule::LayoutRule};
+use crate::{
+    gm::ToF32,
+    ui::layout::{Anchor, layout_rule::LayoutRule},
+};
 
 impl Placer {
     pub fn t(&self, offset: impl ToF32) -> &Self {

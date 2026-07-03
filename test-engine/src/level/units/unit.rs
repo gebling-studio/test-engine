@@ -1,13 +1,15 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::gm::flat::{Point, Shape};
 use rapier2d::{
     dynamics::{CoefficientCombineRule, RigidBodyHandle},
     geometry::ColliderHandle,
 };
 use refs::{Own, Weak, weak_from_ref};
 
-use crate::level::{Body, Sprite, SpriteData};
+use crate::{
+    gm::flat::{Point, Shape},
+    level::{Body, Sprite, SpriteData},
+};
 
 pub struct Unit {
     pub body: Own<Body>,

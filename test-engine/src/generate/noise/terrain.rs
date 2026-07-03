@@ -1,11 +1,9 @@
 use contour::ContourBuilder;
+use noise::{NoiseFn, OpenSimplex, utils::PlaneMapBuilder};
+
 use crate::gm::{
     LossyConvert,
     flat::{Point, Size},
-};
-use noise::{
-    OpenSimplex,
-    utils::{NoiseMapBuilder, PlaneMapBuilder},
 };
 
 #[derive(Debug)]
@@ -57,7 +55,7 @@ pub fn generate_terrain(
     let half_w = size.width / 2.0;
     let half_h = size.width / 2.0;
 
-    let map = PlaneMapBuilder::<_, 2>::new(&open_simplex)
+    let map = PlaneMapBuilder::new_fn(|point: [f64; 2]| open_simplex.get(point))
         .set_size(resolution.width as usize, resolution.height as usize)
         .set_x_bounds(f64::from(position.x - half_w), f64::from(position.x + half_w))
         .set_y_bounds(f64::from(-position.y - half_h), f64::from(-position.y + half_h))
@@ -79,7 +77,7 @@ pub fn generate_terrain(
 fn extract_shapes(data: &[u8], resolution: Size<u32>, skip: usize) -> Vec<Vec<Point>> {
     let data: Vec<_> = data.iter().map(|val| f32::from(*val)).collect();
 
-    let c = ContourBuilder::new(resolution.width, resolution.height, false);
+    let c = ContourBuilder::new(resolution.width as usize, resolution.height as usize, false);
     let res = c.contours(&data, &[0.5]).unwrap();
 
     res.first()

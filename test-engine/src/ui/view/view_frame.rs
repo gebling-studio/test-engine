@@ -1,11 +1,12 @@
 #![allow(clippy::float_cmp)]
 
-use crate::gm::{
-    ToF32,
-    flat::{Point, Rect, Size},
+use crate::{
+    gm::{
+        ToF32,
+        flat::{Point, Rect, Size},
+    },
+    ui::{UIManager, View, ViewSubviews},
 };
-
-use crate::ui::{UIManager, View, ViewSubviews};
 
 pub trait ViewFrame {
     fn z_position(&self) -> f32;

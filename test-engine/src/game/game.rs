@@ -1,7 +1,6 @@
 use refs::{Own, Weak};
-use crate::window::image::Image;
 
-use crate::game::object::Object;
+use crate::{game::object::Object, window::image::Image};
 
 #[derive(Default)]
 pub struct Game {

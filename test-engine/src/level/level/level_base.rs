@@ -1,13 +1,15 @@
 use std::ops::Deref;
 
 use educe::Educe;
-use crate::gm::flat::Point;
 use rapier2d::prelude::Vec2;
 use refs::{Own, Weak};
 use vents::Event;
-use crate::window::image::Image;
 
-use crate::level::{Level, LevelManager, Sprite, level::level_physics::LevelPhysics};
+use crate::{
+    gm::flat::Point,
+    level::{Level, LevelManager, Sprite, level::level_physics::LevelPhysics},
+    window::image::Image,
+};
 
 #[derive(Educe)]
 #[educe(Default)]

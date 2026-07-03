@@ -1,16 +1,19 @@
 use std::{fmt::Display, ops::DerefMut};
 
-use crate::gm::{
-    ToF32,
-    color::{CLEAR, Color, WHITE},
-};
 use refs::{Weak, weak_from_ref};
 use ui_proc::view;
-use crate::window::{Font, image::ToImage};
 
-use crate::ui::{
-    ImageView, Label, Setup, Style, ToLabel, UIColor, UIEvent, UIManager, View, ViewSubviews, ViewTransition,
-    view::{ViewData, ViewTouch},
+use crate::{
+    gm::{
+        ToF32,
+        color::{CLEAR, Color, WHITE},
+    },
+    ui::{
+        ImageView, Label, Setup, Style, ToLabel, UIColor, UIEvent, UIManager, View, ViewSubviews,
+        ViewTransition,
+        view::{ViewData, ViewTouch},
+    },
+    window::{Font, image::ToImage},
 };
 
 #[view]

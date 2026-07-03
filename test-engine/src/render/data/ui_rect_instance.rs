@@ -1,11 +1,13 @@
 use bytemuck::{Pod, Zeroable};
-use crate::gm::{
-    color::Color,
-    flat::{CornerRadii, Point, Rect, Size},
-};
 use wgpu::{BufferAddress, VertexBufferLayout, VertexStepMode};
 
-use crate::render::vertex_layout::VertexLayout;
+use crate::{
+    gm::{
+        color::Color,
+        flat::{CornerRadii, Point, Rect, Size},
+    },
+    render::vertex_layout::VertexLayout,
+};
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Zeroable, Pod)]

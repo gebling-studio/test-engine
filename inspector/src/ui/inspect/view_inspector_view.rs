@@ -1,6 +1,5 @@
-use test_engine::inspect::protocol::ui::ViewRepr;
 use test_engine::{
-    inspect::views::PlacerView,
+    inspect::{protocol::ui::ViewRepr, views::PlacerView},
     refs::Weak,
     ui::{Anchor::Top, Label, Setup, ViewData, view},
 };

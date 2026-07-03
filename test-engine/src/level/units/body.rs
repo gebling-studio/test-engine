@@ -1,6 +1,5 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::gm::flat::{Point, Shape};
 use rapier2d::{
     dynamics::RigidBodyHandle,
     geometry::ColliderHandle,
@@ -8,7 +7,10 @@ use rapier2d::{
 };
 use refs::{Own, Weak, weak_from_ref};
 
-use crate::level::{LevelManager, Sprite, SpriteData, ToCollider, control::Control};
+use crate::{
+    gm::flat::{Point, Shape},
+    level::{LevelManager, Sprite, SpriteData, ToCollider, control::Control},
+};
 
 pub struct Body {
     rigid_handle:    RigidBodyHandle,

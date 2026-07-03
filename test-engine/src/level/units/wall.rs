@@ -1,10 +1,12 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::gm::flat::{Point, Shape};
 use rapier2d::{geometry::ColliderHandle, prelude::Vec2};
 use refs::{Own, Weak, weak_from_ref};
 
-use crate::level::{LevelManager, Sprite, SpriteData, ToCollider};
+use crate::{
+    gm::flat::{Point, Shape},
+    level::{LevelManager, Sprite, SpriteData, ToCollider},
+};
 
 pub struct Wall {
     collider_handle: ColliderHandle,

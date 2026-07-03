@@ -1,15 +1,11 @@
 use std::ops::DerefMut;
 
-use crate::gm::{
-    ToF32,
-    color::Color,
-    flat::CornerRadii,
-};
 use refs::{Own, Weak, weak_from_ref};
 use vents::Event;
 
-use crate::ui::{
-    NavigationView, Shadow, Style, UIAnimation, UIColor, UIManager, View, WeakView, layout::Placer,
+use crate::{
+    gm::{ToF32, color::Color, flat::CornerRadii},
+    ui::{NavigationView, Shadow, Style, UIAnimation, UIColor, UIManager, View, WeakView, layout::Placer},
 };
 
 pub trait ViewData {

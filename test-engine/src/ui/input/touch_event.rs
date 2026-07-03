@@ -1,6 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 
 use anyhow::bail;
+
 use crate::window::ElementState;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

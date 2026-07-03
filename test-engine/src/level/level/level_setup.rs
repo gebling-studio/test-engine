@@ -1,6 +1,4 @@
-use crate::gm::volume::GyroData;
-
-use crate::level::Level;
+use crate::{gm::volume::GyroData, level::Level};
 
 pub trait LevelSetup {
     fn setup(&mut self);

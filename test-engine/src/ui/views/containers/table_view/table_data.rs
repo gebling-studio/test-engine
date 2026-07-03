@@ -1,7 +1,6 @@
 use refs::Weak;
-use crate::ui::View;
 
-use crate::ui::CellRegistry;
+use crate::ui::{CellRegistry, View};
 
 pub trait TableData {
     fn cell_height(&self, index: usize) -> f32;

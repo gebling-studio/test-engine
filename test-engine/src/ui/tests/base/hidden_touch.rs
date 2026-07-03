@@ -1,10 +1,12 @@
 use anyhow::Result;
-use crate::gm::color::{BLUE, RED};
 use hreads::from_main;
 use refs::Weak;
-use crate::ui::{Container, Setup, ViewData, ViewTest, ViewTouch, view_test};
 
-use crate::ui_test::inject_touches;
+use crate::{
+    gm::color::{BLUE, RED},
+    ui::{Container, Setup, ViewData, ViewTest, ViewTouch, view_test},
+    ui_test::inject_touches,
+};
 
 /// A view hidden during an active press must lose the touch capture.
 /// Before the fix it kept it forever: hover moves triggered its events

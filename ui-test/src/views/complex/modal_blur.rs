@@ -4,8 +4,8 @@ use test_engine::{
     dispatch::from_main,
     refs::Weak,
     ui::{
-        BLACK, Container, GREEN, ImageView, Label, ModalView, RED, Setup, Shadow, Size, UIColor,
-        ViewData, ViewTest, WHITE, view, view_test,
+        BLACK, Container, GREEN, ImageView, Label, ModalView, RED, Setup, Shadow, Size, UIColor, ViewData,
+        ViewTest, WHITE, view, view_test,
     },
     ui_test::{check_colors, set_record_probe_count},
 };

@@ -1,7 +1,10 @@
-use crate::window::{AppHandler, Window};
 use winit::event_loop::{ControlFlow, EventLoop};
 
-use crate::{App, AppRunner, app::test_engine_create_app};
+use crate::{
+    App, AppRunner,
+    app::test_engine_create_app,
+    window::{AppHandler, Window},
+};
 
 #[cfg(target_arch = "wasm32")]
 fn run_app(event_loop: EventLoop<Window>, app: &'static mut AppHandler) {

@@ -1,11 +1,13 @@
 use std::fmt::Display;
 
-use crate::gm::Apply;
 use refs::Weak;
 use ui_proc::view;
-use crate::window::image::Image;
 
-use crate::ui::{ImageView, Setup, ViewCallbacks, ViewFrame};
+use crate::{
+    gm::Apply,
+    ui::{ImageView, Setup, ViewCallbacks, ViewFrame},
+    window::image::Image,
+};
 
 #[view]
 pub struct NineSegmentImageView {

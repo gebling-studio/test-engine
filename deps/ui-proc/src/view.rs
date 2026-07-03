@@ -76,7 +76,7 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
 
     let ui_test_related_stuff = if test {
         quote! {
-            #[#root::__internal_macro_deps::ctor::ctor(crate_path = #root::__internal_macro_deps::ctor)]
+            #[#root::__internal_macro_deps::ctor::ctor(unsafe, crate_path = #root::__internal_macro_deps::ctor)]
             fn store_test() {
                 crate::UI_TESTS
                     .lock()

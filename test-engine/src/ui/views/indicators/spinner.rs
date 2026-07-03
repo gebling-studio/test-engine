@@ -1,25 +1,24 @@
 use std::f32::consts::PI;
 
 use chrono::Utc;
-use crate::gm::{
-    Animation, LossyConvert,
-    color::{BLACK, Color, GRAY, LIGHT_BLUE},
-    flat::{Size, point_on_circle},
-};
 use hreads::{from_main, on_main};
 use log::{trace, warn};
 use parking_lot::{Mutex, MutexGuard};
 use refs::Weak;
-use crate::ui::{
-    Container, ModalView, Setup, TouchStack, UIAnimation, View, ViewCallbacks, ViewData, ViewFrame,
-    ViewSubviews, WeakView,
-};
 use ui_proc::view;
 use vents::OnceEvent;
 
 use crate::{
     self as test_engine,
-    ui::{SpinnerLockGlobal, SpinnerLockOnView},
+    gm::{
+        Animation, LossyConvert,
+        color::{BLACK, Color, GRAY, LIGHT_BLUE},
+        flat::{Size, point_on_circle},
+    },
+    ui::{
+        Container, ModalView, Setup, SpinnerLockGlobal, SpinnerLockOnView, TouchStack, UIAnimation, View,
+        ViewCallbacks, ViewData, ViewFrame, ViewSubviews, WeakView,
+    },
 };
 
 static CIRCLES_N: u32 = 6;
@@ -211,12 +210,15 @@ impl ModalView for Spinner {
 mod test {
 
     use anyhow::Result;
-    use crate::gm::color::{BLACK, LIGHTER_GRAY, WHITE};
     use hreads::from_main;
     use refs::Weak;
-    use crate::ui::{Container, Setup, ViewData, ViewFrame, ViewSubviews, ViewTest, view_test};
 
-    use crate::{self as test_engine, ui::Spinner, ui_test::check_colors};
+    use crate::{
+        self as test_engine,
+        gm::color::{BLACK, LIGHTER_GRAY, WHITE},
+        ui::{Container, Setup, Spinner, ViewData, ViewFrame, ViewSubviews, ViewTest, view_test},
+        ui_test::check_colors,
+    };
 
     #[view_test]
     struct TestSpinner {

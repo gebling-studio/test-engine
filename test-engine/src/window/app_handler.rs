@@ -1,6 +1,5 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use crate::gm::flat::Point;
 use log::debug;
 use plat::Platform;
 use refs::main_lock::MainLock;
@@ -12,7 +11,10 @@ use winit::{
     window::WindowId,
 };
 
-use crate::window::{Window, WindowEvents, state::State};
+use crate::{
+    gm::flat::Point,
+    window::{Window, WindowEvents, state::State},
+};
 
 static APP_HANDLER: MainLock<Option<AppHandler>> = MainLock::new();
 

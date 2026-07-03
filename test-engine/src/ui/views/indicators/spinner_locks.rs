@@ -1,9 +1,8 @@
 use hreads::on_main;
 use log::trace;
 use refs::Weak;
-use crate::ui::ViewSubviews;
 
-use crate::ui::Spinner;
+use crate::ui::{Spinner, ViewSubviews};
 
 pub struct SpinnerLockGlobal {
     pub(crate) stopped: bool,

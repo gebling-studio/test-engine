@@ -1,11 +1,12 @@
 use std::hash::{Hash, Hasher};
 
-use crate::gm::LossyConvert;
 use rustybuzz::{Face, UnicodeBuffer, shape};
 use wgpu_text::glyph_brush::{
     GlyphPositioner, HorizontalAlign, SectionGeometry, SectionGlyph, ToSectionText,
     ab_glyph::{Font, Glyph, GlyphId, Rect, ScaleFont, point},
 };
+
+use crate::gm::LossyConvert;
 
 /// Per label shaping parameters, collected where the label is drawn.
 #[derive(Clone, Copy)]
@@ -68,8 +69,7 @@ impl ShapedLayout<'_> {
     /// Greedy wrap at space glyphs. A line that has no space to break at
     /// overflows, same as the builtin layout.
     fn wrap(line: Vec<ShapedGlyph>, text: &str, max_width: f32) -> Vec<Vec<ShapedGlyph>> {
-        let is_space =
-            |glyph: &ShapedGlyph| text.as_bytes().get(glyph.cluster as usize) == Some(&b' ');
+        let is_space = |glyph: &ShapedGlyph| text.as_bytes().get(glyph.cluster as usize) == Some(&b' ');
 
         let mut lines = vec![];
         let mut current: Vec<ShapedGlyph> = vec![];

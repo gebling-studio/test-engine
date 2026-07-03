@@ -1,12 +1,14 @@
-use crate::gm::{
-    Apply,
-    color::{BLACK, Color},
-    flat::Point,
-};
 use refs::Weak;
 use ui_proc::view;
 
-use crate::ui::{Container, Setup, ViewData, ViewFrame, ViewSubviews};
+use crate::{
+    gm::{
+        Apply,
+        color::{BLACK, Color},
+        flat::Point,
+    },
+    ui::{Container, Setup, ViewData, ViewFrame, ViewSubviews},
+};
 
 #[view]
 pub struct HighlightView {

@@ -1,11 +1,9 @@
 use std::pin::Pin;
 
 use anyhow::bail;
-use crate::gm::flat::Size;
 use refs::Own;
-use crate::ui::View;
 
-use crate::app_starter::test_engine_start_with_app;
+use crate::{app_starter::test_engine_start_with_app, gm::flat::Size, ui::View};
 
 pub type PinnedFuture<T> = Pin<Box<dyn Future<Output = anyhow::Result<T>>>>;
 

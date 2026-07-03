@@ -11,7 +11,11 @@ pub(crate) struct Sets {
 }
 
 impl Sets {
-    pub(crate) fn insert(&mut self, rigid: RigidBody, collider: Collider) -> (RigidBodyHandle, ColliderHandle) {
+    pub(crate) fn insert(
+        &mut self,
+        rigid: RigidBody,
+        collider: Collider,
+    ) -> (RigidBodyHandle, ColliderHandle) {
         let rigid_handle = self.rigid_bodies.insert(rigid);
 
         let collider_handle =

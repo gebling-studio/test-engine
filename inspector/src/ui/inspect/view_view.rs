@@ -1,6 +1,6 @@
-use test_engine::inspect::protocol::ui::ViewRepr;
 use parking_lot::Mutex;
 use test_engine::{
+    inspect::protocol::ui::ViewRepr,
     refs::Weak,
     ui::{
         GRAY, Label, Setup, TURQUOISE, TextAlignment::Left, UIManager, ViewData, ViewFrame, ViewSubviews,

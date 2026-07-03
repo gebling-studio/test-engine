@@ -1,18 +1,11 @@
 use std::{path::PathBuf, sync::Once};
 
 use anyhow::Result;
-use crate::gm::{
-    LossyConvert,
-    flat::{Point, Size},
-};
+use hreads::{from_main, invoke_dispatched};
 #[cfg(desktop)]
 use hreads::{is_main_thread, wait_for_next_frame};
-use hreads::{from_main, invoke_dispatched};
-use crate::level::LevelManager;
 use log::debug;
 use refs::{Own, main_lock::MainLock};
-use crate::ui::{Hover, Theme, Touch, TouchEvent, UIEvents, UIManager, View, ViewData, ViewSubviews, WeakView};
-use crate::window::{ElementState, MouseButton, RenderFrame, Screenshot, Theme as OsTheme, Window};
 use winit::{
     event::{KeyEvent, TouchPhase},
     keyboard::Key,
@@ -20,9 +13,18 @@ use winit::{
 
 use crate::{
     App,
+    gm::{
+        LossyConvert,
+        flat::{Point, Size},
+    },
+    level::LevelManager,
     level_drawer::LevelDrawer,
     pipelines::Pipelines,
-    ui::{Input, UIDrawer, ui_test::human_pause},
+    ui::{
+        Hover, Input, Theme, Touch, TouchEvent, UIDrawer, UIEvents, UIManager, View, ViewData, ViewSubviews,
+        WeakView, ui_test::human_pause,
+    },
+    window::{ElementState, MouseButton, RenderFrame, Screenshot, Theme as OsTheme, Window},
 };
 
 #[cfg(not_wasm)]

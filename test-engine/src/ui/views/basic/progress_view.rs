@@ -1,7 +1,9 @@
-use crate::gm::{ToF32, color::BLUE};
 use refs::Weak;
 
-use crate::ui::{Container, Setup, ViewData, view};
+use crate::{
+    gm::{ToF32, color::BLUE},
+    ui::{Container, Setup, ViewData, view},
+};
 
 #[view]
 pub struct ProgressView {

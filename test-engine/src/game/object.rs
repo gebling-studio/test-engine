@@ -1,7 +1,9 @@
 use refs::Weak;
-use crate::window::image::Image;
 
-use crate::game::{Point, Rotation, Shape};
+use crate::{
+    game::{Point, Rotation, Shape},
+    window::image::Image,
+};
 
 pub struct Object {
     pub position: Point,

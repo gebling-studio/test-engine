@@ -1,12 +1,14 @@
-use crate::gm::{LossyConvert, ToF32, flat::Point};
 use netrun::Function;
 use refs::{Own, Weak};
-use crate::ui::{Setup, UIEvent, View, ViewData, ViewFrame, ViewTouch, view};
 
 use super::layout::LayoutMode;
 use crate::{
     self as test_engine,
-    ui::{CellRegistry, ScrollView, TableData, struct_name},
+    gm::{LossyConvert, ToF32, flat::Point},
+    ui::{
+        CellRegistry, ScrollView, Setup, TableData, UIEvent, View, ViewData, ViewFrame, ViewTouch,
+        struct_name, view,
+    },
 };
 
 #[view]
@@ -83,13 +85,13 @@ impl TableView {
         self
     }
 
-    pub(crate) fn set_cell_spacing(&mut self, spacing: impl ToF32) -> &mut Self {
+    pub fn set_cell_spacing(&mut self, spacing: impl ToF32) -> &mut Self {
         self.cell_spacing = spacing.to_f32();
         self.layout_cells(LayoutMode::Full);
         self
     }
 
-    pub(crate) fn bottom_reached(&self) -> &UIEvent {
+    pub fn bottom_reached(&self) -> &UIEvent {
         &self.scroll.bottom_reached
     }
 }
@@ -115,7 +117,9 @@ impl TableView {
         let spacing = self.cell_spacing;
         let cell_width = (self.width() - spacing * (columns - 1.0)) / columns;
 
-        let col = ((pos.x - cell_width / 2.0) / (cell_width + spacing)).round().clamp(0.0, columns - 1.0);
+        let col = ((pos.x - cell_width / 2.0) / (cell_width + spacing))
+            .round()
+            .clamp(0.0, columns - 1.0);
 
         let y = pos.y - self.scroll.get_scroll_content_offset();
         let row = ((y - cell_height / 2.0) / (cell_height + spacing)).round().max(0.0);
@@ -162,15 +166,14 @@ mod test {
     use std::ops::Deref;
 
     use anyhow::Result;
-    use crate::gm::color::Color;
     use hreads::from_main;
     use parking_lot::Mutex;
     use refs::Weak;
-    use crate::ui::{Label, Setup, View, ViewData, ViewTest, view_test};
 
     use crate::{
         self as test_engine,
-        ui::{CellRegistry, TableData, TableView},
+        gm::color::Color,
+        ui::{CellRegistry, Label, Setup, TableData, TableView, View, ViewData, ViewTest, view_test},
         ui_test::{inject_scroll, inject_touches},
     };
 

@@ -2,11 +2,13 @@
 #![allow(clippy::used_underscore_binding)]
 
 use educe::Educe;
-use crate::gm::ToF32;
 
-use crate::ui::{
-    WeakView,
-    layout::{Anchor, Tiling},
+use crate::{
+    gm::ToF32,
+    ui::{
+        WeakView,
+        layout::{Anchor, Tiling},
+    },
 };
 
 #[derive(Clone, Educe)]

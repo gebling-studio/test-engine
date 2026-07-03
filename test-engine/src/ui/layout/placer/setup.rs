@@ -1,13 +1,15 @@
 use std::{ops::Deref, sync::Arc};
 
-use crate::gm::{ToF32, flat::Rect};
 use parking_lot::Mutex;
 
 use super::Placer;
-use crate::ui::{
-    View, WeakView,
-    layout::{Anchor, Tiling, layout_rule::LayoutRule},
-    view::{ViewFrame, ViewSubviews},
+use crate::{
+    gm::{ToF32, flat::Rect},
+    ui::{
+        View, WeakView,
+        layout::{Anchor, Tiling, layout_rule::LayoutRule},
+        view::{ViewFrame, ViewSubviews},
+    },
 };
 
 impl Placer {
@@ -57,7 +59,7 @@ impl Placer {
         self.anchor(Anchor::Height, view, 1)
     }
 
-    pub(crate) fn relative_width(&self, view: impl Deref<Target = impl View>, multiplier: impl ToF32) -> &Self {
+    pub fn relative_width(&self, view: impl Deref<Target = impl View>, multiplier: impl ToF32) -> &Self {
         self.relative(Anchor::Width, view, multiplier)
     }
 
@@ -167,7 +169,7 @@ impl Placer {
         self
     }
 
-    pub(crate) fn all_hor(&self) -> &Self {
+    pub fn all_hor(&self) -> &Self {
         self.all_tiling_rules().push(Tiling::Horizontally.into());
         self
     }

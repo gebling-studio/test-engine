@@ -1,13 +1,15 @@
 use std::{marker::ConstParamTy, ops::Range};
 
-use crate::gm::{
-    checked_usize_to_u32,
-    flat::{Point, Vertex2D},
-};
 use wgpu::Device;
-use crate::window::BufferUsages;
 
-use crate::render::device_helper::DeviceHelper;
+use crate::{
+    gm::{
+        checked_usize_to_u32,
+        flat::{Point, Vertex2D},
+    },
+    render::device_helper::DeviceHelper,
+    window::BufferUsages,
+};
 
 const VERTICES: &[Point] = &[
     Point::new(-1.0, 1.0),

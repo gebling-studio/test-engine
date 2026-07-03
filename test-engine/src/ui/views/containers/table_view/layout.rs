@@ -1,10 +1,11 @@
 use std::ops::DerefMut;
 
-use crate::gm::LossyConvert;
 use refs::weak_from_ref;
-use crate::ui::{ViewData, ViewFrame, ViewSubviews};
 
-use crate::ui::TableView;
+use crate::{
+    gm::LossyConvert,
+    ui::{TableView, ViewData, ViewFrame, ViewSubviews},
+};
 
 pub(super) enum LayoutMode {
     Scroll,

@@ -1,9 +1,11 @@
-use crate::gm::{flat::Point, volume::GyroData};
 use refs::main_lock::MainLock;
 use vents::Event;
-use crate::window::NamedKey;
 
-use crate::ui::{Theme, Touch, UIEvent};
+use crate::{
+    gm::{flat::Point, volume::GyroData},
+    ui::{Theme, Touch, UIEvent},
+    window::NamedKey,
+};
 
 static UI_EVENTS: MainLock<UIEvents> = MainLock::new();
 

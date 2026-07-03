@@ -1,14 +1,16 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use anyhow::Result;
-use crate::gm::color::GRAY;
 use hreads::from_main;
 use refs::Weak;
-use crate::ui::{Container, Label, Setup, View, ViewData, ViewSubviews, ViewTest, view_test};
 
 use crate::{
     self as test_engine,
-    ui::{CellRegistry, TableData, TableView},
+    gm::color::GRAY,
+    ui::{
+        CellRegistry, Container, Label, Setup, TableData, TableView, View, ViewData, ViewSubviews, ViewTest,
+        view_test,
+    },
     ui_test::inject_touches,
 };
 

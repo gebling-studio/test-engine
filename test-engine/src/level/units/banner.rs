@@ -1,9 +1,11 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::gm::flat::{Point, Shape};
 use refs::{Own, Weak, weak_from_ref};
 
-use crate::level::{Sprite, SpriteData};
+use crate::{
+    gm::flat::{Point, Shape},
+    level::{Sprite, SpriteData},
+};
 
 pub struct Banner {
     sprite: SpriteData,

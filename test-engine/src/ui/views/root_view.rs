@@ -1,11 +1,14 @@
-use crate::gm::flat::{Point, Size};
 use plat::Platform;
 use refs::{Own, Weak};
 use ui_proc::view;
-use crate::window::image::ToImage;
 
-use crate::ui::{
-    Container, ImageMode, ImageView, UIColor, View, ViewData, ViewFrame, ViewSubviews, WeakView, view::Setup,
+use crate::{
+    gm::flat::{Point, Size},
+    ui::{
+        Container, ImageMode, ImageView, UIColor, View, ViewData, ViewFrame, ViewSubviews, WeakView,
+        view::Setup,
+    },
+    window::image::ToImage,
 };
 
 #[view]

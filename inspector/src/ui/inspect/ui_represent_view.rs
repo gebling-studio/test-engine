@@ -1,5 +1,5 @@
-use test_engine::inspect::protocol::ui::ViewRepr;
 use test_engine::{
+    inspect::protocol::ui::ViewRepr,
     refs::{Own, Weak},
     ui::{ViewSubviews, view},
 };

@@ -1,21 +1,23 @@
 #![cfg(not_wasm)]
 
 use anyhow::Result;
-use crate::audio::Sound;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use chrono::Local;
 use hreads::{from_main, log_spawn, on_main};
 use image::{ExtendedColorType, ImageEncoder, codecs::png::PngEncoder};
-use crate::inspect::protocol::{AppCommand, EditEntry, InspectorCommand, SERVICE_TYPE, UIRequest, UIResponse, serve};
 use log::info;
 use mdns_sd::{ServiceDaemon, ServiceInfo};
 use refs::manage::DataManager;
 use tokio::net::TcpListener;
-use crate::ui::{Button, Label, TextField, UIManager, ViewData, ViewSubviews, WeakView};
 
-use crate::inspect::{
-    edit_log,
-    view_conversion::{ViewToInspect, weak_to_id},
+use crate::{
+    audio::Sound,
+    inspect::{
+        edit_log,
+        protocol::{AppCommand, EditEntry, InspectorCommand, SERVICE_TYPE, UIRequest, UIResponse, serve},
+        view_conversion::{ViewToInspect, weak_to_id},
+    },
+    ui::{Button, Label, TextField, UIManager, ViewData, ViewSubviews, WeakView},
 };
 
 pub struct InspectService;

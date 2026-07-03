@@ -1,13 +1,12 @@
 use anyhow::Result;
-use crate::gm::color::BLACK;
 use hreads::{from_main, on_main, sleep, spawn};
 use refs::Weak;
-use crate::ui::{Setup, View, ViewData, ViewTest, view_test};
 
 use crate::{
     self as test_engine,
+    gm::color::BLACK,
     ui::{
-        CellRegistry, Spinner, TableData, TableView,
+        CellRegistry, Setup, Spinner, TableData, TableView, View, ViewData, ViewTest, view_test,
         views::containers::table_view::tests::infinite_scroll::{
             basic_scroll::test_basic_scroll, infinite_cell::InfiniteCell,
         },

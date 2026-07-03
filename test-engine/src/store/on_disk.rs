@@ -5,10 +5,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::filesystem::Paths;
 use parking_lot::Mutex;
 
-use crate::store::storable::Storable;
+use crate::{filesystem::Paths, store::storable::Storable};
 
 static ROOT_PATH: Mutex<Option<PathBuf>> = Mutex::new(None);
 
@@ -62,7 +61,7 @@ impl<T: Storable> OnDisk<T> {
         set_value(val, &expand_tilde(self.full_path()));
     }
 
-    pub(crate) fn get(&self) -> Option<T> {
+    pub fn get(&self) -> Option<T> {
         get_value(&expand_tilde(self.full_path()))
     }
 
@@ -122,10 +121,9 @@ mod test {
     use std::sync::LazyLock;
 
     use anyhow::Result;
-    use crate::filesystem::Paths;
     use serde::{Deserialize, Serialize};
 
-    use crate::store::OnDisk;
+    use crate::{filesystem::Paths, store::OnDisk};
 
     #[derive(Debug, PartialEq, Default, Serialize, Deserialize, Clone)]
     struct Data {

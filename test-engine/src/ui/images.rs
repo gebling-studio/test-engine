@@ -1,4 +1,5 @@
 use refs::Weak;
+
 use crate::window::image::Image;
 
 pub struct UIImages;

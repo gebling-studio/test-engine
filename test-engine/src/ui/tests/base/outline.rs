@@ -1,10 +1,12 @@
 use anyhow::Result;
-use crate::gm::color::{BLUE, GREEN, RED, YELLOW};
 use hreads::from_main;
 use refs::Weak;
-use crate::ui::{Anchor::Left, Container, ImageView, Setup, ViewData, ViewTest, view_test};
 
-use crate::ui_test::check_colors;
+use crate::{
+    gm::color::{BLUE, GREEN, RED, YELLOW},
+    ui::{Anchor::Left, Container, ImageView, Setup, ViewData, ViewTest, view_test},
+    ui_test::check_colors,
+};
 
 #[view_test]
 struct Outline {

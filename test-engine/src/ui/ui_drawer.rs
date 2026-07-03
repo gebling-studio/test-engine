@@ -1,25 +1,27 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::gm::{
-    LossyConvert,
-    color::{CLEAR, TURQUOISE},
-    flat::{CornerRadii, Rect, Size},
-};
 use refs::{Weak, main_lock::MainLock};
-use crate::render::{
-    UIBackdropPipeline, UIBlurPipeline, UIGradientPipeline, UIImageRectPipeline, UIRectPipeline,
-    UIShadowPipeline,
-    data::{RectView, UIGradientInstance, UIImageInstance, UIRectInstance, UIShadowInstance},
-};
-use crate::ui::{
-    BlurView, ImageView, Label, ScrimView, TextAlignment, UIManager, View, ViewData, ViewFrame,
-    ViewLayout, ViewSubviews,
-};
 use wgpu::RenderPass;
 use wgpu_text::glyph_brush::{HorizontalAlign, Section, Text};
-use crate::window::{Font, RenderFrame, ShapedParams};
 
-use crate::pipelines::Pipelines;
+use crate::{
+    gm::{
+        LossyConvert,
+        color::{CLEAR, TURQUOISE},
+        flat::{CornerRadii, Rect, Size},
+    },
+    pipelines::Pipelines,
+    render::{
+        UIBackdropPipeline, UIBlurPipeline, UIGradientPipeline, UIImageRectPipeline, UIRectPipeline,
+        UIShadowPipeline,
+        data::{RectView, UIGradientInstance, UIImageInstance, UIRectInstance, UIShadowInstance},
+    },
+    ui::{
+        BlurView, ImageView, Label, ScrimView, TextAlignment, UIManager, View, ViewData, ViewFrame,
+        ViewLayout, ViewSubviews,
+    },
+    window::{Font, RenderFrame, ShapedParams},
+};
 
 static GRADIENT_DRAWER: MainLock<UIGradientPipeline> = MainLock::new();
 static IMAGE_RECT_DRAWER: MainLock<UIImageRectPipeline> = MainLock::new();
@@ -226,13 +228,13 @@ impl UIDrawer {
             && shadow.color.a > 0.0
         {
             SHADOW_DRAWER.get_mut().add(UIShadowInstance {
-                position: frame.origin + shadow.offset,
-                size: frame.size,
-                color: shadow.color,
+                position:     frame.origin + shadow.offset,
+                size:         frame.size,
+                color:        shadow.color,
                 corner_radii: view.corner_radii(),
-                blur: shadow.radius,
-                z_position: view.z_position(),
-                scale: ctx.scale,
+                blur:         shadow.radius,
+                z_position:   view.z_position(),
+                scale:        ctx.scale,
             });
         }
 
@@ -254,13 +256,13 @@ impl UIDrawer {
             }
         } else if view.end_gradient_color().a > 0.0 {
             GRADIENT_DRAWER.get_mut().add(UIGradientInstance {
-                position: frame.origin,
-                size: frame.size,
-                start_color: *view.color(),
-                end_color: *view.end_gradient_color(),
+                position:     frame.origin,
+                size:         frame.size,
+                start_color:  *view.color(),
+                end_color:    *view.end_gradient_color(),
                 corner_radii: view.corner_radii(),
-                z_position: view.z_position(),
-                scale: ctx.scale,
+                z_position:   view.z_position(),
+                scale:        ctx.scale,
             });
         } else if view.color().a > 0.0 || view.border_color().a > 0.0 {
             Pipelines::rect().add(UIRectInstance::new(

@@ -1,14 +1,16 @@
 use anyhow::Result;
-use crate::gm::{
-    color::{BLACK, TURQUOISE},
-    test_state::TestState,
-};
 use refs::Weak;
-use crate::ui::{CellCallbacks, Container, Label, Setup, View, ViewData, ViewFrame, ViewTest, view, view_test};
 
 use crate::{
     self as test_engine,
-    ui::{CellRegistry, Spinner, SpinnerLockOnView, TableData, TableView},
+    gm::{
+        color::{BLACK, TURQUOISE},
+        test_state::TestState,
+    },
+    ui::{
+        CellCallbacks, CellRegistry, Container, Label, Setup, Spinner, SpinnerLockOnView, TableData,
+        TableView, View, ViewData, ViewFrame, ViewTest, view, view_test,
+    },
     ui_test::{inject_scroll, inject_touches},
 };
 

@@ -1,9 +1,8 @@
 use anyhow::Result;
-use test_engine::inspect::protocol::ui::ViewRepr;
 use pretty_assertions::assert_eq;
 use test_engine::{
     dispatch::{from_main, on_main},
-    inspect::ViewToInspect,
+    inspect::{ViewToInspect, protocol::ui::ViewRepr},
     refs::Weak,
     ui::{BLUE, Button, Setup, ViewData, view},
     ui_test::UITest,

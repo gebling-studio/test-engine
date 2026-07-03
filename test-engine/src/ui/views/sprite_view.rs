@@ -1,8 +1,10 @@
-use crate::level::Sprite;
 use refs::Weak;
-use crate::ui::{AlertErr, Setup, TextField, ViewCallbacks, ViewData};
 use ui_proc::view;
 
+use crate::{
+    level::Sprite,
+    ui::{AlertErr, Setup, TextField, ViewCallbacks, ViewData},
+};
 
 #[view]
 pub struct SpriteView {

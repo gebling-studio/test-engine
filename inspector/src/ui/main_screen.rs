@@ -2,11 +2,13 @@ use std::net::{IpAddr, SocketAddr};
 
 use anyhow::{Result, anyhow};
 use hreads::log_spawn;
-use test_engine::inspect::protocol::{AppCommand, Client, InspectorCommand, SERVICE_TYPE, UIRequest, UIResponse, ui::ViewRepr};
 use log::error;
 use mdns_sd::{ScopedIp, ServiceDaemon, ServiceEvent};
 use test_engine::{
     dispatch::on_main,
+    inspect::protocol::{
+        AppCommand, Client, InspectorCommand, SERVICE_TYPE, UIRequest, UIResponse, ui::ViewRepr,
+    },
     refs::Weak,
     ui::{
         AlertErr,

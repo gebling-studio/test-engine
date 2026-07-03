@@ -1,12 +1,15 @@
 use anyhow::Result;
-use crate::gm::color::{BLUE, GREEN, RED};
 use refs::Weak;
-use crate::ui::{
-    Anchor::{Bot, Top},
-    Container, Setup, ViewData, ViewTest, view_test,
-};
 
-use crate::{self as test_engine, ui_test::check_colors};
+use crate::{
+    self as test_engine,
+    gm::color::{BLUE, GREEN, RED},
+    ui::{
+        Anchor::{Bot, Top},
+        Container, Setup, ViewData, ViewTest, view_test,
+    },
+    ui_test::check_colors,
+};
 
 #[view_test]
 pub(crate) struct AnchorLayoutTest {

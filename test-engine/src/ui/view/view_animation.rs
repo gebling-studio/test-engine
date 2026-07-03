@@ -1,12 +1,14 @@
 use std::ops::DerefMut;
 
 use educe::Educe;
-use crate::gm::Animation;
 use netrun::Function;
 use refs::Weak;
 use vents::OnceEvent;
 
-use crate::ui::{View, WeakView};
+use crate::{
+    gm::Animation,
+    ui::{View, WeakView},
+};
 
 type Action = Box<dyn FnMut(&mut dyn View, f32) + Send>;
 

@@ -1,11 +1,13 @@
-use crate::gm::color::{BLUE, Color, GREEN};
 use refs::{Weak, weak_from_ref};
 use ui_proc::view;
 use vents::Event;
 
-use crate::ui::{
-    Anchor, Container, Setup,
-    view::{ViewData, ViewTouch},
+use crate::{
+    gm::color::{BLUE, Color, GREEN},
+    ui::{
+        Anchor, Container, Setup,
+        view::{ViewData, ViewTouch},
+    },
 };
 #[view]
 pub struct Switch {

@@ -1,12 +1,11 @@
 use std::{convert::Infallible, fs::read, path::Path};
 
 use anyhow::Result;
-use crate::gm::flat::Size;
 use hreads::from_main;
 use log::error;
 use refs::{
-    main_lock::MainLock,
     Weak,
+    main_lock::MainLock,
     manage::{DataManager, ResourceLoader},
     managed,
 };
@@ -15,9 +14,12 @@ use wgpu::{
     BindingResource, BindingType, SamplerBindingType, ShaderStages, TextureSampleType, TextureViewDimension,
 };
 
-use crate::window::{
-    Window,
-    image::{ImageBind, Texture, TextureRawData},
+use crate::{
+    gm::flat::Size,
+    window::{
+        Window,
+        image::{ImageBind, Texture, TextureRawData},
+    },
 };
 
 #[derive(Debug)]

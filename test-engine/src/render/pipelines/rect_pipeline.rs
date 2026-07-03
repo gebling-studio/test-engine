@@ -1,19 +1,21 @@
 use bytemuck::Pod;
-use crate::gm::flat::{Point, Vertex2D};
 use indexmap::IndexMap;
 use refs::Weak;
 use wgpu::{
     Buffer, PipelineLayoutDescriptor, PrimitiveTopology, RenderPass, RenderPipeline, ShaderModuleDescriptor,
     ShaderSource, ShaderStages,
 };
-use crate::window::{PolygonMode, Window, image::Image};
 
-use crate::render::{
-    device_helper::DeviceHelper,
-    pipelines::pipeline_type::PipelineType,
-    uniform::{UniformBind, make_uniform_layout},
-    vec_buffer::VecBuffer,
-    vertex_layout::VertexLayout,
+use crate::{
+    gm::flat::{Point, Vertex2D},
+    render::{
+        device_helper::DeviceHelper,
+        pipelines::pipeline_type::PipelineType,
+        uniform::{UniformBind, make_uniform_layout},
+        vec_buffer::VecBuffer,
+        vertex_layout::VertexLayout,
+    },
+    window::{PolygonMode, Window, image::Image},
 };
 
 pub struct RectPipeline<

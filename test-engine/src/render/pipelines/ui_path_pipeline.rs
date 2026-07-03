@@ -1,10 +1,12 @@
-use crate::gm::flat::Point;
 use wgpu::{
     PipelineLayoutDescriptor, PolygonMode, PrimitiveTopology, RenderPass, RenderPipeline, include_wgsl,
 };
-use crate::window::Window;
 
-use crate::render::{data::PathData, device_helper::DeviceHelper, vertex_layout::VertexLayout};
+use crate::{
+    gm::flat::Point,
+    render::{data::PathData, device_helper::DeviceHelper, vertex_layout::VertexLayout},
+    window::Window,
+};
 
 #[derive(Debug)]
 pub struct UIPathPipeline {

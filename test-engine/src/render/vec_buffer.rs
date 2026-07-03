@@ -2,6 +2,7 @@ use std::ops::Range;
 
 use bytemuck::{Pod, cast_slice};
 use wgpu::{Buffer, BufferDescriptor, BufferSlice, BufferUsages, COPY_BUFFER_ALIGNMENT};
+
 use crate::window::Window;
 
 /// CPU-side instance list backed by a persistent GPU buffer.

@@ -1,7 +1,10 @@
-use crate::gm::{color::Color, flat::Rect};
 use refs::Own;
 use serde::{Deserialize, Serialize};
-use crate::ui::Placer;
+
+use crate::{
+    gm::{color::Color, flat::Rect},
+    ui::Placer,
+};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct ViewRepr {
