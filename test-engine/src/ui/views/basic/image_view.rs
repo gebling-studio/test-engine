@@ -5,7 +5,7 @@ use ui_proc::view;
 
 use crate::{
     gm::flat::Rect,
-    ui::{NineSegmentImageView, ViewCallbacks, ViewData, ViewFrame, ViewSubviews},
+    ui::{NineSegmentImageView, Setup, ViewData, ViewFrame, ViewSubviews},
     window::image::{Image, ToImage},
 };
 
@@ -63,7 +63,7 @@ impl ImageView {
     }
 }
 
-impl ViewCallbacks for ImageView {
+impl Setup for ImageView {
     fn clips_to_bounds(&self) -> bool {
         matches!(self.mode, ImageMode::AspectFill)
     }

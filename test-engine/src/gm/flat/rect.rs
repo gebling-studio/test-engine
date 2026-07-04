@@ -128,6 +128,16 @@ impl Rect<f32> {
     }
 }
 
+impl Rect<u32> {
+    pub(crate) fn intersection(&self, other: &Self) -> Self {
+        let x = self.x().max(other.x());
+        let y = self.y().max(other.y());
+        let max_x = (self.x() + self.width()).min(other.x() + other.width());
+        let max_y = (self.y() + self.height()).min(other.y() + other.height());
+        Self::new(x, y, max_x.saturating_sub(x), max_y.saturating_sub(y))
+    }
+}
+
 impl Rect {
     pub fn center(&self) -> Point {
         (self.x() + self.width() / 2.0, self.y() + self.height() / 2.0).into()

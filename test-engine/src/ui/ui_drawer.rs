@@ -44,7 +44,6 @@ struct DrawContext<'a> {
     /// What the current pass has set, reapplied after a blur barrier
     /// reopens the pass.
     scissor:       Rect<u32>,
-    display:       Rect<u32>,
 }
 
 pub struct UIDrawer;
@@ -74,7 +73,6 @@ impl UIDrawer {
             scale: UIManager::scale(),
             resolution,
             scissor: display_rect,
-            display: display_rect,
         };
 
         Self::draw_view(render_frame, UIManager::root_view_static(), &mut ctx);
@@ -203,10 +201,15 @@ impl UIDrawer {
 
         view.before_render(render_frame.pass());
 
-        let clips = view.clips_to_bounds();
+        let clips = view.__internal_clips_to_bounds();
+        let parent_scissor = ctx.scissor;
 
         if clips {
+            // Text is deferred, so everything queued outside this clip
+            // flushes now under the parent scissor. The subtree's text
+            // then flushes under this clip before it is restored.
             Self::flush_pipelines(render_frame.pass(), ctx.resolution);
+            Self::flush_text(render_frame.pass(), &mut ctx.text_sections);
             let mut frame = frame * ctx.scale;
             frame.origin.clip_positive();
 
@@ -219,6 +222,7 @@ impl UIDrawer {
             }
 
             let clip_rect: Rect<u32> = frame.lossy_convert();
+            let clip_rect = clip_rect.intersection(&parent_scissor);
             scissor(render_frame.pass(), clip_rect);
             ctx.scissor = clip_rect;
         }
@@ -324,8 +328,9 @@ impl UIDrawer {
 
         if clips {
             Self::flush_pipelines(render_frame.pass(), ctx.resolution);
-            scissor(render_frame.pass(), ctx.display);
-            ctx.scissor = ctx.display;
+            Self::flush_text(render_frame.pass(), &mut ctx.text_sections);
+            scissor(render_frame.pass(), parent_scissor);
+            ctx.scissor = parent_scissor;
         }
     }
 

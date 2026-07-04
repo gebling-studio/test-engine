@@ -19,9 +19,10 @@ fn cell_frame(
     cell_width: f32,
     cell_height: f32,
     spacing: f32,
+    header: f32,
 ) -> (f32, f32, f32, f32) {
     let x: f32 = (i % columns).lossy_convert() * (cell_width + spacing);
-    let y: f32 = (i / columns).lossy_convert() * (cell_height + spacing);
+    let y: f32 = (i / columns).lossy_convert() * (cell_height + spacing) + header;
     (x, y, cell_width, cell_height)
 }
 
@@ -34,7 +35,7 @@ impl TableView {
         let cell_width = (width - spacing * (columns - 1).lossy_convert()) / columns.lossy_convert();
 
         let rows: f32 = (number_of_cells.lossy_convert() / columns.lossy_convert()).ceil();
-        let total_height = rows * row_pitch - spacing;
+        let total_height = rows * row_pitch - spacing + self.header_height;
 
         self.scroll.set_content_height(total_height);
         if columns == 1 {
@@ -43,7 +44,8 @@ impl TableView {
 
         let rows_fit: usize = (self.height() / row_pitch).ceil().lossy_convert();
         let offset = self.scroll.get_scroll_content_offset();
-        let first_visible_row: usize = (-offset / row_pitch).floor().lossy_convert();
+        let first_visible_row: usize =
+            ((-offset - self.header_height) / row_pitch).floor().max(0.0).lossy_convert();
         let first_index = first_visible_row * columns;
 
         let mut last_index = first_index + rows_fit * columns + columns * 2;
@@ -56,6 +58,10 @@ impl TableView {
 
         for view in self.scroll.content.subviews() {
             if view.is_hidden() {
+                continue;
+            }
+
+            if self.header_views.iter().any(|h| h.raw() == view.weak().raw()) {
                 continue;
             }
 
@@ -82,9 +88,20 @@ impl TableView {
 
         if matches!(mode, LayoutMode::Resize) {
             for view in weak_table.scroll.content.subviews() {
-                if !view.is_hidden() {
-                    view.set_frame(cell_frame(view.tag(), columns, cell_width, cell_height, spacing));
+                if view.is_hidden() {
+                    continue;
                 }
+                if weak_table.header_views.iter().any(|h| h.raw() == view.weak().raw()) {
+                    continue;
+                }
+                view.set_frame(cell_frame(
+                    view.tag(),
+                    columns,
+                    cell_width,
+                    cell_height,
+                    spacing,
+                    self.header_height,
+                ));
             }
         }
 
@@ -97,7 +114,14 @@ impl TableView {
             let cell = cell.deref_mut();
 
             cell.set_tag(i);
-            cell.set_frame(cell_frame(i, columns, cell_width, cell_height, spacing));
+            cell.set_frame(cell_frame(
+                i,
+                columns,
+                cell_width,
+                cell_height,
+                spacing,
+                self.header_height,
+            ));
 
             cell.as_cell().cell_added();
         }

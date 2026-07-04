@@ -12,7 +12,9 @@ Two clients exist:
 - `inspector` — the GUI. Browses mDNS continuously, lists running apps in a dropdown,
   filters out its own advertisement.
 - `te-inspect` — the CLI, also the interface for AI agents. Install once with
-  `cargo install --path te-inspect`, reinstall after protocol changes. Commands: `apps`,
+  `cargo install --path te-inspect`, reinstall after protocol changes. A serde error like
+  `unknown field 'fit_text'` from any command means the installed CLI is older than the
+  app's protocol, reinstall and retry. Commands: `apps`,
   `tree`, `view`, `ui`, `screenshot`, `edit-rule`, `set-text`, `set-color`, `set-scale`,
   `edits`, `play-sound`. The last discovery is cached in the temp dir, so repeat calls
   connect instantly and fall back to a fresh mDNS browse when the cached address is dead.

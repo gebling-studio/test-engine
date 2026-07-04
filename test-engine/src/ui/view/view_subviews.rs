@@ -5,7 +5,7 @@ use refs::{Own, Weak, weak_from_ref};
 use crate::{
     gm::{LossyConvert, color::Color},
     ui::{
-        Container, DELETED_VIEWS, UIManager, View, ViewData, ViewFrame, WeakView, view::view_callbacks::Setup,
+        Container, DELETED_VIEWS, UIManager, View, ViewData, ViewFrame, WeakView, view::setup::Setup,
     },
 };
 

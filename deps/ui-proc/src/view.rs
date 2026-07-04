@@ -166,6 +166,11 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
                 let mut weak = #root::refs::weak_from_ref(self);
                 weak.on_selection_changed(selected);
             }
+
+            fn __internal_clips_to_bounds(&self) -> bool {
+                use #root::ui::Setup;
+                self.clips_to_bounds()
+            }
         }
 
         impl #impl_generics #root::ui::__ViewIntoUnsizedOwn for #name #ty_generics #where_clause {

@@ -78,6 +78,10 @@ impl ScrollView {
 }
 
 impl Setup for ScrollView {
+    fn clips_to_bounds(&self) -> bool {
+        true
+    }
+
     fn setup(mut self: Weak<Self>) {
         self.content.__base_view().dont_hide_off_screen = true;
         self.content.place().back();
