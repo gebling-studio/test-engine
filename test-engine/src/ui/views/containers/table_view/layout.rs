@@ -38,9 +38,7 @@ impl TableView {
         let total_height = rows * row_pitch - spacing + self.header_height;
 
         self.scroll.set_content_height(total_height);
-        if columns == 1 {
-            self.scroll.set_content_width(width);
-        }
+        self.scroll.set_content_width(width);
 
         let rows_fit: usize = (self.height() / row_pitch).ceil().lossy_convert();
         let offset = self.scroll.get_scroll_content_offset();

@@ -80,7 +80,7 @@ usvg = "0.47"
 wasm-bindgen-futures = "0.4"
 web-time = "1.1"
 wgpu = "30.0"
-wgpu_text = { git = "https://github.com/VladasZ/wgpu-text", rev = "4994e84a4dea64b9419d0506fc82dfb664a326a4" }
+wgpu_text = { git = "https://github.com/VladasZ/wgpu-text", rev = "4a27fb8597dbb077ed65453a20b7891864a6331a" }
 winit = "0.30"
 
 # hreads = { path = "../deps/hreads" }

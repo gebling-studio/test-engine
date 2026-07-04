@@ -79,9 +79,9 @@ Found by the FontZoo emoji page. Parked until a real need.
   atlas and `draw_label`, and invalidates every recorded text expectation in the UI
   tests.
 - Blocks: colorful emoji. Nothing in the driver app today.
-- Also parked: gamma aware text blending in the wgpu_text pipeline. The engine
-  blends glyph coverage in linear space, browsers perceptually, so ports tune
-  weight per text polarity. Perceptual blending would remove that workaround.
+- Landed: gamma aware text blending in the wgpu_text pipeline. On sRGB targets
+  the shader remaps coverage so the linear blend lands on the sRGB space result
+  browsers produce, so ports use nominal font weights on both polarities.
 
 ## Shape edge anti-aliasing
 
