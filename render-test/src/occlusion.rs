@@ -124,6 +124,8 @@ pub(crate) fn render_occlusion(pass: &mut RenderPass) {
             z_position:   0.4,
             flags:        0,
             scale:        1.0,
+            uv_position:  (0, 0).into(),
+            uv_size:      (1, 1).into(),
         },
         UIImages::rb(),
     );

@@ -287,6 +287,7 @@ impl UIDrawer {
                 IMAGE_RECT_DRAWER.get_mut().add_with_image(
                     UIImageInstance::new(
                         image_view.image_frame(),
+                        image_view.uv_rect(),
                         *view.border_color(),
                         view.border_width(),
                         view.corner_radii(),

@@ -153,7 +153,7 @@ impl Texture {
             address_mode_v: AddressMode::Repeat,
             address_mode_w: AddressMode::Repeat,
             mag_filter: FilterMode::Linear,
-            min_filter: FilterMode::Nearest,
+            min_filter: FilterMode::Linear,
             mipmap_filter: MipmapFilterMode::Nearest,
             ..Default::default()
         });

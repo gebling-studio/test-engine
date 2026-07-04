@@ -107,25 +107,6 @@ impl Rect<f32> {
         }
     }
 
-    pub(crate) fn fill_aspect_ratio(&self, target_size: Size) -> Rect {
-        let scale_x = self.size.width / target_size.width;
-        let scale_y = self.size.height / target_size.height;
-        let scale = scale_x.max(scale_y);
-
-        let new_width = target_size.width * scale;
-        let new_height = target_size.height * scale;
-
-        let x = self.origin.x + (self.size.width - new_width) / 2.0;
-        let y = self.origin.y + (self.size.height - new_height) / 2.0;
-
-        Rect {
-            origin: Point { x, y },
-            size:   Size {
-                width:  new_width,
-                height: new_height,
-            },
-        }
-    }
 }
 
 impl Rect<u32> {

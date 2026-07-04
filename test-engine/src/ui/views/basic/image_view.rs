@@ -56,15 +56,33 @@ impl ImageView {
 
     pub(crate) fn image_frame(&self) -> Rect {
         match self.mode {
-            ImageMode::Fill => *self.absolute_frame(),
+            ImageMode::Fill | ImageMode::AspectFill => *self.absolute_frame(),
             ImageMode::AspectFit => self.absolute_frame().fit_aspect_ratio(self.image.size.into()),
-            ImageMode::AspectFill => self.absolute_frame().fill_aspect_ratio(self.image.size.into()),
+        }
+    }
+
+    /// Texture subrect in 0..1 UV space. AspectFill keeps the quad at the
+    /// view frame and crops here instead of enlarging the quad, so corner
+    /// radii apply to the visible rect and no scissor is needed.
+    pub(crate) fn uv_rect(&self) -> Rect {
+        match self.mode {
+            ImageMode::Fill | ImageMode::AspectFit => (0, 0, 1, 1).into(),
+            ImageMode::AspectFill => {
+                let frame = self.frame().size;
+                let image: crate::gm::flat::Size = self.image.size.into();
+                let scale = f32::max(frame.width / image.width, frame.height / image.height);
+                let uv_width = frame.width / (image.width * scale);
+                let uv_height = frame.height / (image.height * scale);
+                (
+                    (1.0 - uv_width) / 2.0,
+                    (1.0 - uv_height) / 2.0,
+                    uv_width,
+                    uv_height,
+                )
+                    .into()
+            }
         }
     }
 }
 
-impl Setup for ImageView {
-    fn clips_to_bounds(&self) -> bool {
-        matches!(self.mode, ImageMode::AspectFill)
-    }
-}
+impl Setup for ImageView {}
