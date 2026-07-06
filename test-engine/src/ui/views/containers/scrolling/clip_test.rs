@@ -7,9 +7,7 @@ use refs::Weak;
 use crate::{
     self as test_engine,
     gm::color::{BROWN, Color, GRAY_BLUE, GREEN, LIGHT_BLUE, ORANGE, PURPLE, RED, TURQUOISE, WHITE, YELLOW},
-    ui::{
-        ImageView, Label, ScrollView, Setup, ViewData, ViewFrame, ViewSubviews, ViewTest, view_test,
-    },
+    ui::{ImageView, Label, ScrollView, Setup, ViewData, ViewFrame, ViewSubviews, ViewTest, view_test},
     ui_test::{check_colors, inject_scroll, inject_touches, set_record_probe_count},
 };
 

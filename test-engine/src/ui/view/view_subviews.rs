@@ -4,9 +4,7 @@ use refs::{Own, Weak, weak_from_ref};
 
 use crate::{
     gm::{LossyConvert, color::Color},
-    ui::{
-        Container, DELETED_VIEWS, UIManager, View, ViewData, ViewFrame, WeakView, view::setup::Setup,
-    },
+    ui::{Container, DELETED_VIEWS, UIManager, View, ViewData, ViewFrame, WeakView, view::setup::Setup},
 };
 
 pub trait ViewSubviews {

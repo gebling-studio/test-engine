@@ -106,7 +106,6 @@ impl Rect<f32> {
             },
         }
     }
-
 }
 
 impl Rect<u32> {
