@@ -221,6 +221,13 @@ impl UIDrawer {
                 frame.size.height -= frame.max_y() - ctx.resolution.height;
             }
 
+            // A clip view fully past the right or bottom edge drives these
+            // subtractions negative. Converting a negative Rect to Rect<u32>
+            // panics, so clamp the clipped size to an empty rect instead.
+            // max(0.0) also turns a NaN size into 0.
+            frame.size.width = frame.size.width.max(0.0);
+            frame.size.height = frame.size.height.max(0.0);
+
             let clip_rect: Rect<u32> = frame.lossy_convert();
             let clip_rect = clip_rect.intersection(&parent_scissor);
             scissor(render_frame.pass(), clip_rect);

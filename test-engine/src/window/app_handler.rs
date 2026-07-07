@@ -1,6 +1,9 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::{
+    process::exit,
+    sync::atomic::{AtomicBool, Ordering},
+};
 
-use log::debug;
+use log::{debug, error};
 use plat::Platform;
 use refs::main_lock::MainLock;
 use winit::{
@@ -74,7 +77,14 @@ impl AppHandler {
 
         let handler = handler.as_mut().expect("Failed to get handler");
 
-        let window = hreads::unasync(Window::create_headless(size));
+        let window = match hreads::unasync(Window::create_headless(size)) {
+            Ok(window) => window,
+            Err(err) => {
+                error!("Fatal: could not create headless window: {err:?}");
+                eprintln!("Fatal: could not create headless window: {err:?}");
+                exit(1);
+            }
+        };
 
         handler.state = AppHandlerState::Ready(window);
         handler.te_window_events.window_ready();
@@ -133,7 +143,16 @@ impl ApplicationHandler<Window> for AppHandler {
                 window.inner_size()
             };
 
-            hreads::block_on(Window::start_internal(render_size, window, proxy));
+            hreads::block_on(async move {
+                if let Err(err) = Window::start_internal(render_size, window, proxy).await {
+                    // fern logging can be swallowed on iOS, so also print to stderr.
+                    // Exit instead of panicking. A panic here unwinds across the
+                    // Objective-C run loop and turns into an opaque EXC_BAD_ACCESS.
+                    error!("Fatal: could not start engine window: {err:?}");
+                    eprintln!("Fatal: could not start engine window: {err:?}");
+                    exit(1);
+                }
+            });
         }
     }
 

@@ -61,7 +61,7 @@ impl ImageView {
         }
     }
 
-    /// Texture subrect in 0..1 UV space. AspectFill keeps the quad at the
+    /// Texture subrect in 0..1 UV space. `AspectFill` keeps the quad at the
     /// view frame and crops here instead of enlarging the quad, so corner
     /// radii apply to the visible rect and no scissor is needed.
     pub(crate) fn uv_rect(&self) -> Rect {

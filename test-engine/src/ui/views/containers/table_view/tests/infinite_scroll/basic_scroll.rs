@@ -7,10 +7,9 @@ use crate::{
     ui_test::{check_colors, inject_scroll, inject_touches},
 };
 
-pub(super) fn test_basic_scroll(mut view: Weak<InfiniteScrollTest>) -> Result<()> {
-    fn initial_check() -> Result<()> {
-        check_colors(
-            r"
+fn initial_check() -> Result<()> {
+    check_colors(
+        r"
                 80    4 -  89 124 149
                 220    4 -  89 124 149
                 448    4 -  89 124 149
@@ -44,9 +43,10 @@ pub(super) fn test_basic_scroll(mut view: Weak<InfiniteScrollTest>) -> Result<()
                 588  476 -   0   0   0
                 148  592 -  89 124 149
             ",
-        )
-    }
+    )
+}
 
+pub(super) fn test_basic_scroll(mut view: Weak<InfiniteScrollTest>) -> Result<()> {
     initial_check()?;
 
     inject_touches(

@@ -103,7 +103,7 @@ impl TableView {
     }
 
     /// The view lives in the scroll content above the cells and scrolls
-    /// away with them. Lay it out with place() rules, they are relative
+    /// away with them. Lay it out with `place()` rules, they are relative
     /// to the content top.
     pub fn add_header_view<T: View + Default + 'static>(&mut self) -> Weak<T> {
         let view = self.scroll.add_view::<T>();
