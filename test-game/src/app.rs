@@ -1,21 +1,20 @@
-#![allow(dead_code)]
-
 use test_engine::{
     App, Window,
     refs::Own,
-    ui::{Button, Label, Setup, Size, View},
+    ui::{Button, Setup, Size, View},
 };
+#[cfg(not_wasm)]
+use test_engine::{PinnedFuture, net::SecretsManager};
 
 #[cfg(feature = "bench")]
-use crate::interface::test_game_view::UIBenchmarkView;
-use crate::interface::{loading_view::LoadingView, test_game_view::BUTTON};
+use crate::interface::dev::UIBenchmarkView;
+use crate::interface::{BUTTON, loading_view::LoadingView};
 
 #[cfg(not_wasm)]
-async fn secrets() -> anyhow::Result<&'static test_engine::net::SecretsManager> {
+async fn secrets() -> anyhow::Result<&'static SecretsManager> {
     use std::env::var;
 
     use anyhow::Context;
-    use test_engine::net::SecretsManager;
     use tokio::sync::OnceCell;
 
     static SECRETS: OnceCell<SecretsManager> = OnceCell::const_new();
@@ -44,7 +43,6 @@ pub struct TestGameApp;
 impl App for TestGameApp {
     fn before_launch(&self) {
         BUTTON.apply_globally::<Button>();
-        BUTTON.apply_globally::<Label>();
     }
 
     fn after_launch(&self) {
@@ -53,10 +51,16 @@ impl App for TestGameApp {
 
     fn make_root_view(&self) -> Own<dyn View> {
         #[cfg(feature = "bench")]
-        if std::env::var("UI_BENCHMARK").is_ok() {
-            let force = std::env::args().any(|arg| arg == "--no-guard");
-            crate::interface::test_game_view::guard_benchmark(force);
-            return UIBenchmarkView::new();
+        {
+            use std::env::{args, var};
+
+            use crate::interface::dev::guard_benchmark;
+
+            if var("UI_BENCHMARK").is_ok() {
+                let force = args().any(|arg| arg == "--no-guard");
+                guard_benchmark(force);
+                return UIBenchmarkView::new();
+            }
         }
         LoadingView::new()
     }
@@ -66,7 +70,7 @@ impl App for TestGameApp {
     }
 
     #[cfg(not_wasm)]
-    fn sentry_url(&self) -> test_engine::PinnedFuture<String> {
+    fn sentry_url(&self) -> PinnedFuture<String> {
         Box::pin(async {
             dotenvy::dotenv()?;
             let url = secrets().await?.get("SENTRY_URL").await?;

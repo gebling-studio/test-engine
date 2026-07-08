@@ -13,7 +13,7 @@ use test_engine::{
 };
 
 use crate::{
-    interface::{polygon_view::PolygonView, test_game_view::HAS_BACK_BUTTON},
+    interface::{HAS_BACK_BUTTON, polygon_view::PolygonView},
     levels::NoiseLevel,
 };
 

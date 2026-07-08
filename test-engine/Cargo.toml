@@ -84,3 +84,6 @@ rfd = { workspace = true }
 
 [build-dependencies]
 plat = { workspace = true }
+
+[lints]
+workspace = true

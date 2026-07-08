@@ -28,20 +28,6 @@ impl<T> Node<T> {
         }
     }
 
-    pub fn retain(&mut self, mut predicate: impl FnMut(&T) -> bool + Copy) {
-        self.leaves.retain(|node| predicate(&node.value));
-
-        for leaf in &mut self.leaves {
-            leaf.retain(predicate);
-        }
-    }
-
-    pub fn open(mut self) -> Self {
-        self.open = true;
-        self.update_indices(0, 0);
-        self
-    }
-
     pub fn is_leaf(&self) -> bool {
         self.leaves.is_empty()
     }
@@ -108,7 +94,7 @@ impl<T> Iterator for Node<T> {
 
 #[cfg(test)]
 mod test {
-    use crate::interface::test_game_view::Node;
+    use crate::interface::dev::Node;
 
     #[test]
     fn test_node() {

@@ -17,3 +17,6 @@ tokio = { workspace = true }
 
 mdns-sd = { workspace = true }
 refs = { workspace = true }
+
+[lints]
+workspace = true

@@ -7,7 +7,7 @@ use test_engine::{
     ui_test::check_colors,
 };
 
-use crate::interface::test_game_view::HAS_BACK_BUTTON;
+use crate::interface::HAS_BACK_BUTTON;
 
 const CORNER_STYLE: Style = Style::new(|v| {
     v.set_color(LIGHT_BLUE).place().size(80, 80);

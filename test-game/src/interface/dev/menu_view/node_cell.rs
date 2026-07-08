@@ -4,7 +4,7 @@ use test_engine::{
     ui::{Anchor::Left, Button, Label, TextAlignment, UIImages, ViewData, view},
 };
 
-use crate::interface::test_game_view::{MenuEntry, Node};
+use crate::interface::dev::{MenuEntry, Node};
 
 #[view]
 pub struct NodeCell {

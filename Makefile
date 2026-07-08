@@ -43,33 +43,11 @@ ios-debug:
 	rm -f ./target/universal/release/libtest_game.a
 	cp ./target/universal/debug/libtest_game.a ./target/universal/release/libtest_game.a
 
-CLIPPY_FLAGS = -- \
-      \
-      -W clippy::all \
-      -W clippy::pedantic \
-      \
-      -A clippy::module_name_repetitions \
-      -A clippy::explicit_deref_methods \
-      -A clippy::missing_panics_doc \
-      -A clippy::missing_errors_doc \
-      -A clippy::missing_safety_doc \
-      -A clippy::format_push_string \
-      -A clippy::new_without_default \
-      -A clippy::must_use_candidate \
-      -A clippy::module_inception \
-      -A clippy::needless_pass_by_value \
-      -A clippy::unnecessary_box_returns \
-      -A clippy::return_self_not_must_use \
-      -A clippy::struct_field_names \
-      -A clippy::manual_assert
-
 fix-lint:
-	cargo clippy --fix --allow-dirty --allow-staged $(CLIPPY_FLAGS)
+	cargo clippy --fix --allow-dirty --allow-staged --workspace --all-targets
 
 lint:
-	cargo clippy -p test-game -p inspector -p te-inspect $(CLIPPY_FLAGS) \
-      \
-      -D warnings
+	cargo clippy --workspace --all-targets -- -D warnings
 
 serve:
 	rustup target add wasm32-unknown-unknown

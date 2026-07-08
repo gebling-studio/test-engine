@@ -9,7 +9,7 @@ use test_engine::{
     },
 };
 
-use crate::interface::test_game_view::HAS_BACK_BUTTON;
+use crate::interface::HAS_BACK_BUTTON;
 
 #[view]
 pub struct PolygonView {

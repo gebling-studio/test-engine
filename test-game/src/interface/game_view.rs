@@ -8,7 +8,7 @@ use test_engine::{
     ui_test::check_colors,
 };
 
-use crate::interface::test_game_view::HAS_BACK_BUTTON;
+use crate::interface::HAS_BACK_BUTTON;
 
 #[view_test]
 pub struct GameView {

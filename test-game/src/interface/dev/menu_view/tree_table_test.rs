@@ -10,7 +10,7 @@ use test_engine::{
     ui_test::{inject_touches, inject_touches_delayed},
 };
 
-use crate::interface::test_game_view::{MenuEntry, Node, NodeCell};
+use crate::interface::dev::{MenuEntry, Node, NodeCell};
 
 static DATA: Mutex<String> = Mutex::new(String::new());
 

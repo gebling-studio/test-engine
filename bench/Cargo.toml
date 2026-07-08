@@ -7,3 +7,6 @@ version.workspace = true
 anyhow = { workspace = true }
 chrono = { workspace = true }
 serde_json = { workspace = true }
+
+[lints]
+workspace = true
