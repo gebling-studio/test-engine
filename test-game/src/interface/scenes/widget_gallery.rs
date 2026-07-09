@@ -1,42 +1,38 @@
 use test_engine::{
-    refs::{Weak, manage::DataManager},
+    refs::Weak,
     ui::{
-        Alert, Button, CheckBox, Container, DropDown, Font, Label, NumberView, ProgressView, Setup, Spinner,
-        Switch, TextAlignment, TextField, ViewData, ViewSubviews, WHITE, view,
+        Alert, Button, CheckBox, Container, DropDown, Label, NumberView, ProgressView, ScrollView, Setup,
+        Spinner, Switch, TextAlignment, TextField, ViewData, ViewSubviews, WHITE, view,
     },
 };
 
 use crate::interface::{
     palette::{ACCENT, BG, BORDER, SURFACE, TEXT, TEXT_DIM},
-    scenes::add_back_button,
+    scenes::{HEADER_HEIGHT, add_header},
 };
 
 /// A wrapped grid of tiles, one widget per tile with a caption, so every
-/// common control can be seen and poked in one place.
+/// common control can be seen and poked in one place. The grid scrolls,
+/// so every tile stays reachable on small screens.
 #[view]
 pub struct WidgetGallery {
+    grid: Weak<Container>,
+
     #[init]
-    title: Label,
-    grid:  Container,
+    scroll: ScrollView,
 }
 
 impl Setup for WidgetGallery {
-    fn setup(self: Weak<Self>) {
+    fn setup(mut self: Weak<Self>) {
         self.set_color(BG);
 
-        self.title
-            .set_text("Widget Gallery")
-            .set_text_color(TEXT)
-            .set_text_size(22)
-            .set_font(Font::get("RussoOne-Regular.ttf"))
-            .set_alignment(TextAlignment::Center);
-        self.title.place().t(20).center_x().w(320).h(34);
-
-        self.grid.place().t(72).lr(20).all(14).all_wrap();
+        self.scroll.place().t(HEADER_HEIGHT).lrb(0);
+        self.grid = self.scroll.add_view::<Container>();
+        self.grid.place().t(16).lr(20).all(14).all_wrap();
 
         self.add_widgets();
 
-        add_back_button(self);
+        add_header(self, "Widget Gallery");
     }
 }
 
@@ -77,9 +73,8 @@ impl WidgetGallery {
             .center_x()
             .size(46, 46);
 
-        let mut toggle = self.tile("Switch").add_view::<Switch>();
-        toggle.set_off_color(BORDER.light);
-        toggle.place().t(52).center_x().size(84, 40);
+        let toggle = self.tile("Switch").add_view::<Switch>();
+        toggle.place().t(52).center_x().size(72, 40);
 
         self.tile("ProgressView")
             .add_view::<ProgressView>()

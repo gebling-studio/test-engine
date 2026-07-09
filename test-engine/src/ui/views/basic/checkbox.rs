@@ -34,7 +34,7 @@ impl CheckBox {
         self
     }
 
-    pub(crate) fn set_on(&mut self, on: bool) {
+    pub fn set_on(&mut self, on: bool) {
         self.dot.set_hidden(!on);
         self.on = on;
     }

@@ -22,10 +22,22 @@ impl Setup for ImageView {
 }
 
 pub async fn test_image_view() -> Result<()> {
-    let mut view = UITest::start::<ImageView>();
+    let view = UITest::start::<ImageView>();
 
+    check_gradient()?;
+    check_resized_gradient(view)?;
+    check_cat_with_debug_frames(view)?;
+    check_aspect_fit(view)?;
+    check_tall_aspect_fit(view)?;
+
+    from_main(UIManager::disable_debug_frames);
+
+    Ok(())
+}
+
+fn check_gradient() -> Result<()> {
     check_colors(
-        r#"
+        r"
             108  104 - 113 242  74
             248  104 -  52 118 131
             280  104 -  39  90 156
@@ -58,15 +70,19 @@ pub async fn test_image_view() -> Result<()> {
             340  376 - 246 220  74
             368  376 - 250 244  81
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_resized_gradient(view: Weak<ImageView>) -> Result<()> {
     from_main(move || {
         view.image_view.place().clear().tl(100).size(400, 400);
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             104  104 - 116 248  75
             164  104 -  97 210  73
@@ -99,9 +115,13 @@ pub async fn test_image_view() -> Result<()> {
             340  496 - 238 158  56
             400  496 - 243 194  66
             440  496 - 246 218  73
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_cat_with_debug_frames(view: Weak<ImageView>) -> Result<()> {
     from_main(move || {
         UIManager::enable_debug_frames();
         view.image_view.place().clear().tl(140).size(280, 200);
@@ -109,7 +129,7 @@ pub async fn test_image_view() -> Result<()> {
     });
 
     check_colors(
-        r#"
+        r"
             592    4 -  89 124 149
             144  144 - 235 198 205
             276  144 - 225 185 186
@@ -142,16 +162,20 @@ pub async fn test_image_view() -> Result<()> {
             4  592 -  89 124 149
             256  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_aspect_fit(mut view: Weak<ImageView>) -> Result<()> {
     from_main(move || {
         view.image_view.mode = ImageMode::AspectFit;
         view.image_view.place().clear().tl(140).size(280, 200);
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             592    4 -  89 124 149
             212  144 - 235 198 205
@@ -184,15 +208,19 @@ pub async fn test_image_view() -> Result<()> {
             4  592 -  89 124 149
             256  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_tall_aspect_fit(view: Weak<ImageView>) -> Result<()> {
     from_main(move || {
         view.image_view.place().clear().tl(140).size(100, 400);
     });
 
     check_colors(
-        r#"
+        r"
             288    4 -  89 124 149
             592    4 -  89 124 149
             4   24 -  89 124 149
@@ -225,10 +253,8 @@ pub async fn test_image_view() -> Result<()> {
             4  592 -  89 124 149
             364  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
-
-    from_main(|| UIManager::disable_debug_frames());
 
     Ok(())
 }

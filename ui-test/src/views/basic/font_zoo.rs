@@ -96,8 +96,16 @@ impl ViewTest for FontZoo {
     fn perform_test(view: Weak<Self>) -> Result<()> {
         set_record_probe_count(160);
 
-        check_colors(
-            r"
+        latin_page()?;
+        cyrillic_cjk_page(view)?;
+        emoji_page(view)?;
+
+        Ok(())
+    }
+}
+
+// Probe tables live in consts to keep every fn under the clippy line limit.
+const LATIN_COLORS: &str = r"
                4    4 -  89 124 149
              308    4 -  89 124 149
              440    4 -  89 124 149
@@ -258,15 +266,13 @@ impl ViewTest for FontZoo {
              372  592 -  89 124 149
              432  592 -  89 124 149
              592  592 -  89 124 149
-            ",
-        )?;
+            ";
 
-        from_main(move || {
-            view.set_page(1);
-        });
+fn latin_page() -> Result<()> {
+    check_colors(LATIN_COLORS)
+}
 
-        check_colors(
-            r"
+const CYRILLIC_CJK_COLORS: &str = r"
                4    4 -  89 124 149
              284    4 -  89 124 149
              356    4 -  89 124 149
@@ -427,15 +433,17 @@ impl ViewTest for FontZoo {
              292  592 -  89 124 149
              448  592 -  89 124 149
              592  592 -  89 124 149
-            ",
-        )?;
+            ";
 
-        from_main(move || {
-            view.set_page(2);
-        });
+fn cyrillic_cjk_page(view: Weak<FontZoo>) -> Result<()> {
+    from_main(move || {
+        view.set_page(1);
+    });
 
-        check_colors(
-            r"
+    check_colors(CYRILLIC_CJK_COLORS)
+}
+
+const EMOJI_COLORS: &str = r"
                4    4 -  89 124 149
              112    4 -  89 124 149
              428    4 -  89 124 149
@@ -596,11 +604,14 @@ impl ViewTest for FontZoo {
              332  592 -  89 124 149
              432  592 -  89 124 149
              592  592 -  89 124 149
-            ",
-        )?;
+            ";
 
-        Ok(())
-    }
+fn emoji_page(view: Weak<FontZoo>) -> Result<()> {
+    from_main(move || {
+        view.set_page(2);
+    });
+
+    check_colors(EMOJI_COLORS)
 }
 
 pub async fn test_font_zoo() -> Result<()> {

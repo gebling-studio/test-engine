@@ -1,5 +1,3 @@
-#![allow(clippy::float_cmp)]
-
 use anyhow::Result;
 use hreads::from_main;
 use refs::Weak;

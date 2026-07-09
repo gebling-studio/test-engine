@@ -28,8 +28,19 @@ impl Setup for CenterField {
 pub async fn test_center_field() -> anyhow::Result<()> {
     let view = UITest::start::<CenterField>();
 
+    check_initial_layout()?;
+    check_all_sides_200(view)?;
+    check_max_width(view)?;
+    check_all_sides_100(view)?;
+    check_center_x(view)?;
+    check_center_y_offset(view)?;
+
+    Ok(())
+}
+
+fn check_initial_layout() -> anyhow::Result<()> {
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             592    4 -  89 124 149
             300   96 -  89 124 149
@@ -62,15 +73,19 @@ pub async fn test_center_field() -> anyhow::Result<()> {
             304  592 -  89 124 149
             448  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_all_sides_200(view: Weak<CenterField>) -> anyhow::Result<()> {
     from_main(move || {
         view.container.place().clear().all_sides(200);
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             208    4 -  89 124 149
             592    4 -  89 124 149
@@ -103,16 +118,20 @@ pub async fn test_center_field() -> anyhow::Result<()> {
             4  592 -  89 124 149
             388  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_max_width(view: Weak<CenterField>) -> anyhow::Result<()> {
     from_main(move || {
         view.container.place().clear().all_sides(250);
         view.field.place().max_width(200);
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             252    4 -  89 124 149
             592    4 -  89 124 149
@@ -145,15 +164,19 @@ pub async fn test_center_field() -> anyhow::Result<()> {
             4  592 -  89 124 149
             280  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_all_sides_100(view: Weak<CenterField>) -> anyhow::Result<()> {
     from_main(move || {
         view.container.place().clear().all_sides(100);
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             432    4 -  89 124 149
             592    4 -  89 124 149
@@ -186,15 +209,19 @@ pub async fn test_center_field() -> anyhow::Result<()> {
             180  592 -  89 124 149
             304  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_center_x(view: Weak<CenterField>) -> anyhow::Result<()> {
     from_main(move || {
         view.field.place().center_x();
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             140    4 -  89 124 149
             592    4 -  89 124 149
@@ -227,15 +254,19 @@ pub async fn test_center_field() -> anyhow::Result<()> {
             224  592 -  89 124 149
             432  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_center_y_offset(view: Weak<CenterField>) -> anyhow::Result<()> {
     from_main(move || {
         view.field.place().center_y_offset(-50);
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             192    4 -  89 124 149
             428    4 -  89 124 149
@@ -268,7 +299,7 @@ pub async fn test_center_field() -> anyhow::Result<()> {
             224  592 -  89 124 149
             432  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

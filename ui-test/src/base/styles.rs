@@ -45,7 +45,7 @@ pub async fn test_styles() -> Result<()> {
     UITest::start::<Styles>();
 
     check_colors(
-        r#"
+        r"
             592    4 -  89 124 149
             92   80 -  75 129 244
             248   92 - 255 203   0
@@ -78,7 +78,7 @@ pub async fn test_styles() -> Result<()> {
             148  592 -  89 124 149
             352  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

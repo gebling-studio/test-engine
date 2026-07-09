@@ -75,11 +75,9 @@ impl TableData for LabelImage {
     }
 }
 
-pub async fn test_label_image() -> Result<()> {
-    let mut view = UITest::start::<LabelImage>();
-
+fn check_initial_images() -> Result<()> {
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             156   52 - 236 197 202
             316   52 - 222 182 183
@@ -112,16 +110,18 @@ pub async fn test_label_image() -> Result<()> {
             84  468 - 255 255 255
             224  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn check_label_resizing_image(mut view: Weak<LabelImage>) -> Result<()> {
     from_main(move || {
         view.label.set_resizing_image("button");
         view.label.set_text_color(WHITE);
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             592    4 -  89 124 149
             312   52 -   0  59 161
@@ -154,11 +154,11 @@ pub async fn test_label_image() -> Result<()> {
             312  476 - 229 195 186
             376  476 - 210 172 153
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             592    4 -  89 124 149
             312   52 -   0  59 161
@@ -191,16 +191,18 @@ pub async fn test_label_image() -> Result<()> {
             312  476 - 229 195 186
             376  476 - 210 172 153
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn check_cells_resizing_image(mut view: Weak<LabelImage>) -> Result<()> {
     from_main(move || {
         view.resizing_image = true;
         view.table_view.reload_data();
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             592    4 -  89 124 149
             312   52 -   0  59 161
@@ -233,8 +235,16 @@ pub async fn test_label_image() -> Result<()> {
             376  476 - 210 172 153
             52  488 -   0 218 255
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
+
+pub async fn test_label_image() -> Result<()> {
+    let view = UITest::start::<LabelImage>();
+
+    check_initial_images()?;
+    check_label_resizing_image(view)?;
+    check_cells_resizing_image(view)?;
 
     Ok(())
 }

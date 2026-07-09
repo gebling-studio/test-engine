@@ -43,20 +43,19 @@ impl Setup for ThemeSwitch {
     }
 }
 
-impl ViewTest for ThemeSwitch {
-    fn perform_test(view: Weak<Self>) -> Result<()> {
-        // In human mode the OS theme may be dark. Start from a known state.
-        from_main(move || {
-            Theme::set_mode(ThemeMode::System);
-            Theme::set_system(Theme::Light);
-            let mut this = view;
-            this.switches.clear();
-        });
+fn check_initial_light_theme(view: Weak<ThemeSwitch>) -> Result<()> {
+    // In human mode the OS theme may be dark. Start from a known state.
+    from_main(move || {
+        Theme::set_mode(ThemeMode::System);
+        Theme::set_system(Theme::Light);
+        let mut this = view;
+        this.switches.clear();
+    });
 
-        wait_for_next_frame();
+    wait_for_next_frame();
 
-        check_colors(
-            r"
+    check_colors(
+        r"
              592    4 -  89 124 149
               88   24 -   0   0 231
              148   24 -   0   0 231
@@ -90,21 +89,25 @@ impl ViewTest for ThemeSwitch {
                4  592 -  89 124 149
              592  592 -  89 124 149
             ",
-        )?;
+    )?;
 
-        from_main(move || {
-            assert_eq!(Theme::current(), Theme::Light);
-            assert_eq!(*view.themed.color(), WHITE);
-            assert_eq!(*view.themed.border_color(), BLUE);
-            assert_eq!(*view.label.text_color(), BLACK);
-            assert_eq!(*view.plain.color(), RED);
-        });
+    from_main(move || {
+        assert_eq!(Theme::current(), Theme::Light);
+        assert_eq!(*view.themed.color(), WHITE);
+        assert_eq!(*view.themed.border_color(), BLUE);
+        assert_eq!(*view.label.text_color(), BLACK);
+        assert_eq!(*view.plain.color(), RED);
+    });
 
-        from_main(|| Theme::set_system(Theme::Dark));
-        wait_for_next_frame();
+    Ok(())
+}
 
-        check_colors(
-            r"
+fn check_dark_theme(view: Weak<ThemeSwitch>) -> Result<()> {
+    from_main(|| Theme::set_system(Theme::Dark));
+    wait_for_next_frame();
+
+    check_colors(
+        r"
              580    4 -  89 124 149
               24   24 - 255 255   0
              152   24 - 255 255   0
@@ -138,38 +141,44 @@ impl ViewTest for ThemeSwitch {
              440  592 -  89 124 149
              592  592 -  89 124 149
             ",
-        )?;
+    )?;
 
-        from_main(move || {
-            assert_eq!(Theme::current(), Theme::Dark);
-            assert_eq!(*view.themed.color(), BACKGROUND.dark);
-            assert_eq!(*view.themed.border_color(), YELLOW);
-            assert_eq!(*view.label.text_color(), WHITE);
-            assert_eq!(*view.plain.color(), RED);
-            assert_eq!(view.switches, vec![Theme::Dark]);
-        });
+    from_main(move || {
+        assert_eq!(Theme::current(), Theme::Dark);
+        assert_eq!(*view.themed.color(), BACKGROUND.dark);
+        assert_eq!(*view.themed.border_color(), YELLOW);
+        assert_eq!(*view.label.text_color(), WHITE);
+        assert_eq!(*view.plain.color(), RED);
+        assert_eq!(view.switches, vec![Theme::Dark]);
+    });
 
-        // A view created while dark resolves against the dark theme.
-        from_main(move || {
-            let mut this = view;
-            let added = this.add_view::<Container>();
-            added.set_color(BACKGROUND);
-            added.place().t(140).l(240).size(100, 100);
-            this.added = added;
-        });
+    Ok(())
+}
 
-        wait_for_next_frame();
+// A view created while dark resolves against the dark theme.
+fn check_view_added_in_dark(view: Weak<ThemeSwitch>) {
+    from_main(move || {
+        let mut this = view;
+        let added = this.add_view::<Container>();
+        added.set_color(BACKGROUND);
+        added.place().t(140).l(240).size(100, 100);
+        this.added = added;
+    });
 
-        from_main(move || {
-            assert_eq!(*view.added.color(), BACKGROUND.dark);
-        });
+    wait_for_next_frame();
 
-        // Forced light wins over the dark system theme.
-        from_main(|| Theme::set_mode(ThemeMode::Light));
-        wait_for_next_frame();
+    from_main(move || {
+        assert_eq!(*view.added.color(), BACKGROUND.dark);
+    });
+}
 
-        check_colors(
-            r"
+// Forced light wins over the dark system theme.
+fn check_forced_light(view: Weak<ThemeSwitch>) -> Result<()> {
+    from_main(|| Theme::set_mode(ThemeMode::Light));
+    wait_for_next_frame();
+
+    check_colors(
+        r"
              496    4 -  89 124 149
               88   24 -   0   0 231
              288   24 - 255   0   0
@@ -203,32 +212,45 @@ impl ViewTest for ThemeSwitch {
                4  592 -  89 124 149
              592  592 -  89 124 149
             ",
-        )?;
+    )?;
 
-        from_main(move || {
-            assert_eq!(Theme::current(), Theme::Light);
-            assert_eq!(*view.themed.color(), WHITE);
-            assert_eq!(*view.themed.border_color(), BLUE);
-            assert_eq!(*view.label.text_color(), BLACK);
-            assert_eq!(*view.added.color(), WHITE);
-            assert_eq!(view.switches, vec![Theme::Dark, Theme::Light]);
-        });
+    from_main(move || {
+        assert_eq!(Theme::current(), Theme::Light);
+        assert_eq!(*view.themed.color(), WHITE);
+        assert_eq!(*view.themed.border_color(), BLUE);
+        assert_eq!(*view.label.text_color(), BLACK);
+        assert_eq!(*view.added.color(), WHITE);
+        assert_eq!(view.switches, vec![Theme::Dark, Theme::Light]);
+    });
 
-        // Back to following the system, which is still dark.
-        from_main(|| Theme::set_mode(ThemeMode::System));
-        wait_for_next_frame();
+    Ok(())
+}
 
-        from_main(move || {
-            assert_eq!(Theme::current(), Theme::Dark);
-            assert_eq!(*view.themed.color(), BACKGROUND.dark);
-            assert_eq!(view.switches, vec![Theme::Dark, Theme::Light, Theme::Dark]);
-        });
+// Back to following the system, which is still dark.
+fn check_back_to_system(view: Weak<ThemeSwitch>) {
+    from_main(|| Theme::set_mode(ThemeMode::System));
+    wait_for_next_frame();
 
-        // Leave the default state for the tests that follow.
-        from_main(|| {
-            Theme::set_system(Theme::Light);
-            assert_eq!(Theme::current(), Theme::Light);
-        });
+    from_main(move || {
+        assert_eq!(Theme::current(), Theme::Dark);
+        assert_eq!(*view.themed.color(), BACKGROUND.dark);
+        assert_eq!(view.switches, vec![Theme::Dark, Theme::Light, Theme::Dark]);
+    });
+
+    // Leave the default state for the tests that follow.
+    from_main(|| {
+        Theme::set_system(Theme::Light);
+        assert_eq!(Theme::current(), Theme::Light);
+    });
+}
+
+impl ViewTest for ThemeSwitch {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        check_initial_light_theme(view)?;
+        check_dark_theme(view)?;
+        check_view_added_in_dark(view);
+        check_forced_light(view)?;
+        check_back_to_system(view);
 
         Ok(())
     }

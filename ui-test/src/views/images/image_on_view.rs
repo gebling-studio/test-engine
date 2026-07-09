@@ -27,7 +27,7 @@ pub async fn test_image_on_view() -> Result<()> {
     UITest::start::<ImageOnView>();
 
     check_colors(
-        r#"
+        r"
             416    4 -  89 124 149
             592    4 -  89 124 149
             104  104 -   0 255   0
@@ -60,7 +60,7 @@ pub async fn test_image_on_view() -> Result<()> {
             4  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

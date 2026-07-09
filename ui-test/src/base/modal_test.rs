@@ -23,11 +23,11 @@ impl Setup for ShowModally {
             } else {
                 view = self.add_view::<Container>();
                 view.set_color(Color::random()).place().tl(1).size(400, 400);
-                assert_eq!(view.z_position(), 0.49_996_987);
+                assert!((view.z_position() - 0.499_969_87).abs() < f32::EPSILON);
             }
         }
 
-        assert_eq!(view.z_position(), 0.49_797_717);
+        assert!((view.z_position() - 0.497_977_17).abs() < f32::EPSILON);
     }
 }
 
@@ -64,7 +64,7 @@ pub async fn test_modal() -> Result<()> {
     Modal::show_modally_with_input((), |()| {});
 
     check_colors(
-        r#"
+        r"
             592    4 -  89 124 149
             104  104 - 255 255 255
             432  104 - 255 255 255
@@ -97,7 +97,7 @@ pub async fn test_modal() -> Result<()> {
             4  592 -  89 124 149
             260  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

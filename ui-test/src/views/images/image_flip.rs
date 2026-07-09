@@ -35,7 +35,7 @@ pub async fn test_image_flip() -> Result<()> {
     let _view = UITest::start::<ImageFlip>();
 
     check_colors(
-        r#"
+        r"
             592    4 -  89 124 149
             52   52 - 234 199 205
             180   52 - 217 175 176
@@ -68,7 +68,7 @@ pub async fn test_image_flip() -> Result<()> {
             4  592 -  89 124 149
             328  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

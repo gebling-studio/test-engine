@@ -36,11 +36,9 @@ impl TableData for TableViewResize {
     }
 }
 
-pub async fn test_table_view_resize() -> Result<()> {
-    let view = UITest::start::<TableViewResize>();
-
+fn check_initial_cell() -> Result<()> {
     check_colors(
-        r#"
+        r"
             448    4 -  89 124 149
             24   24 -   0 255   0
             52   24 -   0 255   0
@@ -73,15 +71,17 @@ pub async fn test_table_view_resize() -> Result<()> {
             4  592 -  89 124 149
             212  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn check_cell_after_scroll() -> Result<()> {
     for i in 0..5 {
         inject_scroll(i);
     }
 
     check_colors(
-        r#"
+        r"
             448    4 -  89 124 149
             24   24 -   0 255   0
             52   24 -   0 255   0
@@ -114,15 +114,17 @@ pub async fn test_table_view_resize() -> Result<()> {
             4  592 -  89 124 149
             212  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn check_resized_table(view: Weak<TableViewResize>) -> Result<()> {
     from_main(move || {
         view.table.set_size(400, 100);
     });
 
     check_colors(
-        r#"
+        r"
             24   24 -   0 255   0
             116   24 -   0 255   0
             312   24 -   0 255   0
@@ -155,8 +157,16 @@ pub async fn test_table_view_resize() -> Result<()> {
             4  592 -  89 124 149
             216  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
+
+pub async fn test_table_view_resize() -> Result<()> {
+    let view = UITest::start::<TableViewResize>();
+
+    check_initial_cell()?;
+    check_cell_after_scroll()?;
+    check_resized_table(view)?;
 
     for i in 0..5 {
         inject_scroll(-i);

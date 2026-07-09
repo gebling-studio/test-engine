@@ -31,8 +31,21 @@ impl Setup for LabelFont {
 
 impl ViewTest for LabelFont {
     fn perform_test(view: Weak<Self>) -> Result<()> {
-        check_colors(
-            r"
+        default_font_colors()?;
+
+        let original = AppRunner::take_screenshot()?;
+
+        let custom_font = set_font_changes_one_label(view, &original)?;
+        set_default_changes_default_label(&custom_font)?;
+        reset_default_restores_original(&original)?;
+
+        Ok(())
+    }
+}
+
+fn default_font_colors() -> Result<()> {
+    check_colors(
+        r"
                 592    4 -  89 124 149
                 380   44 -   0   0   0
                 88   48 -   0   0   0
@@ -66,16 +79,16 @@ impl ViewTest for LabelFont {
                 172  592 -  89 124 149
                 592  592 -  89 124 149
             ",
-        )?;
+    )
+}
 
-        let original = AppRunner::take_screenshot()?;
+fn set_font_changes_one_label(view: Weak<LabelFont>, original: &Screenshot) -> Result<Screenshot> {
+    from_main(move || {
+        view.custom_label.set_font(Font::get("OpenSans.ttf"));
+    });
 
-        from_main(move || {
-            view.custom_label.set_font(Font::get("OpenSans.ttf"));
-        });
-
-        check_colors(
-            r"
+    check_colors(
+        r"
                 224   40 -   0   0   0
                 380   44 -   0   0   0
                 88   48 -   0   0   0
@@ -109,25 +122,29 @@ impl ViewTest for LabelFont {
                 324  592 -  89 124 149
                 592  592 -  89 124 149
             ",
-        )?;
+    )?;
 
-        let custom_font = AppRunner::take_screenshot()?;
+    let custom_font = AppRunner::take_screenshot()?;
 
-        assert!(
-            region(&custom_font, CUSTOM_FRAME) != region(&original, CUSTOM_FRAME),
-            "set_font did not change the label rendering"
-        );
-        assert!(
-            region(&custom_font, DEFAULT_FRAME) == region(&original, DEFAULT_FRAME),
-            "set_font on one label changed another label"
-        );
+    assert!(
+        region(&custom_font, CUSTOM_FRAME) != region(original, CUSTOM_FRAME),
+        "set_font did not change the label rendering"
+    );
+    assert!(
+        region(&custom_font, DEFAULT_FRAME) == region(original, DEFAULT_FRAME),
+        "set_font on one label changed another label"
+    );
 
-        from_main(|| {
-            Font::set_default(Font::get("DroidSansMono.ttf"));
-        });
+    Ok(custom_font)
+}
 
-        check_colors(
-            r"
+fn set_default_changes_default_label(custom_font: &Screenshot) -> Result<()> {
+    from_main(|| {
+        Font::set_default(Font::get("DroidSansMono.ttf"));
+    });
+
+    check_colors(
+        r"
                 416   44 -   0   0   0
                 124   52 -   0   0   0
                 204   52 -   0   0   0
@@ -161,23 +178,27 @@ impl ViewTest for LabelFont {
                 4  592 -  89 124 149
                 592  592 -  89 124 149
             ",
-        )?;
+    )?;
 
-        let custom_default = AppRunner::take_screenshot()?;
+    let custom_default = AppRunner::take_screenshot()?;
 
-        assert!(
-            region(&custom_default, DEFAULT_FRAME) != region(&custom_font, DEFAULT_FRAME),
-            "set_default did not change the default label rendering"
-        );
-        assert!(
-            region(&custom_default, CUSTOM_FRAME) == region(&custom_font, CUSTOM_FRAME),
-            "set_default changed a label with its own font"
-        );
+    assert!(
+        region(&custom_default, DEFAULT_FRAME) != region(custom_font, DEFAULT_FRAME),
+        "set_default did not change the default label rendering"
+    );
+    assert!(
+        region(&custom_default, CUSTOM_FRAME) == region(custom_font, CUSTOM_FRAME),
+        "set_default changed a label with its own font"
+    );
 
-        from_main(Font::reset_default);
+    Ok(())
+}
 
-        check_colors(
-            r"
+fn reset_default_restores_original(original: &Screenshot) -> Result<()> {
+    from_main(Font::reset_default);
+
+    check_colors(
+        r"
                 224   40 -   0   0   0
                 380   44 -   0   0   0
                 88   48 -   0   0   0
@@ -211,17 +232,16 @@ impl ViewTest for LabelFont {
                 324  592 -  89 124 149
                 592  592 -  89 124 149
             ",
-        )?;
+    )?;
 
-        let restored = AppRunner::take_screenshot()?;
+    let restored = AppRunner::take_screenshot()?;
 
-        assert!(
-            region(&restored, DEFAULT_FRAME) == region(&original, DEFAULT_FRAME),
-            "reset_default did not restore the original rendering"
-        );
+    assert!(
+        region(&restored, DEFAULT_FRAME) == region(original, DEFAULT_FRAME),
+        "reset_default did not restore the original rendering"
+    );
 
-        Ok(())
-    }
+    Ok(())
 }
 
 fn region(shot: &Screenshot, frame: (u32, u32, u32, u32)) -> Vec<U8Color> {

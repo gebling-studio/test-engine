@@ -58,103 +58,14 @@ impl Setup for HoverTest {
 impl ViewTest for HoverTest {
     fn perform_test(view: Weak<Self>) -> Result<()> {
         // Cursor position and hover state can leak from previous tests.
-        from_main(|| Hover::clear());
+        from_main(Hover::clear);
         from_main(move || {
             let mut this = view;
             this.log.clear();
         });
 
-        inject_touches("30 30 m");
-
-        from_main(move || {
-            assert_eq!(view.log, vec![("first", true)]);
-            assert!(view.first.is_hovered());
-            assert!(!view.second.is_hovered());
-        });
-
-        check_colors(
-            r"
-             592    4 -  89 124 149
-              24   24 -   0 255   0
-             100   24 -   0 255   0
-             144   24 - 255   0   0
-             236   24 - 255   0   0
-             192   36 - 255   0   0
-              64   44 - 255 255   0
-              88   44 - 255 255   0
-              24   52 -   0 255   0
-             116   64 -   0 255   0
-              88   68 - 255 255   0
-             224   68 - 255   0   0
-              44   72 - 255 255   0
-              68   72 - 255 255   0
-             180   80 - 255   0   0
-              72   92 - 255 255   0
-              44   96 - 255 255   0
-              96   96 - 255 255   0
-             200  112 - 255   0   0
-              24  116 -   0 255   0
-              56  116 -   0 255   0
-              80  116 -   0 255   0
-             116  116 -   0 255   0
-             160  116 - 255   0   0
-             236  116 - 255   0   0
-             444  152 -  89 124 149
-             300  300 -  89 124 149
-             592  300 -  89 124 149
-              64  356 -  89 124 149
-               4  592 -  89 124 149
-             300  592 -  89 124 149
-             592  592 -  89 124 149
-            ",
-        )?;
-
-        // Both first and top are under the cursor. Topmost wins,
-        // exit fires before enter.
-        inject_touches("70 70 m");
-
-        from_main(move || {
-            assert_eq!(view.log, vec![("first", true), ("first", false), ("top", true)]);
-            assert!(!view.first.is_hovered());
-            assert!(view.top.is_hovered());
-        });
-
-        check_colors(
-            r"
-             592    4 -  89 124 149
-              24   24 -   0   0 231
-             100   24 -   0   0 231
-             144   24 - 255   0   0
-             236   24 - 255   0   0
-             192   36 - 255   0   0
-              64   44 - 255 255   0
-              88   44 - 255 255   0
-              24   52 -   0   0 231
-             116   64 -   0   0 231
-              88   68 - 255 255   0
-             224   68 - 255   0   0
-              44   72 - 255 255   0
-              68   72 - 255 255   0
-             180   80 - 255   0   0
-              72   92 - 255 255   0
-              44   96 - 255 255   0
-              96   96 - 255 255   0
-             200  112 - 255   0   0
-              24  116 -   0   0 231
-              56  116 -   0   0 231
-              80  116 -   0   0 231
-             116  116 -   0   0 231
-             160  116 - 255   0   0
-             236  116 - 255   0   0
-             444  152 -  89 124 149
-             300  300 -  89 124 149
-             592  300 -  89 124 149
-              64  356 -  89 124 149
-               4  592 -  89 124 149
-             300  592 -  89 124 149
-             592  592 -  89 124 149
-            ",
-        )?;
+        first_hovers(view)?;
+        top_wins_overlap(view)?;
 
         inject_touches("170 70 m");
 
@@ -191,7 +102,7 @@ impl ViewTest for HoverTest {
 
         // Cursor leaving the window clears hover.
         inject_touches("30 30 m");
-        from_main(|| Hover::clear());
+        from_main(Hover::clear);
 
         from_main(move || {
             assert_eq!(*view.log.last().unwrap(), ("first", false));
@@ -200,6 +111,102 @@ impl ViewTest for HoverTest {
 
         Ok(())
     }
+}
+
+fn first_hovers(view: Weak<HoverTest>) -> Result<()> {
+    inject_touches("30 30 m");
+
+    from_main(move || {
+        assert_eq!(view.log, vec![("first", true)]);
+        assert!(view.first.is_hovered());
+        assert!(!view.second.is_hovered());
+    });
+
+    check_colors(
+        r"
+             592    4 -  89 124 149
+              24   24 -   0 255   0
+             100   24 -   0 255   0
+             144   24 - 255   0   0
+             236   24 - 255   0   0
+             192   36 - 255   0   0
+              64   44 - 255 255   0
+              88   44 - 255 255   0
+              24   52 -   0 255   0
+             116   64 -   0 255   0
+              88   68 - 255 255   0
+             224   68 - 255   0   0
+              44   72 - 255 255   0
+              68   72 - 255 255   0
+             180   80 - 255   0   0
+              72   92 - 255 255   0
+              44   96 - 255 255   0
+              96   96 - 255 255   0
+             200  112 - 255   0   0
+              24  116 -   0 255   0
+              56  116 -   0 255   0
+              80  116 -   0 255   0
+             116  116 -   0 255   0
+             160  116 - 255   0   0
+             236  116 - 255   0   0
+             444  152 -  89 124 149
+             300  300 -  89 124 149
+             592  300 -  89 124 149
+              64  356 -  89 124 149
+               4  592 -  89 124 149
+             300  592 -  89 124 149
+             592  592 -  89 124 149
+            ",
+    )
+}
+
+fn top_wins_overlap(view: Weak<HoverTest>) -> Result<()> {
+    // Both first and top are under the cursor. Topmost wins,
+    // exit fires before enter.
+    inject_touches("70 70 m");
+
+    from_main(move || {
+        assert_eq!(view.log, vec![("first", true), ("first", false), ("top", true)]);
+        assert!(!view.first.is_hovered());
+        assert!(view.top.is_hovered());
+    });
+
+    check_colors(
+        r"
+             592    4 -  89 124 149
+              24   24 -   0   0 231
+             100   24 -   0   0 231
+             144   24 - 255   0   0
+             236   24 - 255   0   0
+             192   36 - 255   0   0
+              64   44 - 255 255   0
+              88   44 - 255 255   0
+              24   52 -   0   0 231
+             116   64 -   0   0 231
+              88   68 - 255 255   0
+             224   68 - 255   0   0
+              44   72 - 255 255   0
+              68   72 - 255 255   0
+             180   80 - 255   0   0
+              72   92 - 255 255   0
+              44   96 - 255 255   0
+              96   96 - 255 255   0
+             200  112 - 255   0   0
+              24  116 -   0   0 231
+              56  116 -   0   0 231
+              80  116 -   0   0 231
+             116  116 -   0   0 231
+             160  116 - 255   0   0
+             236  116 - 255   0   0
+             444  152 -  89 124 149
+             300  300 -  89 124 149
+             592  300 -  89 124 149
+              64  356 -  89 124 149
+               4  592 -  89 124 149
+             300  592 -  89 124 149
+             592  592 -  89 124 149
+            ",
+    )
 }
 
 pub async fn test_hover() -> Result<()> {

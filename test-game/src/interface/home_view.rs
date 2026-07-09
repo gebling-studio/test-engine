@@ -1,10 +1,9 @@
-use netrun::local_ip;
 use test_engine::{
     level::LevelManager,
     refs::{Weak, manage::DataManager},
     ui::{
-        Container, Font, ImageView, Label, Setup, Shadow, Switch, TextAlignment, Theme, ThemeMode, UIManager,
-        ViewData, ViewSubviews, view,
+        Container, Font, ImageView, Label, ScrollView, Setup, Shadow, Switch, TextAlignment, Theme,
+        ThemeMode, UIManager, ViewData, ViewSubviews, view,
     },
 };
 
@@ -12,7 +11,7 @@ use crate::interface::{
     card::Card,
     dev::MenuView,
     noise_view::NoiseView,
-    palette::{BG, SURFACE, TEXT, TEXT_DIM},
+    palette::{BG, SURFACE, TEXT},
     render_view::RenderView,
     root_layout_view::RootLayoutView,
     scenes::{EffectsScene, FrostedHud, GameScene, ScrollTables, TextFonts, WidgetGallery},
@@ -41,23 +40,23 @@ const CARD_FONTS: [&str; 4] = [
     "Pangolin-Regular.ttf",
 ];
 
-/// The home dashboard. A themed top bar and a responsive grid of cards
-/// that open the showcase scenes.
+/// The home dashboard. A themed top bar and a scrollable responsive grid
+/// of cards that open the showcase scenes.
 #[view]
 pub struct HomeView {
     cards: Vec<Weak<Card>>,
+    grid:  Weak<Container>,
 
     #[init]
     top_bar: Container,
     logo:    ImageView,
     title:   Label,
-    status:  Label,
     theme:   Switch,
-    grid:    Container,
+    scroll:  ScrollView,
 }
 
 impl Setup for HomeView {
-    fn setup(self: Weak<Self>) {
+    fn setup(mut self: Weak<Self>) {
         LevelManager::stop_level();
         self.set_color(BG);
 
@@ -71,23 +70,18 @@ impl Setup for HomeView {
             .set_text("TestEngine")
             .set_text_color(TEXT)
             .set_text_size(26)
-            .set_font(Font::get("RussoOne-Regular.ttf"));
-        self.title.place().l(70).t(15).w(320).h(34);
+            .set_font(Font::get("RussoOne-Regular.ttf"))
+            .set_alignment(TextAlignment::Left);
+        self.title.place().l(70).t(15).r(84).h(34);
 
-        let ip = local_ip().map_or_else(|_| "no ip".to_string(), |ip| ip.to_string());
-        self.status
-            .set_text(format!("{ip}   {}", UIManager::app_instance_id()))
-            .set_text_color(TEXT_DIM)
-            .set_text_size(11)
-            .set_alignment(TextAlignment::Right);
-        self.status.place().t(22).r(94).w(260).h(20);
-
-        self.theme.place().tr(14).size(64, 32);
+        self.theme.place().tr(16).size(56, 32);
         self.theme.on_change(move |on| {
             Theme::set_mode(if on { ThemeMode::Dark } else { ThemeMode::Light });
         });
 
-        self.grid.place().t(80).lr(24).all(16).all_wrap();
+        self.scroll.place().t(64).lrb(0);
+        self.grid = self.scroll.add_view::<Container>();
+        self.grid.place().t(16).lr(24).all(16).all_wrap();
         self.add_cards();
 
         // Start light so the toggle sitting in its off state is honest.

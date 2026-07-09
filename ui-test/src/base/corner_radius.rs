@@ -30,8 +30,13 @@ impl ViewTest for CornerRadius {
     fn perform_test(_view: Weak<Self>) -> Result<()> {
         set_record_probe_count(96);
 
-        check_colors(
-            r"
+        check_rounded_corners()
+    }
+}
+
+fn check_rounded_corners() -> Result<()> {
+    check_colors(
+        r"
               96   52 -   0   0 231
              216   52 - 226 186 187
              236   52 - 222 182 183
@@ -129,10 +134,7 @@ impl ViewTest for CornerRadius {
              300  592 -  89 124 149
              592  592 -  89 124 149
             ",
-        )?;
-
-        Ok(())
-    }
+    )
 }
 
 pub async fn test_corner_radius() -> Result<()> {

@@ -30,7 +30,7 @@ impl Setup for FrostedHud {
 
         let title = self.panel.add_view::<Label>();
         title
-            .set_text("Frosted HUD  -  the game is blurred behind this glass")
+            .set_text("Frosted glass over the game")
             .set_text_color(WHITE)
             .set_text_size(16)
             .set_alignment(TextAlignment::Center);

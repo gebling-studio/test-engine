@@ -21,7 +21,7 @@ pub async fn test_highlight() -> Result<()> {
     UITest::start::<HighLightTestView>();
 
     check_colors(
-        r#"
+        r"
             392    4 -  89 124 149
             592    4 -  89 124 149
             128  128 -   0 255   0
@@ -54,7 +54,7 @@ pub async fn test_highlight() -> Result<()> {
             4  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

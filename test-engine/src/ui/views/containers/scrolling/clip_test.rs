@@ -1,5 +1,3 @@
-#![allow(clippy::float_cmp)]
-
 use anyhow::Result;
 use hreads::from_main;
 use refs::Weak;
@@ -307,7 +305,7 @@ impl ViewTest for ScrollClipTest {
         for _ in 0..5 {
             inject_scroll(-30);
         }
-        assert_eq!(offset(), -150.0);
+        assert!((offset() + 150.0).abs() < f32::EPSILON);
         check_items_cut()?;
         check_no_leak()?;
 
@@ -315,14 +313,14 @@ impl ViewTest for ScrollClipTest {
         for _ in 0..2 {
             inject_scroll(-205);
         }
-        assert_eq!(offset(), -560.0);
+        assert!((offset() + 560.0).abs() < f32::EPSILON);
         check_photo_cut()?;
         check_no_leak()?;
 
         // All the way down: the photo bottom aligns with the scroll
         // bottom, ITEM 5 is cut at the top.
         inject_scroll(-1000);
-        assert_eq!(offset(), -600.0);
+        assert!((offset() + 600.0).abs() < f32::EPSILON);
         check_bottom()?;
         check_no_leak()?;
 

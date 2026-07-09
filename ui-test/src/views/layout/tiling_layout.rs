@@ -24,6 +24,14 @@ impl Setup for TilingLayout {
 pub async fn test_tiling_layout() -> anyhow::Result<()> {
     let view = UITest::start::<TilingLayout>();
 
+    check_initial_tiles()?;
+    check_empty_menu(view)?;
+    check_button_tiles(view)?;
+
+    Ok(())
+}
+
+fn check_initial_tiles() -> anyhow::Result<()> {
     check_colors(
         r"
          472    4 -  89 124 149
@@ -61,6 +69,10 @@ pub async fn test_tiling_layout() -> anyhow::Result<()> {
         ",
     )?;
 
+    Ok(())
+}
+
+fn check_empty_menu(view: Weak<TilingLayout>) -> anyhow::Result<()> {
     from_main(move || {
         view.menu.remove_all_subviews();
     });
@@ -102,6 +114,10 @@ pub async fn test_tiling_layout() -> anyhow::Result<()> {
         ",
     )?;
 
+    Ok(())
+}
+
+fn check_button_tiles(view: Weak<TilingLayout>) -> anyhow::Result<()> {
     from_main(move || {
         view.menu
             .add_view::<Button>()

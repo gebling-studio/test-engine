@@ -76,7 +76,7 @@ pub async fn test_add_on_tap() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 - 255 255 255
             292    4 -  89 124 149
             592    4 -  89 124 149
@@ -109,7 +109,7 @@ pub async fn test_add_on_tap() -> Result<()> {
             396  580 -   0 255 255
             548  580 -   0 255 255
             4  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

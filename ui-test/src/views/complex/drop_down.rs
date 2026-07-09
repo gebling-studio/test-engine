@@ -17,7 +17,7 @@ impl Setup for DropDownTestView {
     fn setup(mut self: Weak<Self>) {
         [self.top, self.bot].apply(|v| {
             v.on_changed(|val| {
-                append_state(&format!("{val}\n"));
+                append_state(format!("{val}\n"));
             });
             v.place().center_x().size(200, 40);
         });

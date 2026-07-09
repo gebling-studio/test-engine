@@ -13,7 +13,7 @@ const STYLE: Style = Style::new(|view| {
             .set_text_size(80)
             .set_gradient(BLUE, (0, 150, 150))
             .set_corner_radius(20);
-    })
+    });
 });
 
 #[view]
@@ -36,7 +36,7 @@ pub async fn test_number_view_design() -> Result<()> {
     let _view = UITest::start::<NumberViewDesign>();
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             592    4 -  89 124 149
             240  204 -   0  20 230
@@ -69,7 +69,7 @@ pub async fn test_number_view_design() -> Result<()> {
             244  396 -   0 149 152
             4  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     from_main(|| {

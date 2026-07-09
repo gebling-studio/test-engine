@@ -2,6 +2,7 @@ use anyhow::Result;
 use instant::Instant;
 use test_engine::{
     dispatch::from_main,
+    refs::Weak,
     ui::{
         Container, NavigationView, PRESENT_ANIMATION_DURATION, RED, Setup, TouchStack, ViewController,
         ViewData, view,
@@ -25,8 +26,16 @@ pub async fn test_navigation_view() -> Result<()> {
         "Present".to_string(),
     );
 
+    check_before_present()?;
+    check_present_animation(view)?;
+    check_presented_stays()?;
+
+    Ok(())
+}
+
+fn check_before_present() -> Result<()> {
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             444    4 -  89 124 149
             592    4 -  89 124 149
@@ -59,11 +68,15 @@ pub async fn test_navigation_view() -> Result<()> {
             152  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     assert_eq!(TouchStack::dump(), vec![vec!["Layer: Root view".to_string()]]);
 
+    Ok(())
+}
+
+fn check_present_animation(view: Weak<PresentTestView>) -> Result<()> {
     let now = Instant::now();
 
     let presented = from_main(move || {
@@ -79,7 +92,7 @@ pub async fn test_navigation_view() -> Result<()> {
     let allowed_error = 0.032;
 
     check_colors(
-        r#"
+        r"
             4    4 - 255 255 255
             444    4 - 255 255 255
             592    4 - 255 255 255
@@ -112,7 +125,7 @@ pub async fn test_navigation_view() -> Result<()> {
             152  592 - 255 255 255
             300  592 - 255 255 255
             592  592 - 255 255 255
-        "#,
+        ",
     )?;
 
     assert!(
@@ -122,8 +135,12 @@ pub async fn test_navigation_view() -> Result<()> {
 
     assert_eq!(TouchStack::dump(), vec![vec!["Layer: Root view".to_string()]]);
 
+    Ok(())
+}
+
+fn check_presented_stays() -> Result<()> {
     check_colors(
-        r#"
+        r"
             4    4 - 255 255 255
             444    4 - 255 255 255
             592    4 - 255 255 255
@@ -156,7 +173,7 @@ pub async fn test_navigation_view() -> Result<()> {
             152  592 - 255 255 255
             300  592 - 255 255 255
             592  592 - 255 255 255
-        "#,
+        ",
     )?;
 
     Ok(())

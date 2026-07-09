@@ -36,8 +36,57 @@ impl Setup for LabelFitText {
 
 impl ViewTest for LabelFitText {
     fn perform_test(view: Weak<Self>) -> Result<()> {
-        check_colors(
-            r"
+        fitted_text_colors()?;
+
+        let (tag, panel, centered) =
+            from_main(move || (*view.tag.frame(), *view.panel.frame(), *view.centered.frame()));
+
+        assert!(
+            (tag.origin.x - 20.0).abs() < f32::EPSILON && (tag.origin.y - 20.0).abs() < f32::EPSILON,
+            "fit_text moved the anchored origin: {tag:?}"
+        );
+        assert!(
+            tag.size.width < 200.0 && tag.size.height < 70.0,
+            "fitted frame does not hug the text: {tag:?}"
+        );
+        assert!(
+            (panel.size.width - 560.0).abs() < f32::EPSILON,
+            "fit_text_height changed the width set by side rules: {panel:?}"
+        );
+        assert!(
+            (centered.center().x - 300.0).abs() < 1.0,
+            "fitted label is not centered: {centered:?}"
+        );
+
+        grown_text_colors(view)?;
+
+        let (grown_tag, grown_panel, grown_centered) =
+            from_main(move || (*view.tag.frame(), *view.panel.frame(), *view.centered.frame()));
+
+        assert!(
+            grown_tag.size.width > tag.size.width + 50.0,
+            "fitted width did not follow longer text: {grown_tag:?}"
+        );
+        assert!(
+            grown_panel.size.height > panel.size.height,
+            "fitted height did not grow with more wrapped text: {grown_panel:?}"
+        );
+        assert!(
+            grown_centered.size.width > centered.size.width,
+            "centered fitted width did not grow: {grown_centered:?}"
+        );
+        assert!(
+            (grown_centered.center().x - 300.0).abs() < 1.0,
+            "label did not stay centered after refit: {grown_centered:?}"
+        );
+
+        Ok(())
+    }
+}
+
+fn fitted_text_colors() -> Result<()> {
+    check_colors(
+        r"
                 24   24 -   0 255   0
                 44   40 -   0 255   0
                 64   40 -   0   0   0
@@ -71,40 +120,21 @@ impl ViewTest for LabelFitText {
                 404  592 -  89 124 149
                 592  592 -  89 124 149
             ",
-        )?;
+    )
+}
 
-        let (tag, panel, centered) =
-            from_main(move || (*view.tag.frame(), *view.panel.frame(), *view.centered.frame()));
+fn grown_text_colors(view: Weak<LabelFitText>) -> Result<()> {
+    from_main(move || {
+        view.tag.set_text("much longer tag");
+        view.panel
+            .set_text("Grumpy wizards make toxic brew for the jovial queen and jack, then brew even more");
+        view.centered.set_text("wide middle");
+    });
 
-        assert!(
-            tag.origin.x == 20.0 && tag.origin.y == 20.0,
-            "fit_text moved the anchored origin: {tag:?}"
-        );
-        assert!(
-            tag.size.width < 200.0 && tag.size.height < 70.0,
-            "fitted frame does not hug the text: {tag:?}"
-        );
-        assert!(
-            panel.size.width == 560.0,
-            "fit_text_height changed the width set by side rules: {panel:?}"
-        );
-        assert!(
-            (centered.center().x - 300.0).abs() < 1.0,
-            "fitted label is not centered: {centered:?}"
-        );
+    wait_for_next_frame();
 
-        from_main(move || {
-            view.tag.set_text("much longer tag");
-            view.panel.set_text(
-                "Grumpy wizards make toxic brew for the jovial queen and jack, then brew even more",
-            );
-            view.centered.set_text("wide middle");
-        });
-
-        wait_for_next_frame();
-
-        check_colors(
-            r"
+    check_colors(
+        r"
                 220   24 -   0 255   0
                 100   36 -   0 255   0
                 168   40 -   0 255   0
@@ -138,30 +168,7 @@ impl ViewTest for LabelFitText {
                 288  592 -  89 124 149
                 592  592 -  89 124 149
             ",
-        )?;
-
-        let (grown_tag, grown_panel, grown_centered) =
-            from_main(move || (*view.tag.frame(), *view.panel.frame(), *view.centered.frame()));
-
-        assert!(
-            grown_tag.size.width > tag.size.width + 50.0,
-            "fitted width did not follow longer text: {grown_tag:?}"
-        );
-        assert!(
-            grown_panel.size.height > panel.size.height,
-            "fitted height did not grow with more wrapped text: {grown_panel:?}"
-        );
-        assert!(
-            grown_centered.size.width > centered.size.width,
-            "centered fitted width did not grow: {grown_centered:?}"
-        );
-        assert!(
-            (grown_centered.center().x - 300.0).abs() < 1.0,
-            "label did not stay centered after refit: {grown_centered:?}"
-        );
-
-        Ok(())
-    }
+    )
 }
 
 pub async fn test_label_fit_text() -> Result<()> {

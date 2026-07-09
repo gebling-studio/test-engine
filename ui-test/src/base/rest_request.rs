@@ -68,7 +68,7 @@ impl ViewTest for RestRequest {
             ",
         );
 
-        while NOT_REQUESTED.load(Ordering::Relaxed) {}
+        while NOT_REQUESTED.load(Ordering::Relaxed) { std::hint::spin_loop() }
 
         let value = from_main(move || view.label.text.clone());
 

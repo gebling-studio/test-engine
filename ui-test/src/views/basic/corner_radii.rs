@@ -69,8 +69,13 @@ impl ViewTest for CornerRadiiTest {
     fn perform_test(_view: Weak<Self>) -> Result<()> {
         set_record_probe_count(96);
 
-        check_colors(
-            r"
+        rounded_corners_colors()
+    }
+}
+
+fn rounded_corners_colors() -> Result<()> {
+    check_colors(
+        r"
                 24   24 - 255 203   0
                 132   24 - 255 203   0
                 208   24 - 255   0 255
@@ -168,10 +173,7 @@ impl ViewTest for CornerRadiiTest {
                 156  592 -  89 124 149
                 592  592 -  89 124 149
             ",
-        )?;
-
-        Ok(())
-    }
+    )
 }
 
 pub async fn test_corner_radii() -> Result<()> {

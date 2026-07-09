@@ -1,43 +1,39 @@
 use test_engine::{
-    refs::{Weak, manage::DataManager},
+    refs::Weak,
     ui::{
-        BlurView, ColorMeter, Container, CornerRadii, Font, ImageView, Label, Setup, Shadow, TextAlignment,
-        ViewData, ViewSubviews, ViewTouch, WHITE, view,
+        BlurView, ColorMeter, Container, CornerRadii, ImageView, Label, ScrollView, Setup, Shadow,
+        TextAlignment, ViewData, ViewSubviews, ViewTouch, WHITE, view,
     },
 };
 
 use crate::interface::{
-    palette::{ACCENT, ACCENT_END, ACCENT_START, BG, BORDER, SURFACE, TEXT, TEXT_DIM},
-    scenes::add_back_button,
+    palette::{ACCENT, ACCENT_END, ACCENT_START, BG, BORDER, SURFACE, TEXT_DIM},
+    scenes::{HEADER_HEIGHT, add_header},
 };
 
 /// One tile per visual effect the engine gives every view: shadow,
 /// gradient, per corner rounding, frosted blur, hover and the live
-/// color meter eyedropper.
+/// color meter eyedropper. The tiles scroll, so every one stays
+/// reachable on small screens.
 #[view]
 pub struct EffectsScene {
+    grid: Weak<Container>,
+
     #[init]
-    title: Label,
-    grid:  Container,
+    scroll: ScrollView,
 }
 
 impl Setup for EffectsScene {
-    fn setup(self: Weak<Self>) {
+    fn setup(mut self: Weak<Self>) {
         self.set_color(BG);
 
-        self.title
-            .set_text("Effects")
-            .set_text_color(TEXT)
-            .set_text_size(22)
-            .set_font(Font::get("RussoOne-Regular.ttf"))
-            .set_alignment(TextAlignment::Center);
-        self.title.place().t(20).center_x().w(320).h(34);
-
-        self.grid.place().t(72).lr(20).all(14).all_wrap();
+        self.scroll.place().t(HEADER_HEIGHT).lrb(0);
+        self.grid = self.scroll.add_view::<Container>();
+        self.grid.place().t(16).lr(20).all(14).all_wrap();
 
         self.add_effects();
 
-        add_back_button(self);
+        add_header(self, "Effects");
     }
 }
 

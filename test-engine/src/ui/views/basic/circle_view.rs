@@ -19,7 +19,7 @@ pub struct CircleView {
 }
 
 impl CircleView {
-    pub(crate) fn set_radius(&mut self, radius: impl ToF32) -> &mut Self {
+    pub fn set_radius(&mut self, radius: impl ToF32) -> &mut Self {
         let radius = radius.to_f32();
 
         if (radius - self.radius).abs() < f32::EPSILON {

@@ -120,7 +120,6 @@ mod test {
 
     use std::sync::LazyLock;
 
-    use anyhow::Result;
     use serde::{Deserialize, Serialize};
 
     use crate::{filesystem::Paths, store::OnDisk};
@@ -138,7 +137,7 @@ mod test {
     fn check_sync<T: Sync>(_sync: &T) {}
 
     #[test]
-    fn stored() -> Result<()> {
+    fn stored() {
         OnDisk::<()>::set_root_path("~/.test_on_disk/");
 
         check_send(&STORED);
@@ -160,8 +159,6 @@ mod test {
         let loaded_data = STORED_STRUCT.get();
 
         assert_eq!(data, loaded_data.unwrap());
-
-        Ok(())
     }
 
     #[test]

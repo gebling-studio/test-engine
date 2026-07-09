@@ -23,7 +23,7 @@ pub async fn test_color_checker() -> Result<()> {
     let _view = UITest::start::<TestColorChecker>();
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             304    4 -  89 124 149
             592    4 -  89 124 149
@@ -56,7 +56,7 @@ pub async fn test_color_checker() -> Result<()> {
             48  592 -  89 124 149
             200  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     // These assertions inspect the error text of a deliberately failing
@@ -64,11 +64,11 @@ pub async fn test_color_checker() -> Result<()> {
     // or the whole record pass dies on this test.
     if !recording_colors() {
         let error = check_colors(
-            r#"
+            r"
                   76  215 -  89 124 149
                   90  214 -   0   0 255
                  112  213 -  89 124 149
-            "#,
+            ",
         )
         .err()
         .unwrap()
@@ -90,7 +90,7 @@ pub async fn test_color_checker() -> Result<()> {
     }
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             304    4 -  89 124 149
             592    4 -  89 124 149
@@ -123,7 +123,7 @@ pub async fn test_color_checker() -> Result<()> {
             48  592 -  89 124 149
             200  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

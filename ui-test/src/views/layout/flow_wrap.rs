@@ -50,8 +50,17 @@ fn assert_frame(frame: Rect, expected: (f32, f32, f32, f32), name: &str) {
 
 impl ViewTest for FlowWrap {
     fn perform_test(view: Weak<Self>) -> Result<()> {
-        check_colors(
-            r"
+        check_initial_wrap(view)?;
+        check_wrap_after_hide(view)?;
+        check_wrap_after_resize(view)?;
+
+        Ok(())
+    }
+}
+
+fn check_initial_wrap(view: Weak<FlowWrap>) -> Result<()> {
+    check_colors(
+        r"
               56   24 - 255   0   0
              116   24 - 255   0   0
              156   24 -   0 255   0
@@ -85,32 +94,36 @@ impl ViewTest for FlowWrap {
              300  592 -  89 124 149
              592  592 -  89 124 149
             ",
-        )?;
+    )?;
 
-        let (frames, flow) = from_main(move || {
-            let frames: Vec<Rect> = view.boxes.iter().map(|b| *b.frame()).collect();
-            (frames, *view.flow.frame())
-        });
+    let (frames, flow) = from_main(move || {
+        let frames: Vec<Rect> = view.boxes.iter().map(|b| *b.frame()).collect();
+        (frames, *view.flow.frame())
+    });
 
-        assert_frame(frames[0], (0.0, 0.0, 100.0, 50.0), "first in row");
-        assert_frame(frames[1], (110.0, 0.0, 120.0, 40.0), "second in row");
-        assert_frame(frames[2], (0.0, 60.0, 150.0, 60.0), "wrapped to second row");
-        assert_frame(frames[3], (160.0, 60.0, 80.0, 30.0), "second row neighbor");
-        assert_frame(
-            frames[4],
-            (0.0, 130.0, 340.0, 20.0),
-            "oversized child got own row",
-        );
-        assert_frame(flow, (20.0, 20.0, 300.0, 150.0), "container sized to content");
+    assert_frame(frames[0], (0.0, 0.0, 100.0, 50.0), "first in row");
+    assert_frame(frames[1], (110.0, 0.0, 120.0, 40.0), "second in row");
+    assert_frame(frames[2], (0.0, 60.0, 150.0, 60.0), "wrapped to second row");
+    assert_frame(frames[3], (160.0, 60.0, 80.0, 30.0), "second row neighbor");
+    assert_frame(
+        frames[4],
+        (0.0, 130.0, 340.0, 20.0),
+        "oversized child got own row",
+    );
+    assert_frame(flow, (20.0, 20.0, 300.0, 150.0), "container sized to content");
 
-        from_main(move || {
-            view.boxes[1].set_hidden(true);
-        });
+    Ok(())
+}
 
-        wait_for_next_frame();
+fn check_wrap_after_hide(view: Weak<FlowWrap>) -> Result<()> {
+    from_main(move || {
+        view.boxes[1].set_hidden(true);
+    });
 
-        check_colors(
-            r"
+    wait_for_next_frame();
+
+    check_colors(
+        r"
              592    4 -  89 124 149
               56   24 - 255   0   0
              116   24 - 255   0   0
@@ -144,28 +157,32 @@ impl ViewTest for FlowWrap {
              300  592 -  89 124 149
              592  592 -  89 124 149
             ",
-        )?;
+    )?;
 
-        let (frames, flow) = from_main(move || {
-            let frames: Vec<Rect> = view.boxes.iter().map(|b| *b.frame()).collect();
-            (frames, *view.flow.frame())
-        });
+    let (frames, flow) = from_main(move || {
+        let frames: Vec<Rect> = view.boxes.iter().map(|b| *b.frame()).collect();
+        (frames, *view.flow.frame())
+    });
 
-        assert_frame(frames[0], (0.0, 0.0, 100.0, 50.0), "first after hide");
-        assert_frame(frames[2], (110.0, 0.0, 150.0, 60.0), "moved up after hide");
-        assert_frame(frames[3], (0.0, 70.0, 80.0, 30.0), "wrapped after hide");
-        assert_frame(frames[4], (0.0, 110.0, 340.0, 20.0), "last row after hide");
-        assert_frame(flow, (20.0, 20.0, 300.0, 130.0), "height follows hidden child");
+    assert_frame(frames[0], (0.0, 0.0, 100.0, 50.0), "first after hide");
+    assert_frame(frames[2], (110.0, 0.0, 150.0, 60.0), "moved up after hide");
+    assert_frame(frames[3], (0.0, 70.0, 80.0, 30.0), "wrapped after hide");
+    assert_frame(frames[4], (0.0, 110.0, 340.0, 20.0), "last row after hide");
+    assert_frame(flow, (20.0, 20.0, 300.0, 130.0), "height follows hidden child");
 
-        from_main(move || {
-            view.boxes[1].set_hidden(false);
-            view.flow.place().w(500);
-        });
+    Ok(())
+}
 
-        wait_for_next_frame();
+fn check_wrap_after_resize(view: Weak<FlowWrap>) -> Result<()> {
+    from_main(move || {
+        view.boxes[1].set_hidden(false);
+        view.flow.place().w(500);
+    });
 
-        check_colors(
-            r"
+    wait_for_next_frame();
+
+    check_colors(
+        r"
               56   24 - 255   0   0
              116   24 - 255   0   0
              248   24 -   0 255   0
@@ -199,26 +216,25 @@ impl ViewTest for FlowWrap {
              300  592 -  89 124 149
              592  592 -  89 124 149
             ",
-        )?;
+    )?;
 
-        let (frames, flow) = from_main(move || {
-            let frames: Vec<Rect> = view.boxes.iter().map(|b| *b.frame()).collect();
-            (frames, *view.flow.frame())
-        });
+    let (frames, flow) = from_main(move || {
+        let frames: Vec<Rect> = view.boxes.iter().map(|b| *b.frame()).collect();
+        (frames, *view.flow.frame())
+    });
 
-        assert_frame(frames[0], (0.0, 0.0, 100.0, 50.0), "first after resize");
-        assert_frame(frames[1], (110.0, 0.0, 120.0, 40.0), "second after resize");
-        assert_frame(frames[2], (240.0, 0.0, 150.0, 60.0), "third fits after resize");
-        assert_frame(frames[3], (400.0, 0.0, 80.0, 30.0), "fourth fits after resize");
-        assert_frame(
-            frames[4],
-            (0.0, 70.0, 340.0, 20.0),
-            "wide child wrapped after resize",
-        );
-        assert_frame(flow, (20.0, 20.0, 500.0, 90.0), "container re-wrapped on resize");
+    assert_frame(frames[0], (0.0, 0.0, 100.0, 50.0), "first after resize");
+    assert_frame(frames[1], (110.0, 0.0, 120.0, 40.0), "second after resize");
+    assert_frame(frames[2], (240.0, 0.0, 150.0, 60.0), "third fits after resize");
+    assert_frame(frames[3], (400.0, 0.0, 80.0, 30.0), "fourth fits after resize");
+    assert_frame(
+        frames[4],
+        (0.0, 70.0, 340.0, 20.0),
+        "wide child wrapped after resize",
+    );
+    assert_frame(flow, (20.0, 20.0, 500.0, 90.0), "container re-wrapped on resize");
 
-        Ok(())
-    }
+    Ok(())
 }
 
 pub async fn test_flow_wrap() -> Result<()> {

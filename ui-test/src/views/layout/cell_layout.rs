@@ -51,8 +51,15 @@ impl Setup for CellLayout {
 pub async fn test_cell_layout() -> anyhow::Result<()> {
     let view = UITest::start::<CellLayout>();
 
+    check_initial_layout()?;
+    check_reapplied_placement(view)?;
+
+    Ok(())
+}
+
+fn check_initial_layout() -> anyhow::Result<()> {
     check_colors(
-        r#"
+        r"
             172    4 -  89 124 149
             424  104 - 255 255 255
             404  108 -  30  96 139
@@ -85,11 +92,11 @@ pub async fn test_cell_layout() -> anyhow::Result<()> {
             208  556 -   0 255 255
             4  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     check_colors(
-        r#"
+        r"
             172    4 -  89 124 149
             424  104 - 255 255 255
             404  108 -  30  96 139
@@ -122,9 +129,13 @@ pub async fn test_cell_layout() -> anyhow::Result<()> {
             208  556 -   0 255 255
             4  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_reapplied_placement(view: Weak<CellLayout>) -> anyhow::Result<()> {
     from_main(move || {
         view.title.place().clear().h(50).lrt(10);
 
@@ -132,7 +143,7 @@ pub async fn test_cell_layout() -> anyhow::Result<()> {
     });
 
     check_colors(
-        r#"
+        r"
             172    4 -  89 124 149
             424  104 - 255 255 255
             404  108 -  30  96 139
@@ -165,7 +176,7 @@ pub async fn test_cell_layout() -> anyhow::Result<()> {
             208  556 -   0 255 255
             4  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

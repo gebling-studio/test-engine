@@ -25,6 +25,13 @@ impl Setup for ButtonPress {
 pub async fn test_button() -> Result<()> {
     UITest::start::<ButtonPress>();
 
+    button_text_colors()?;
+    tap_combinations()?;
+
+    Ok(())
+}
+
+fn button_text_colors() -> Result<()> {
     check_colors(
         r"
          380    4 -  89 124 149
@@ -60,8 +67,10 @@ pub async fn test_button() -> Result<()> {
          232  592 -  89 124 149
          592  592 -  89 124 149
         ",
-    )?;
+    )
+}
 
+fn tap_combinations() -> Result<()> {
     test_combinations([
         ("0 0 b", 0),
         ("0 0 e", 0),
@@ -158,7 +167,5 @@ pub async fn test_button() -> Result<()> {
                 ",
             5,
         ),
-    ])?;
-
-    Ok(())
+    ])
 }

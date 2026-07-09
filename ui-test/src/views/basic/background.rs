@@ -19,8 +19,17 @@ impl Setup for Background {
 pub async fn test_background() -> Result<()> {
     let _view = UITest::start::<Background>();
 
+    green_clear_color()?;
+    gray_blue_clear_color()?;
+    root_view_image()?;
+    image_removed()?;
+
+    Ok(())
+}
+
+fn green_clear_color() -> Result<()> {
     check_colors(
-        r#"
+        r"
             4    4 -   0 255   0
             444    4 -   0 255   0
             592    4 -   0 255   0
@@ -53,15 +62,17 @@ pub async fn test_background() -> Result<()> {
             152  592 -   0 255   0
             300  592 -   0 255   0
             592  592 -   0 255   0
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn gray_blue_clear_color() -> Result<()> {
     from_main(|| {
         Window::set_clear_color(GRAY_BLUE);
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             444    4 -  89 124 149
             592    4 -  89 124 149
@@ -94,15 +105,17 @@ pub async fn test_background() -> Result<()> {
             152  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn root_view_image() -> Result<()> {
     from_main(|| {
         UIManager::root_view().set_image(UIImages::up());
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             24    4 -  89 124 149
             196    4 -   0 150 230
@@ -135,15 +148,17 @@ pub async fn test_background() -> Result<()> {
             4  592 -  89 124 149
             20  592 -  89 124 149
             272  592 -   0 150 230
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn image_removed() -> Result<()> {
     from_main(|| {
         UIManager::root_view().set_image(NoImage);
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             444    4 -  89 124 149
             592    4 -  89 124 149
@@ -176,8 +191,6 @@ pub async fn test_background() -> Result<()> {
             152  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
-
-    Ok(())
+        ",
+    )
 }

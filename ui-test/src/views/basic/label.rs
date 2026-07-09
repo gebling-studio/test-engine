@@ -37,8 +37,17 @@ impl Setup for LabelSettings {
 pub async fn test_label() -> Result<()> {
     let view = UITest::start::<LabelSettings>();
 
+    initial_label_colors()?;
+    stepper_changes_text_size()?;
+    blue_text_color(view)?;
+    left_right_aligned_labels(view)?;
+
+    Ok(())
+}
+
+fn initial_label_colors() -> Result<()> {
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             592    4 -  89 124 149
             120   84 - 255 255 255
@@ -71,9 +80,11 @@ pub async fn test_label() -> Result<()> {
             4  588 -  89 124 149
             256  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn stepper_changes_text_size() -> Result<()> {
     inject_touches(
         "
             39   305  b
@@ -125,7 +136,7 @@ pub async fn test_label() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             592    4 -  89 124 149
             120   84 - 255 255 255
             240   84 - 255 255 255
@@ -158,15 +169,17 @@ pub async fn test_label() -> Result<()> {
             4  592 -  89 124 149
             260  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn blue_text_color(view: Weak<LabelSettings>) -> Result<()> {
     from_main(move || {
         view.label.set_text_color(BLUE);
     });
 
     check_colors(
-        r#"
+        r"
             592    4 -  89 124 149
             120   84 - 255 255 255
             252   84 - 255 255 255
@@ -199,9 +212,11 @@ pub async fn test_label() -> Result<()> {
             4  592 -  89 124 149
             260  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn left_right_aligned_labels(view: Weak<LabelSettings>) -> Result<()> {
     from_main(move || {
         view.label.set_text_size(28);
         view.add_view::<Label>()
@@ -224,7 +239,7 @@ pub async fn test_label() -> Result<()> {
     });
 
     check_colors(
-        r#"
+        r"
             592    4 -  89 124 149
             64   64 - 243 243 243
             212   64 - 243 243 243
@@ -257,8 +272,6 @@ pub async fn test_label() -> Result<()> {
             44  592 -  89 124 149
             292  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
-
-    Ok(())
+        ",
+    )
 }

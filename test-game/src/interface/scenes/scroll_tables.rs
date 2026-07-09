@@ -1,23 +1,23 @@
 use test_engine::{
     gm::LossyConvert,
-    refs::{Weak, manage::DataManager},
+    refs::Weak,
     ui::{
-        CellRegistry, Container, Font, Label, ScrollView, Setup, TableData, TableView, TextAlignment, View,
-        ViewData, ViewSubviews, view,
+        Anchor, CellRegistry, Container, Label, ScrollView, Setup, TableData, TableView, TextAlignment,
+        View, ViewData, ViewFrame, ViewSubviews, view,
     },
 };
 
 use crate::interface::{
     palette::{BG, SURFACE, SURFACE_ALT, TEXT, TEXT_DIM},
-    scenes::add_back_button,
+    scenes::{HEADER_HEIGHT, add_header},
 };
 
 const SCROLL_ROWS: usize = 26;
 const TABLE_ROWS: usize = 60;
-const SCROLL_WIDTH: f32 = 330.0;
 
-/// A manual `ScrollView` with a tall stack of rows on the left and a
-/// recycling `TableView` driven by a data source on the right.
+/// A manual `ScrollView` with a tall stack of rows and a recycling
+/// `TableView` driven by a data source. Side by side on wide screens,
+/// stacked vertically on narrow ones.
 #[view]
 pub struct ScrollTables {
     #[init]
@@ -29,29 +29,34 @@ impl Setup for ScrollTables {
     fn setup(self: Weak<Self>) {
         self.set_color(BG);
 
-        let title = self.add_view::<Label>();
-        title
-            .set_text("Scroll and Tables")
-            .set_text_color(TEXT)
-            .set_text_size(22)
-            .set_font(Font::get("RussoOne-Regular.ttf"))
-            .set_alignment(TextAlignment::Center);
-        title.place().t(18).center_x().w(360).h(34);
-
         self.scroll.set_color(SURFACE_ALT).set_corner_radius(12);
-        self.scroll.place().t(66).b(16).l(16).w(SCROLL_WIDTH);
         self.fill_scroll();
 
         self.table.set_color(SURFACE).set_corner_radius(12);
-        self.table.place().t(66).b(16).r(16).relative_width(self, 0.44);
         self.table.set_data_source(self).register_cell::<Label>();
 
-        add_back_button(self);
+        add_header(self, "Scroll and Tables");
+
+        self.size_changed().sub(move || self.arrange());
+        self.arrange();
     }
 }
 
 impl ScrollTables {
-    fn fill_scroll(mut self: Weak<Self>) {
+    /// Wide screens show the panels side by side, narrow ones stack them
+    /// vertically so both stay usable.
+    fn arrange(self: Weak<Self>) {
+        let top = HEADER_HEIGHT + 12.0;
+        if self.width() < 560.0 {
+            self.scroll.place().clear().t(top).lr(12).relative_height(self, 0.4);
+            self.table.place().clear().anchor(Anchor::Top, self.scroll, 12).lr(12).b(12);
+        } else {
+            self.scroll.place().clear().t(top).b(16).l(16).w(330);
+            self.table.place().clear().t(top).b(16).r(16).relative_width(self, 0.44);
+        }
+    }
+
+    fn fill_scroll(self: Weak<Self>) {
         for i in 0..SCROLL_ROWS {
             let row = self.scroll.add_view::<Container>();
             row.set_color(if i.is_multiple_of(2) { SURFACE } else { SURFACE_ALT });
@@ -61,12 +66,6 @@ impl ScrollTables {
             label.set_text(format!("Scroll row {i}")).set_text_color(TEXT).set_text_size(15);
             label.place().l(14).center_y().w(220).h(22);
         }
-
-        // Direct children of a scroll size against its content size, which
-        // starts at zero width, so set it to the left panel width for the
-        // rows to fill.
-        self.scroll.set_content_width(SCROLL_WIDTH);
-        self.scroll.set_content_height(46.0 * SCROLL_ROWS.lossy_convert());
     }
 }
 

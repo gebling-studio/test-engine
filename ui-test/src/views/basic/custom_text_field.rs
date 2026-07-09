@@ -27,8 +27,18 @@ impl Setup for CustomTextField {
 pub async fn test_custom_text_field() -> Result<()> {
     let _view = UITest::start::<CustomTextField>();
 
+    unfocused_field_colors()?;
+    tap_focuses_field()?;
+    tap_outside_unfocuses_field()?;
+
+    // test_engine::ui_test::record_ui_test();
+
+    Ok(())
+}
+
+fn unfocused_field_colors() -> Result<()> {
     check_colors(
-        r#"
+        r"
             460    4 -  89 124 149
             144   52 -   0 255 255
             196   52 -   0 255 255
@@ -61,9 +71,11 @@ pub async fn test_custom_text_field() -> Result<()> {
             300  456 -  89 124 149
             4  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn tap_focuses_field() -> Result<()> {
     inject_touches(
         "
           193  123  b
@@ -72,7 +84,7 @@ pub async fn test_custom_text_field() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             460    4 -  89 124 149
             144   52 -   0 255 255
             196   52 -   0 255 255
@@ -105,9 +117,11 @@ pub async fn test_custom_text_field() -> Result<()> {
             300  456 -  89 124 149
             4  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn tap_outside_unfocuses_field() -> Result<()> {
     inject_touches(
         "
         43   192  b
@@ -116,7 +130,7 @@ pub async fn test_custom_text_field() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             460    4 -  89 124 149
             144   52 -   0 255 255
             196   52 -   0 255 255
@@ -149,10 +163,6 @@ pub async fn test_custom_text_field() -> Result<()> {
             300  456 -  89 124 149
             4  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
-
-    // test_engine::ui_test::record_ui_test();
-
-    Ok(())
+        ",
+    )
 }

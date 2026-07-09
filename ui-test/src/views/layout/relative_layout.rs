@@ -34,7 +34,7 @@ pub async fn test_relative_layout() -> Result<()> {
     let view = UITest::start::<RelativeLayout>();
 
     check_colors(
-        r#"
+        r"
             392    4 -  89 124 149
             592    4 -  89 124 149
             52   52 -   0   0 231
@@ -67,7 +67,7 @@ pub async fn test_relative_layout() -> Result<()> {
             4  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     from_main(move || {
@@ -75,7 +75,7 @@ pub async fn test_relative_layout() -> Result<()> {
     });
 
     check_colors(
-        r#"
+        r"
             432    4 -  89 124 149
             592    4 -  89 124 149
             52   52 -   0   0 231
@@ -108,7 +108,7 @@ pub async fn test_relative_layout() -> Result<()> {
             176  592 -  89 124 149
             368  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

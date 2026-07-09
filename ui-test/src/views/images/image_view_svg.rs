@@ -28,8 +28,15 @@ impl Setup for ImageViewSVG {
 pub async fn test_image_view_svg() -> Result<()> {
     let view = UITest::start::<ImageViewSVG>();
 
+    check_untinted_svg()?;
+    check_tinted_settings(view)?;
+
+    Ok(())
+}
+
+fn check_untinted_svg() -> Result<()> {
     check_colors(
-        r#"
+        r"
             400    4 -  89 124 149
             592    4 -  89 124 149
             164   44 -   0 123 255
@@ -62,11 +69,11 @@ pub async fn test_image_view_svg() -> Result<()> {
             100  548 -   0   0   0
             360  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     check_colors(
-        r#"
+        r"
             400    4 -  89 124 149
             592    4 -  89 124 149
             164   44 -   0 123 255
@@ -99,9 +106,13 @@ pub async fn test_image_view_svg() -> Result<()> {
             100  548 -   0   0   0
             360  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_tinted_settings(view: Weak<ImageViewSVG>) -> Result<()> {
     from_main(move || {
         view.settings.set_image(Tinted {
             tint: BLUE,
@@ -110,7 +121,7 @@ pub async fn test_image_view_svg() -> Result<()> {
     });
 
     check_colors(
-        r#"
+        r"
             400    4 -  89 124 149
             592    4 -  89 124 149
             164   44 -   0 123 255
@@ -143,7 +154,7 @@ pub async fn test_image_view_svg() -> Result<()> {
             100  548 -   0   0 153
             360  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

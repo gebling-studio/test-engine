@@ -29,9 +29,7 @@ impl Setup for Slider {
     }
 }
 
-pub async fn test_slider() -> Result<()> {
-    let mut view = UITest::start::<Slider>();
-
+fn tap_sets_value(view: Weak<Slider>) {
     inject_touches(
         r"
             306  202  b
@@ -39,9 +37,11 @@ pub async fn test_slider() -> Result<()> {
     ",
     );
 
-    assert_eq!(view.slider.value(), 0.78);
+    assert!((view.slider.value() - 0.78).abs() < f32::EPSILON);
     assert_eq!(view.label.text(), "0.78");
+}
 
+fn drag_outside_does_not_change_value(view: Weak<Slider>) {
     inject_touches(
         r"
             177  137  m
@@ -67,9 +67,11 @@ pub async fn test_slider() -> Result<()> {
     ",
     );
 
-    assert_eq!(view.slider.value(), 0.78);
+    assert!((view.slider.value() - 0.78).abs() < f32::EPSILON);
     assert_eq!(view.label.text(), "0.78");
+}
 
+fn drag_sets_value(view: Weak<Slider>) {
     inject_touches(
         r"
             317  218  m
@@ -106,9 +108,11 @@ pub async fn test_slider() -> Result<()> {
     ",
     );
 
-    assert_eq!(view.slider.value(), 0.122_857_15);
+    assert!((view.slider.value() - 0.122_857_15).abs() < f32::EPSILON);
     assert_eq!(view.label.text(), "0.12");
+}
 
+fn drag_below_bottom_clamps_to_zero(view: Weak<Slider>) {
     inject_touches(
         r"
             322  443  m
@@ -127,9 +131,11 @@ pub async fn test_slider() -> Result<()> {
     ",
     );
 
-    assert_eq!(view.slider.value(), 0.0);
+    assert!(view.slider.value().abs() < f32::EPSILON);
     assert_eq!(view.label.text(), "0.00");
+}
 
+fn drag_above_top_clamps_to_one(view: Weak<Slider>) {
     inject_touches(
         r"
             337  478  m
@@ -151,16 +157,20 @@ pub async fn test_slider() -> Result<()> {
     ",
     );
 
-    assert_eq!(view.slider.value(), 1.0);
+    assert!((view.slider.value() - 1.0).abs() < f32::EPSILON);
     assert_eq!(view.label.text(), "1.00");
+}
 
+fn set_range_updates_value(mut view: Weak<Slider>) {
     from_main(move || {
         view.slider.set_range(-5, 5);
     });
 
-    assert_eq!(view.slider.value(), 5.0);
+    assert!((view.slider.value() - 5.0).abs() < f32::EPSILON);
     assert_eq!(view.label.text(), "5.00");
+}
 
+fn drag_to_bottom_of_range(view: Weak<Slider>) {
     inject_touches(
         "
             301  136  b
@@ -173,9 +183,11 @@ pub async fn test_slider() -> Result<()> {
         ",
     );
 
-    assert_eq!(view.slider.value(), -5.0);
+    assert!((view.slider.value() + 5.0).abs() < f32::EPSILON);
     assert_eq!(view.label.text(), "-5.00");
+}
 
+fn check_labels_at_indicator_positions(mut view: Weak<Slider>) -> Result<()> {
     for i in -5..=5 {
         from_main(move || {
             view.slider.set_value(i);
@@ -189,7 +201,7 @@ pub async fn test_slider() -> Result<()> {
     }
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             160    4 -  89 124 149
             428    4 -  89 124 149
@@ -222,8 +234,21 @@ pub async fn test_slider() -> Result<()> {
             4  592 -  89 124 149
             168  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
+
+pub async fn test_slider() -> Result<()> {
+    let view = UITest::start::<Slider>();
+
+    tap_sets_value(view);
+    drag_outside_does_not_change_value(view);
+    drag_sets_value(view);
+    drag_below_bottom_clamps_to_zero(view);
+    drag_above_top_clamps_to_one(view);
+    set_range_updates_value(view);
+    drag_to_bottom_of_range(view);
+    check_labels_at_indicator_positions(view)?;
 
     Ok(())
 }

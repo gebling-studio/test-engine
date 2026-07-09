@@ -74,7 +74,7 @@ mod test {
         let mut ch = vec![];
         [(1, '5'), (2, '4'), (3, '3'), (4, '2'), (5, '1')].apply(|(n, c)| {
             num.push(n);
-            ch.push(c.clone());
+            ch.push(c);
         });
         assert_eq!(&num, &[1, 2, 3, 4, 5]);
         assert_eq!(&ch, &['5', '4', '3', '2', '1']);

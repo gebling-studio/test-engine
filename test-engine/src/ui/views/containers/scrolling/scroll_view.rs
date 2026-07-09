@@ -10,8 +10,8 @@ use crate::{
         flat::{Point, Size},
     },
     ui::{
-        NO_TOUCH_ID, Scrollable, Setup, Touch, TouchStack, UIAnimation, UIEvent, View, ViewData, ViewFrame,
-        ViewSubviews, view, views::containers::scrolling::ScrollContent,
+        NO_TOUCH_ID, Scrollable, Setup, Touch, TouchStack, UIAnimation, UIEvent, View, ViewCallbacks,
+        ViewData, ViewFrame, ViewSubviews, view, views::containers::scrolling::ScrollContent,
     },
 };
 
@@ -21,12 +21,14 @@ const DRAG_SLOP: f32 = 10.0;
 
 #[view]
 pub struct ScrollView {
-    inertia:            f32,
-    began_touch:        Point,
-    previous_touch:     Point,
-    dragging:           bool,
-    pub on_scroll:      Event<f32>,
-    pub bottom_reached: UIEvent,
+    inertia:               f32,
+    began_touch:           Point,
+    previous_touch:        Point,
+    dragging:              bool,
+    manual_content_width:  bool,
+    manual_content_height: bool,
+    pub on_scroll:         Event<f32>,
+    pub bottom_reached:    UIEvent,
 
     #[init]
     pub(crate) content: ScrollContent,
@@ -52,28 +54,57 @@ impl ScrollView {
         self
     }
 
-    pub(crate) fn set_content_size(&mut self, size: impl Into<Size>) -> &mut Self {
+    pub fn set_content_size(&mut self, size: impl Into<Size>) -> &mut Self {
+        self.manual_content_width = true;
+        self.manual_content_height = true;
         self.content.content_size = size.into();
         self
     }
 
     pub fn set_content_width(&mut self, width: impl ToF32) -> &mut Self {
+        self.manual_content_width = true;
         self.content.content_size.width = width.to_f32();
         self
     }
 
     pub fn set_content_height(&mut self, height: impl ToF32) -> &mut Self {
+        self.manual_content_height = true;
         self.content.content_size.height = height.to_f32();
+        self.clamp_offset();
+        self
+    }
 
+    fn clamp_offset(&mut self) {
         if self.content.__base_view().__content_offset < self.max_offset() {
             self.content.__base_view().__content_offset = self.max_offset();
         }
-
-        self
     }
 
     pub(crate) fn get_scroll_content_offset(&self) -> f32 {
         self.content.content_offset()
+    }
+}
+
+impl ViewCallbacks for ScrollView {
+    /// Content dimensions the app never set follow the layout on their
+    /// own: width tracks the viewport, height tracks the lowest subview
+    /// edge. Frames are read from the previous layout pass, so the size
+    /// settles a frame after the content does.
+    fn update(&mut self) {
+        if !self.manual_content_width {
+            self.content.content_size.width = self.width();
+        }
+        if !self.manual_content_height {
+            let bottom = self
+                .content
+                .subviews()
+                .iter()
+                .filter(|view| !view.is_hidden())
+                .map(|view| view.frame().max_y())
+                .fold(0.0, f32::max);
+            self.content.content_size.height = bottom;
+            self.clamp_offset();
+        }
     }
 }
 

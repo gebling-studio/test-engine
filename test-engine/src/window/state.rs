@@ -404,7 +404,7 @@ impl State {
 
             let period = Window::queue().get_timestamp_period();
             let stamps: [u64; 2] = {
-                let data = slice.get_mapped_range();
+                let data = slice.get_mapped_range()?;
                 bytemuck::pod_read_unaligned(&data[..])
             };
             timer.readback.unmap();

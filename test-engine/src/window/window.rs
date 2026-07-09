@@ -417,7 +417,7 @@ impl Window {
 
     /// Index of the frame currently being rendered. Bumps once per rendered
     /// frame, before any draw code runs.
-    pub(crate) fn render_frame() -> u64 {
+    pub fn render_frame() -> u64 {
         RENDER_FRAME.load(Ordering::Relaxed)
     }
 

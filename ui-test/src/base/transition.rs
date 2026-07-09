@@ -42,7 +42,7 @@ pub async fn test_transition() -> Result<()> {
     UITest::start::<Transition>();
 
     check_colors(
-        r#"
+        r"
             452    4 -  89 124 149
             24   24 - 255 255 255
             152   24 - 255 255 255
@@ -75,7 +75,7 @@ pub async fn test_transition() -> Result<()> {
             192  592 -  89 124 149
             404  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     inject_touches(
@@ -87,7 +87,7 @@ pub async fn test_transition() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 -   0   0 231
             444    4 -   0   0 231
             592    4 -   0   0 231
@@ -120,7 +120,7 @@ pub async fn test_transition() -> Result<()> {
             152  592 -   0   0 231
             300  592 -   0   0 231
             592  592 -   0   0 231
-        "#,
+        ",
     )?;
 
     assert_eq!(ACTIONS.lock().as_slice(), &["Transition callback", "Blue setup"]);

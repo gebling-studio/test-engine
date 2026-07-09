@@ -22,6 +22,14 @@ impl Setup for MovableViewTestView {
 pub async fn test_movable_view() -> Result<()> {
     let mut _view = UITest::start::<MovableViewTestView>();
 
+    check_dragged_by_title()?;
+    check_resized_from_corner()?;
+    check_resized_to_min_size()?;
+
+    Ok(())
+}
+
+fn check_dragged_by_title() -> Result<()> {
     inject_touches(
         "
             346  36   b
@@ -31,7 +39,7 @@ pub async fn test_movable_view() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             160   68 - 255 255 255
             420   68 - 255 255 255
@@ -64,9 +72,13 @@ pub async fn test_movable_view() -> Result<()> {
             4  592 -  89 124 149
             284  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_resized_from_corner() -> Result<()> {
     inject_touches(
         "
             501  458  b
@@ -76,7 +88,7 @@ pub async fn test_movable_view() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             592    4 -  89 124 149
             152   68 - 255 255 255
             256   68 - 255 255 255
@@ -109,9 +121,13 @@ pub async fn test_movable_view() -> Result<()> {
             300  504 -  89 124 149
             4  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_resized_to_min_size() -> Result<()> {
     inject_touches(
         "
             313  190  b
@@ -121,7 +137,7 @@ pub async fn test_movable_view() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             592    4 -  89 124 149
             140   68 - 255 255 255
             180   68 - 255 255 255
@@ -154,7 +170,7 @@ pub async fn test_movable_view() -> Result<()> {
             300  464 -  89 124 149
             4  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

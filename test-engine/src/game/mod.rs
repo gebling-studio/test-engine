@@ -19,7 +19,7 @@ mod test {
     use gltf::Gltf;
 
     #[test]
-    #[ignore]
+    #[ignore = "reads a local file, manual experiment"]
     fn test_model_import() -> Result<()> {
         let gltf = Gltf::open("/Users/vladas/Downloads/Untitled.gltf")?;
 
@@ -27,7 +27,7 @@ mod test {
 
         for scene in gltf.scenes() {
             for node in scene.nodes() {
-                println!("Node #{} has {} children", node.index(), node.children().count(),);
+                println!("Node #{} has {} children", node.index(), node.children().count());
             }
         }
 

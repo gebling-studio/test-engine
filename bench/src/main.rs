@@ -12,14 +12,17 @@ use anyhow::{Result, bail};
 use chrono::Local;
 use serde_json::{Value, json};
 
-/// Must match `BENCH_REJECTED_EXIT_CODE` in benchmark_view.rs.
+/// Must match `BENCH_REJECTED_EXIT_CODE` in `benchmark_view.rs`.
 const REJECTED: i32 = 75;
 
 /// Contention only makes results worse, so a run far below the median was
 /// fought over the CPU by something else.
-const SUSPECT_BELOW_MEDIAN: f64 = 0.85;
+const SUSPECT_BELOW_MEDIAN_PERCENT: i64 = 85;
 
-const MODES: &[(&str, &str, &[(&str, &str)])] = &[
+/// Mode name, binary to run and extra environment variables.
+type Mode = (&'static str, &'static str, &'static [(&'static str, &'static str)]);
+
+const MODES: &[Mode] = &[
     ("debug", "target/debug/test-game", &[]),
     ("release", "target/release/test-game", &[]),
     ("headless", "target/release/test-game", &[("TE_HEADLESS", "1")]),
@@ -138,7 +141,7 @@ fn run_once(binary: &str, envs: &[(&str, &str)], result_path: &Path) -> Result<V
 /// clean runs.
 fn mark_suspects(runs: &mut [Value]) -> i64 {
     let all = median(runs.iter().map(|r| r["views"].as_i64().expect("views is a number")));
-    let threshold = (f64::from(u32::try_from(all).expect("views fits u32")) * SUSPECT_BELOW_MEDIAN) as i64;
+    let threshold = all * SUSPECT_BELOW_MEDIAN_PERCENT / 100;
 
     for run in &mut *runs {
         if run["views"].as_i64().expect("views is a number") < threshold {
@@ -166,8 +169,8 @@ fn median(values: impl Iterator<Item = i64>) -> i64 {
     values.sort_unstable();
 
     let mid = values.len() / 2;
-    if values.len() % 2 == 0 {
-        (values[mid - 1] + values[mid]) / 2
+    if values.len().is_multiple_of(2) {
+        i64::midpoint(values[mid - 1], values[mid])
     } else {
         values[mid]
     }

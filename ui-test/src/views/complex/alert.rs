@@ -8,15 +8,13 @@ use test_engine::{
 #[view]
 struct AlertTestView {}
 
-pub async fn test_alert() -> Result<()> {
-    UITest::start::<AlertTestView>();
-
+fn check_alert_shown() -> Result<()> {
     from_main(|| {
         Alert::show("Forogorn\nSopokok\nFergel");
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             304    4 -  89 124 149
             592    4 -  89 124 149
@@ -49,9 +47,11 @@ pub async fn test_alert() -> Result<()> {
             4  592 -  89 124 149
             220  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn check_alert_dismissed() -> Result<()> {
     inject_touches(
         "
             338  373  b
@@ -60,7 +60,7 @@ pub async fn test_alert() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             444    4 -  89 124 149
             592    4 -  89 124 149
@@ -93,9 +93,11 @@ pub async fn test_alert() -> Result<()> {
             152  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn check_styled_alert() -> Result<()> {
     from_main(|| {
         Alert::with_label(|l| {
             l.set_text_color(RED).set_text_size(50).set_alignment(TextAlignment::Left);
@@ -104,7 +106,7 @@ pub async fn test_alert() -> Result<()> {
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             268    4 -  89 124 149
             592    4 -  89 124 149
@@ -137,9 +139,11 @@ pub async fn test_alert() -> Result<()> {
             4  592 -  89 124 149
             236  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn check_alert_shown_again() -> Result<()> {
     inject_touches(
         "
             338  373  b
@@ -152,7 +156,7 @@ pub async fn test_alert() -> Result<()> {
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             304    4 -  89 124 149
             592    4 -  89 124 149
@@ -185,8 +189,17 @@ pub async fn test_alert() -> Result<()> {
             4  592 -  89 124 149
             220  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
+
+pub async fn test_alert() -> Result<()> {
+    UITest::start::<AlertTestView>();
+
+    check_alert_shown()?;
+    check_alert_dismissed()?;
+    check_styled_alert()?;
+    check_alert_shown_again()?;
 
     Ok(())
 }

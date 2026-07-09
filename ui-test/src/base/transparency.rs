@@ -48,7 +48,7 @@ pub async fn test_transparency() -> Result<()> {
     });
 
     check_colors(
-        r#"
+        r"
             100    4 -  96 209  74
             308    4 -  54 123 128
             592    4 -   3   5 239
@@ -81,7 +81,7 @@ pub async fn test_transparency() -> Result<()> {
             444  592 - 242 191  66
             508  592 - 245 217  73
             592  592 - 251 251  83
-        "#,
+        ",
     )?;
 
     Ok(())

@@ -26,11 +26,9 @@ impl Setup for NineSegment {
     }
 }
 
-pub async fn test_nine_segment() -> Result<()> {
-    let mut view = UITest::start::<NineSegment>();
-
+fn check_initial_segment() -> Result<()> {
     check_colors(
-        r#"
+        r"
             376    4 -  89 124 149
             592    4 -  89 124 149
             168   52 -   0  57 162
@@ -63,15 +61,17 @@ pub async fn test_nine_segment() -> Result<()> {
             160  496 - 206 171 151
             240  496 - 183 155 133
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn check_wide_segment(view: Weak<NineSegment>) -> Result<()> {
     from_main(move || {
         view.segment.set_frame((100, 100, 250, 160));
     });
 
     check_colors(
-        r#"
+        r"
             592    4 -  89 124 149
             128  116 -   4  19  63
             320  116 -   3  18  63
@@ -104,15 +104,17 @@ pub async fn test_nine_segment() -> Result<()> {
             160  496 - 206 171 151
             240  496 - 183 155 133
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn check_tall_segment(view: Weak<NineSegment>) -> Result<()> {
     from_main(move || {
         view.segment.set_frame((100, 100, 140, 280));
     });
 
     check_colors(
-        r#"
+        r"
             380    4 -  89 124 149
             592    4 -  89 124 149
             128  116 -   4  19  63
@@ -145,11 +147,11 @@ pub async fn test_nine_segment() -> Result<()> {
             160  496 - 206 171 151
             240  496 - 183 155 133
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     check_colors(
-        r#"
+        r"
             380    4 -  89 124 149
             592    4 -  89 124 149
             128  116 -   4  19  63
@@ -182,9 +184,11 @@ pub async fn test_nine_segment() -> Result<()> {
             160  496 - 206 171 151
             240  496 - 183 155 133
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn check_button_resizing_image(mut view: Weak<NineSegment>) -> Result<()> {
     from_main(move || {
         view.button.set_image(NoImage);
         view.button.set_resizing_image("button");
@@ -192,7 +196,7 @@ pub async fn test_nine_segment() -> Result<()> {
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             384    4 -  89 124 149
             592    4 -  89 124 149
@@ -225,8 +229,17 @@ pub async fn test_nine_segment() -> Result<()> {
             60  472 -   3  17  61
             360  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
+
+pub async fn test_nine_segment() -> Result<()> {
+    let view = UITest::start::<NineSegment>();
+
+    check_initial_segment()?;
+    check_wide_segment(view)?;
+    check_tall_segment(view)?;
+    check_button_resizing_image(view)?;
 
     Ok(())
 }

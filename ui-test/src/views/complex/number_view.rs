@@ -47,11 +47,7 @@ impl Setup for NumberTestView {
     }
 }
 
-pub async fn test_number_view() -> Result<()> {
-    let view = UITest::start::<NumberTestView>();
-
-    inject_touches(
-        "
+const INITIAL_TAPS: &str = "
             379  244  b
             378  243  e
             378  243  b
@@ -161,23 +157,27 @@ pub async fn test_number_view() -> Result<()> {
             361  325  b
             361  325  e
 
-        ",
-    );
+        ";
+
+fn tap_buttons_then_clamp_to_min(view: Weak<NumberTestView>) {
+    inject_touches(INITIAL_TAPS);
 
     from_main(move || {
-        assert_eq!(view.float.value(), -6.0);
-        assert_eq!(view.uint.value(), 3.0);
-        assert_eq!(view.int.value(), -6.0);
+        assert!((view.float.value() + 6.0).abs() < f32::EPSILON);
+        assert!((view.uint.value() - 3.0).abs() < f32::EPSILON);
+        assert!((view.int.value() + 6.0).abs() < f32::EPSILON);
 
         view.float.set_min(-10.0);
         view.uint.set_min(2);
         view.int.set_min(-10);
 
-        assert_eq!(view.float.value(), -10.0);
-        assert_eq!(view.uint.value(), 2.0);
-        assert_eq!(view.int.value(), -10.0);
+        assert!((view.float.value() + 10.0).abs() < f32::EPSILON);
+        assert!((view.uint.value() - 2.0).abs() < f32::EPSILON);
+        assert!((view.int.value() + 10.0).abs() < f32::EPSILON);
     });
+}
 
+fn tap_up_to_five(view: Weak<NumberTestView>) {
     inject_touches(
         "
             160  266  b
@@ -254,12 +254,12 @@ pub async fn test_number_view() -> Result<()> {
         ",
     );
 
-    assert_eq!(view.float.value(), 5.0);
-    assert_eq!(view.uint.value(), 5.0);
-    assert_eq!(view.int.value(), 5.0);
+    assert!((view.float.value() - 5.0).abs() < f32::EPSILON);
+    assert!((view.uint.value() - 5.0).abs() < f32::EPSILON);
+    assert!((view.int.value() - 5.0).abs() < f32::EPSILON);
+}
 
-    inject_touches(
-        "
+const TAPS_BELOW_MIN: &str = "
             126  344  b
             126  344  e
             126  344  b
@@ -445,12 +445,22 @@ pub async fn test_number_view() -> Result<()> {
             386  353  b
             386  353  e
 
-        ",
-    );
+        ";
 
-    assert_eq!(view.float.value(), -10.0);
-    assert_eq!(view.uint.value(), 2.0);
-    assert_eq!(view.int.value(), -10.0);
+fn tap_down_clamps_to_min(view: Weak<NumberTestView>) {
+    inject_touches(TAPS_BELOW_MIN);
+
+    assert!((view.float.value() + 10.0).abs() < f32::EPSILON);
+    assert!((view.uint.value() - 2.0).abs() < f32::EPSILON);
+    assert!((view.int.value() + 10.0).abs() < f32::EPSILON);
+}
+
+pub async fn test_number_view() -> Result<()> {
+    let view = UITest::start::<NumberTestView>();
+
+    tap_buttons_then_clamp_to_min(view);
+    tap_up_to_five(view);
+    tap_down_clamps_to_min(view);
 
     Ok(())
 }

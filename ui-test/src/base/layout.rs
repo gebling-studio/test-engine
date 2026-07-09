@@ -75,7 +75,7 @@ impl Setup for LayoutPlace {
             };
 
             button.on_tap(move || {
-                append_state(&format!("|{}", button.text()));
+                append_state(format!("|{}", button.text()));
             });
         }
 
@@ -105,6 +105,18 @@ pub async fn test_layout() -> Result<()> {
 
     AppRunner::set_window_size((240, 240));
 
+    check_taps_at_240();
+
+    AppRunner::set_window_size((400, 400));
+
+    clear_state();
+
+    check_taps_at_400();
+
+    Ok(())
+}
+
+fn check_taps_at_240() {
     inject_touches(
         r"
             8    121  b
@@ -170,11 +182,9 @@ pub async fn test_layout() -> Result<()> {
         get_state::<String>(),
         "|le_s_ct|left|le_ct|center|ri_ct|right|ri_s_ct|bo_s_ct|bottom|bt_ct|center|tp_ct|top|to_s_ct",
     );
+}
 
-    AppRunner::set_window_size((400, 400));
-
-    clear_state();
-
+fn check_taps_at_400() {
     inject_touches(
         r"
             4    201  b
@@ -274,6 +284,4 @@ pub async fn test_layout() -> Result<()> {
         get_state::<String>(),
         "|le_s_ct|left|le_ct|center|ri_ct|right|ri_s_ct|bo_s_ct|bottom|bt_ct|center|tp_ct|top|to_s_ct",
     );
-
-    Ok(())
 }

@@ -236,7 +236,7 @@ impl Placer {
         self
     }
 
-    pub(crate) fn relative(
+    pub fn relative(
         &self,
         side: Anchor,
         view: impl Deref<Target = impl View + ?Sized>,
@@ -293,7 +293,7 @@ impl Placer {
         self
     }
 
-    pub(crate) fn custom(&self, custom: impl FnMut(&mut Rect) + Send + 'static) -> &Self {
+    pub fn custom(&self, custom: impl FnMut(&mut Rect) + Send + 'static) -> &Self {
         *self.custom.borrow_mut() = Some(Arc::new(Mutex::new(custom)));
         self
     }

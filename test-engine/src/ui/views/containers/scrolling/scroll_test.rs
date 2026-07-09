@@ -1,5 +1,3 @@
-#![allow(clippy::float_cmp)]
-
 use anyhow::Result;
 use hreads::from_main;
 use refs::Weak;
@@ -68,16 +66,16 @@ impl ViewTest for ScrollViewTest {
             ",
         )?;
 
-        assert_eq!(view.scroll.content_offset(), 0.0_f32);
+        assert!(view.scroll.content_offset().abs() < f32::EPSILON);
 
         inject_scroll(-5);
-        assert_eq!(view.scroll.content_offset(), 0.0_f32);
+        assert!(view.scroll.content_offset().abs() < f32::EPSILON);
 
         inject_scroll(-20);
-        assert_eq!(view.scroll.content_offset(), 0.0_f32);
+        assert!(view.scroll.content_offset().abs() < f32::EPSILON);
 
         inject_scroll(-30);
-        assert_eq!(view.scroll.content_offset(), 0.0_f32);
+        assert!(view.scroll.content_offset().abs() < f32::EPSILON);
 
         check_colors(
             r"
@@ -203,7 +201,7 @@ impl ViewTest for ScrollViewTest {
         inject_touches("258  176  e");
 
         inject_scroll(-150);
-        assert_eq!(view.scroll.get_scroll_content_offset(), -150.0);
+        assert!((view.scroll.get_scroll_content_offset() + 150.0).abs() < f32::EPSILON);
 
         check_colors(
             r"
@@ -243,7 +241,7 @@ impl ViewTest for ScrollViewTest {
         )?;
 
         inject_scroll(-1500);
-        assert_eq!(view.scroll.get_scroll_content_offset(), -200.0);
+        assert!((view.scroll.get_scroll_content_offset() + 200.0).abs() < f32::EPSILON);
 
         check_colors(
             r"

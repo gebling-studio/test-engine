@@ -1,12 +1,12 @@
 use test_engine::{
     gm::LossyConvert,
     refs::{Weak, manage::DataManager},
-    ui::{Font, Label, Setup, TextAlignment, ViewData, ViewSubviews, view},
+    ui::{Font, Label, ScrollView, Setup, ViewData, ViewSubviews, view},
 };
 
 use crate::interface::{
     palette::{BG, TEXT, TEXT_DIM},
-    scenes::add_back_button,
+    scenes::{HEADER_HEIGHT, add_header},
 };
 
 // Font file and a short sample. Each renders in its own typeface to show
@@ -15,48 +15,45 @@ const FONTS: [(&str, &str); 5] = [
     ("RussoOne-Regular.ttf", "Russo One heading"),
     ("OpenSans.ttf", "Open Sans stays clean"),
     ("Monoton-Regular.ttf", "MONOTON NEON 88"),
-    ("Neucha.ttf", "Neucha soft handwriting"),
-    ("SpecialElite-Regular.ttf", "Special Elite typewriter"),
+    ("Neucha.ttf", "Neucha handwriting"),
+    ("SpecialElite-Regular.ttf", "Special Elite keys"),
 ];
 
-/// A stack of labels, each in a different font, plus a letter spacing
-/// row and a multiline row.
+/// A scrollable stack of labels, each in a different font, plus a letter
+/// spacing row and a multiline row. Sizes are picked to fit a 320 point
+/// wide phone screen.
 #[view]
-pub struct TextFonts {}
+pub struct TextFonts {
+    #[init]
+    scroll: ScrollView,
+}
 
 impl Setup for TextFonts {
     fn setup(self: Weak<Self>) {
         self.set_color(BG);
 
-        let title = self.add_view::<Label>();
-        title
-            .set_text("Text and Fonts")
-            .set_text_color(TEXT)
-            .set_text_size(24)
-            .set_font(Font::get("RussoOne-Regular.ttf"))
-            .set_alignment(TextAlignment::Center);
-        title.place().t(18).center_x().w(360).h(36);
+        self.scroll.place().t(HEADER_HEIGHT).lrb(0);
 
         for (i, (font, sample)) in FONTS.into_iter().enumerate() {
-            let y = 66.0 + 42.0 * i.lossy_convert();
-            let label = self.add_view::<Label>();
+            let y = 16.0 + 40.0 * i.lossy_convert();
+            let label = self.scroll.add_view::<Label>();
             label
                 .set_text(sample)
                 .set_text_color(TEXT)
-                .set_text_size(28)
+                .set_text_size(22)
                 .set_font(Font::get(font));
-            label.place().t(y).l(24).r(24).h(38);
+            label.place().t(y).l(16).r(16).h(34);
         }
 
-        let spacing = self.add_view::<Label>();
+        let spacing = self.scroll.add_view::<Label>();
         spacing
             .set_text("LETTER SPACING")
             .set_text_color(TEXT_DIM)
-            .set_text_size(24)
-            .set_letter_spacing(10);
-        spacing.place().t(410).l(24).r(24).h(34);
+            .set_text_size(18)
+            .set_letter_spacing(6);
+        spacing.place().t(226).l(16).r(16).h(30);
 
-        let multiline = self.add_view::<Label>();
+        let multiline = self.scroll.add_view::<Label>();
         multiline
             .set_text(
                 "This is a multiline label. It wraps across several lines when the text is longer than its width, so paragraphs stay readable.",
@@ -64,8 +61,8 @@ impl Setup for TextFonts {
             .set_text_color(TEXT)
             .set_text_size(18)
             .set_multiline(true);
-        multiline.place().t(452).l(24).r(24).h(110);
+        multiline.place().t(266).l(16).r(16).h(180);
 
-        add_back_button(self);
+        add_header(self, "Text and Fonts");
     }
 }

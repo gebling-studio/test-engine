@@ -54,6 +54,17 @@ impl Setup for OutBounds {
 pub async fn test_out_bounds() -> Result<()> {
     UITest::start::<OutBounds>();
 
+    check_out_bottom()?;
+    check_out_bottom_right()?;
+    check_out_top_right()?;
+    check_out_top_left()?;
+    check_out_left()?;
+    check_out_bottom_left()?;
+
+    Ok(())
+}
+
+fn check_out_bottom() -> Result<()> {
     inject_touches(
         r"
             372  307  b
@@ -72,7 +83,7 @@ pub async fn test_out_bounds() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             324    4 -  89 124 149
             592    4 -  89 124 149
@@ -105,9 +116,13 @@ pub async fn test_out_bounds() -> Result<()> {
             336  588 - 255 255 255
             276  592 - 186 154 129
             348  592 -   0   0   0
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_out_bottom_right() -> Result<()> {
     inject_touches(
         r"
             308  305  b
@@ -128,7 +143,7 @@ pub async fn test_out_bounds() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             324    4 -  89 124 149
             592    4 -  89 124 149
@@ -161,9 +176,13 @@ pub async fn test_out_bounds() -> Result<()> {
             572  588 - 242 214 203
             4  592 -  89 124 149
             224  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_out_top_right() -> Result<()> {
     inject_touches(
         r"
             365  376  b
@@ -198,7 +217,7 @@ pub async fn test_out_bounds() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             556    4 - 255 255 255
             572    4 -   0   0   0
@@ -231,9 +250,13 @@ pub async fn test_out_bounds() -> Result<()> {
             352  376 -   0 150 230
             4  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_out_top_left() -> Result<()> {
     inject_touches(
         r"
             298  380  b
@@ -260,7 +283,7 @@ pub async fn test_out_bounds() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             56    4 - 255 255 255
             72    4 -   0   0   0
             88    4 -   0   0   0
@@ -293,9 +316,13 @@ pub async fn test_out_bounds() -> Result<()> {
             384  376 -   0 150 230
             4  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_out_left() -> Result<()> {
     inject_touches(
         r"
             303  377  b
@@ -318,7 +345,7 @@ pub async fn test_out_bounds() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             224    4 -  89 124 149
             592    4 -  89 124 149
             4  204 - 223 183 184
@@ -351,9 +378,13 @@ pub async fn test_out_bounds() -> Result<()> {
             148  396 - 255 255 255
             164  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_out_bottom_left() -> Result<()> {
     inject_touches(
         r"
             372  364  b
@@ -376,7 +407,7 @@ pub async fn test_out_bounds() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             276    4 -  89 124 149
             592    4 -  89 124 149
@@ -409,7 +440,7 @@ pub async fn test_out_bounds() -> Result<()> {
             68  592 -   0   0   0
             100  592 -   0   0   0
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

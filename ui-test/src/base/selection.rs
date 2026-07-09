@@ -38,8 +38,18 @@ impl Setup for Selection {
 pub async fn test_selection() -> Result<()> {
     UITest::start::<Selection>();
 
+    check_none_selected()?;
+    check_left_selected()?;
+    check_center_selected()?;
+    check_right_selected()?;
+    check_deselected_outside()?;
+
+    Ok(())
+}
+
+fn check_none_selected() -> Result<()> {
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             252    4 -  89 124 149
             592    4 -  89 124 149
@@ -72,9 +82,13 @@ pub async fn test_selection() -> Result<()> {
             4  592 -  89 124 149
             288  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_left_selected() -> Result<()> {
     inject_touches(
         r"
             128  274  b
@@ -83,7 +97,7 @@ pub async fn test_selection() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             252    4 -  89 124 149
             592    4 -  89 124 149
@@ -116,9 +130,13 @@ pub async fn test_selection() -> Result<()> {
             4  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_center_selected() -> Result<()> {
     inject_touches(
         r"
             260  260  b
@@ -127,7 +145,7 @@ pub async fn test_selection() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             252    4 -  89 124 149
             592    4 -  89 124 149
@@ -160,9 +178,13 @@ pub async fn test_selection() -> Result<()> {
             4  592 -  89 124 149
             332  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_right_selected() -> Result<()> {
     inject_touches(
         r"
             420  260  b
@@ -171,7 +193,7 @@ pub async fn test_selection() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             252    4 -  89 124 149
             592    4 -  89 124 149
@@ -204,9 +226,13 @@ pub async fn test_selection() -> Result<()> {
             4  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_deselected_outside() -> Result<()> {
     inject_touches(
         r"
               5    5  b
@@ -214,7 +240,7 @@ pub async fn test_selection() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             252    4 -  89 124 149
             592    4 -  89 124 149
@@ -247,7 +273,7 @@ pub async fn test_selection() -> Result<()> {
             4  592 -  89 124 149
             288  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

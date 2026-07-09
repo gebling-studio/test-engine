@@ -26,8 +26,18 @@ impl Setup for NearLayout {
 pub async fn test_near_layout() -> anyhow::Result<()> {
     let view = UITest::start::<NearLayout>();
 
+    check_at_right()?;
+    check_below(view)?;
+    check_at_right_with_width(view)?;
+    check_below_with_width(view)?;
+    check_below_with_height(view)?;
+
+    Ok(())
+}
+
+fn check_at_right() -> anyhow::Result<()> {
     check_colors(
-        r#"
+        r"
             592    4 -  89 124 149
             24   24 -   0 255   0
             52   24 -   0 255   0
@@ -60,15 +70,19 @@ pub async fn test_near_layout() -> anyhow::Result<()> {
             4  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_below(view: Weak<NearLayout>) -> anyhow::Result<()> {
     from_main(move || {
         view.next.place().clear().below(view.base, 20);
     });
 
     check_colors(
-        r#"
+        r"
             328    4 -  89 124 149
             592    4 -  89 124 149
             24   24 -   0 255   0
@@ -101,15 +115,19 @@ pub async fn test_near_layout() -> anyhow::Result<()> {
             4  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_at_right_with_width(view: Weak<NearLayout>) -> anyhow::Result<()> {
     from_main(move || {
         view.next.place().clear().at_right(view.base, 20).w(200);
     });
 
     check_colors(
-        r#"
+        r"
             440    4 -  89 124 149
             592    4 -  89 124 149
             44   24 -   0 255   0
@@ -142,15 +160,19 @@ pub async fn test_near_layout() -> anyhow::Result<()> {
             4  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_below_with_width(view: Weak<NearLayout>) -> anyhow::Result<()> {
     from_main(move || {
         view.next.place().clear().below(view.base, 20).w(200);
     });
 
     check_colors(
-        r#"
+        r"
             380    4 -  89 124 149
             592    4 -  89 124 149
             32   24 -   0 255   0
@@ -183,15 +205,19 @@ pub async fn test_near_layout() -> anyhow::Result<()> {
             4  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_below_with_height(view: Weak<NearLayout>) -> anyhow::Result<()> {
     from_main(move || {
         view.next.place().clear().below(view.base, 20).h(10);
     });
 
     check_colors(
-        r#"
+        r"
             592    4 -  89 124 149
             24   24 -   0 255   0
             68   24 -   0 255   0
@@ -224,7 +250,7 @@ pub async fn test_near_layout() -> anyhow::Result<()> {
             4  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

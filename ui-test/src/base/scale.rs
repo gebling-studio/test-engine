@@ -38,7 +38,7 @@ impl Setup for ScaleView {
         self.bl_button.place().bl(20).size(50, 50);
         self.br_button.place().br(20).size(50, 50);
 
-        let mut this = self.clone();
+        let mut this = self;
         self.apply_to::<Button>(move |b| {
             let b = weak_from_ref(b);
             b.on_tap(move || {
@@ -62,8 +62,20 @@ impl TableData for ScaleView {
 }
 
 pub async fn test_scale() -> Result<()> {
-    let mut view = UITest::start::<ScaleView>();
+    let view = UITest::start::<ScaleView>();
 
+    check_default_scale(view)?;
+    check_downscaled(view)?;
+    check_upscaled(view)?;
+
+    from_main(move || {
+        UIManager::override_scale(1);
+    });
+
+    Ok(())
+}
+
+fn check_default_scale(view: Weak<ScaleView>) -> Result<()> {
     inject_touches(
         "
             39   40   b
@@ -110,7 +122,7 @@ pub async fn test_scale() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             300    4 -  89 124 149
             592    4 -  89 124 149
@@ -143,9 +155,13 @@ pub async fn test_scale() -> Result<()> {
             24  576 - 255 255 255
             576  576 - 255 255 255
             312  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_downscaled(mut view: Weak<ScaleView>) -> Result<()> {
     from_main(move || {
         UIManager::override_scale(0.6);
         view.data.clear();
@@ -191,7 +207,7 @@ pub async fn test_scale() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             216    4 -  89 124 149
             428    4 -  89 124 149
@@ -224,9 +240,13 @@ pub async fn test_scale() -> Result<()> {
             16  584 - 255 255 255
             584  584 - 255 255 255
             248  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_upscaled(mut view: Weak<ScaleView>) -> Result<()> {
     from_main(move || {
         UIManager::override_scale(1.5);
         view.data.clear();
@@ -281,7 +301,7 @@ pub async fn test_scale() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             356    4 -  89 124 149
             568   32 - 255 255 255
             196   72 -   0   0   0
@@ -314,12 +334,8 @@ pub async fn test_scale() -> Result<()> {
             408  584 -  89 124 149
             4  592 -  89 124 149
             248  592 -  89 124 149
-        "#,
+        ",
     )?;
-
-    from_main(move || {
-        UIManager::override_scale(1);
-    });
 
     Ok(())
 }

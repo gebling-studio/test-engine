@@ -11,8 +11,18 @@ pub struct RootViewTest {}
 pub async fn test_root_view() -> Result<()> {
     UITest::start::<RootViewTest>();
 
+    check_default_root()?;
+    check_green_root()?;
+    check_clear_root()?;
+    check_image_root()?;
+    check_no_image_root()?;
+
+    Ok(())
+}
+
+fn check_default_root() -> Result<()> {
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             444    4 -  89 124 149
             592    4 -  89 124 149
@@ -45,15 +55,19 @@ pub async fn test_root_view() -> Result<()> {
             152  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_green_root() -> Result<()> {
     from_main(|| {
         UIManager::root_view().set_color(GREEN);
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -   0 255   0
             444    4 -   0 255   0
             592    4 -   0 255   0
@@ -86,15 +100,19 @@ pub async fn test_root_view() -> Result<()> {
             152  592 -   0 255   0
             300  592 -   0 255   0
             592  592 -   0 255   0
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_clear_root() -> Result<()> {
     from_main(|| {
         UIManager::root_view().set_color(CLEAR);
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             444    4 -  89 124 149
             592    4 -  89 124 149
@@ -127,15 +145,19 @@ pub async fn test_root_view() -> Result<()> {
             152  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_image_root() -> Result<()> {
     from_main(|| {
         UIManager::root_view().set_image("cat.png");
     });
 
     check_colors(
-        r#"
+        r"
             4    4 - 238 199 204
             360    4 - 224 178 180
             592    4 - 214 164 165
@@ -168,15 +190,19 @@ pub async fn test_root_view() -> Result<()> {
             72  592 - 228 179 178
             344  592 - 206 171 151
             592  592 - 180 150 126
-        "#,
+        ",
     )?;
 
+    Ok(())
+}
+
+fn check_no_image_root() -> Result<()> {
     from_main(|| {
         UIManager::root_view().set_image(NoImage);
     });
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             444    4 -  89 124 149
             592    4 -  89 124 149
@@ -209,7 +235,7 @@ pub async fn test_root_view() -> Result<()> {
             152  592 -  89 124 149
             300  592 -  89 124 149
             592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

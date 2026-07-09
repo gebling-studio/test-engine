@@ -5,7 +5,7 @@ use std::{
 };
 
 use anyhow::Result;
-use netrun::System;
+use netrun::{System, local_ip};
 use test_engine::{
     Platform,
     audio::Sound,
@@ -15,8 +15,8 @@ use test_engine::{
     refs::{Weak, manage::DataManager},
     ui::{
         ALL_VIEWS, AfterSetup, Alert, Anchor, Button, Container, Font, InfiniteScrollTest, Label, Point,
-        Setup, Shadow, Spinner, TextAlignment, UIManager, ViewData, ViewSubviews, all_view_tests, all_views,
-        view,
+        ScrollView, Setup, Shadow, Spinner, TextAlignment, UIManager, ViewData, ViewSubviews,
+        all_view_tests, all_views, view,
     },
 };
 
@@ -38,12 +38,14 @@ use crate::{
     no_physics::NoPhysicsView,
 };
 
-/// A flat dev launcher. A themed top bar over a set of labelled sections,
-/// each a wrapped row of buttons that fire one dev action.
+/// A flat dev launcher. A themed top bar over a scrollable set of
+/// labelled sections, each a wrapped row of buttons that fire one dev
+/// action, so every button stays reachable on small screens.
 #[view]
 pub struct MenuView {
     #[init]
     top_bar: Container,
+    scroll:  ScrollView,
 }
 
 impl Setup for MenuView {
@@ -59,10 +61,21 @@ impl Setup for MenuView {
             .set_text_color(TEXT)
             .set_text_size(24)
             .set_font(Font::get("RussoOne-Regular.ttf"))
-            .set_alignment(TextAlignment::Center);
-        title.place().center().size(140, 34);
+            .set_alignment(TextAlignment::Left);
+        title.place().l(124).center_y().size(70, 34);
+
+        let ip = local_ip().map_or_else(|_| "no ip".to_string(), |ip| ip.to_string());
+        let status = self.top_bar.add_view::<Label>();
+        status
+            .set_text(format!("{ip}   {}", UIManager::app_instance_id()))
+            .set_text_color(TEXT_DIM)
+            .set_text_size(10)
+            .set_alignment(TextAlignment::Right);
+        status.place().r(12).center_y().size(120, 30);
 
         add_back_button(self);
+
+        self.scroll.place().t(64).lrb(0);
 
         let scenes = self.scenes();
         let ui = self.ui(scenes);
@@ -73,7 +86,7 @@ impl Setup for MenuView {
 
 impl MenuView {
     fn scenes(self: Weak<Self>) -> Weak<Container> {
-        let scenes = self.section(self.top_bar, "SCENES");
+        let scenes = self.section(None, "SCENES");
         Self::btn(scenes, "Main level", || UIManager::set_view(GameScene::new()));
         Self::btn(scenes, "Polygon", || UIManager::set_view(PolygonView::new()));
         Self::btn(scenes, "Noise", || {
@@ -99,7 +112,7 @@ impl MenuView {
     }
 
     fn ui(self: Weak<Self>, anchor: Weak<Container>) -> Weak<Container> {
-        let ui = self.section(anchor, "UI");
+        let ui = self.section(Some(anchor), "UI");
         #[cfg(feature = "bench")]
         Self::btn(ui, "UI bench", || {
             LevelManager::stop_level();
@@ -139,7 +152,7 @@ impl MenuView {
     }
 
     fn level(self: Weak<Self>, anchor: Weak<Container>) -> Weak<Container> {
-        let level = self.section(anchor, "LEVEL");
+        let level = self.section(Some(anchor), "LEVEL");
         Self::btn(level, "Benchmark", || {
             *LevelManager::camera_pos() = Point::default();
             LevelManager::set_level(BenchmarkLevel::default());
@@ -150,7 +163,7 @@ impl MenuView {
     }
 
     fn system(self: Weak<Self>, anchor: Weak<Container>) {
-        let system = self.section(anchor, "SYSTEM");
+        let system = self.section(Some(anchor), "SYSTEM");
         Self::btn(system, "System info", || {
             Alert::with_label(|l| {
                 l.set_text_size(15);
@@ -173,19 +186,25 @@ impl MenuView {
         Self::btn(system, "Panic", || panic!("test panic"));
     }
 
-    /// Adds a section header under `anchor` and returns the wrapped button
-    /// row below it, to feed the next section as its anchor.
-    fn section(self: Weak<Self>, anchor: Weak<Container>, title: &str) -> Weak<Container> {
-        let label = self.add_view::<Label>();
+    /// Adds a section header into the scroll and returns the wrapped
+    /// button row below it, to feed the next section as its anchor. The
+    /// first section passes no anchor and pins to the top.
+    fn section(self: Weak<Self>, anchor: Option<Weak<Container>>, title: &str) -> Weak<Container> {
+        let label = self.scroll.add_view::<Label>();
         label
             .set_text(title)
             .set_text_color(TEXT_DIM)
             .set_text_size(13)
             .set_font(Font::get("RussoOne-Regular.ttf"))
             .set_alignment(TextAlignment::Left);
-        label.place().anchor(Anchor::Top, anchor, 16).lr(24).h(20);
+        match anchor {
+            Some(anchor) => label.place().anchor(Anchor::Top, anchor, 16),
+            None => label.place().t(12),
+        }
+        .lr(24)
+        .h(20);
 
-        let grid = self.add_view::<Container>();
+        let grid = self.scroll.add_view::<Container>();
         // Anchor only the top to the header. below() would also copy the
         // header width, so lr could no longer inset the row.
         grid.place().anchor(Anchor::Top, label, 6).lr(18).all(6).all_wrap();

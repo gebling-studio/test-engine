@@ -3,11 +3,16 @@ use log::debug;
 use test_engine::{
     RenderPass,
     dispatch::from_main,
+    refs::Weak,
     ui::{ViewCallbacks, view},
     ui_test::{UITest, check_colors},
 };
 
-use crate::{occlusion::render_occlusion, path::render_path, render::Case::*};
+use crate::{
+    occlusion::render_occlusion,
+    path::render_path,
+    render::Case::{Occlusion, Path},
+};
 
 #[derive(Default)]
 enum Case {
@@ -37,10 +42,17 @@ impl ViewCallbacks for RenderTestView {
 pub async fn test_render() -> Result<()> {
     debug!("Test render");
 
-    let mut view = UITest::start::<RenderTestView>();
+    let view = UITest::start::<RenderTestView>();
 
+    check_occlusion()?;
+    check_path(view)?;
+
+    Ok(())
+}
+
+fn check_occlusion() -> Result<()> {
     check_colors(
-        r#"
+        r"
               36   36 -  89 124 149
               47   41 -  89 124 149
               54   72 - 255   0   0
@@ -120,17 +132,21 @@ pub async fn test_render() -> Result<()> {
              251   65 -   0 255   0
              251   64 -   0 255   0
              254   31 -  89 124 149
-        "#,
+        ",
     )?;
 
     debug!("Occlusion: OK");
 
+    Ok(())
+}
+
+fn check_path(mut view: Weak<RenderTestView>) -> Result<()> {
     from_main(move || {
         view.case = Path;
     });
 
     check_colors(
-        r#"
+        r"
              167  243 -  89 124 149
              181  243 -  89 124 149
              187  243 -  89 124 149
@@ -169,7 +185,7 @@ pub async fn test_render() -> Result<()> {
              319  378 -  89 124 149
               69  331 -  89 124 149
              194  116 -  89 124 149
-        "#,
+        ",
     )?;
 
     debug!("Path: OK");

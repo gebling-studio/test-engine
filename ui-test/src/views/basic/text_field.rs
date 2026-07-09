@@ -25,11 +25,7 @@ impl Setup for TextField {
     }
 }
 
-pub async fn test_text_field() -> Result<()> {
-    let view = UITest::start::<TextField>();
-
-    AppRunner::set_window_size((800, 800));
-
+fn check_typed_text() -> Result<()> {
     inject_touches(
         r"
             389  576  b
@@ -60,7 +56,7 @@ pub async fn test_text_field() -> Result<()> {
     );
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             244    4 -  89 124 149
             552    4 -  89 124 149
@@ -93,9 +89,11 @@ pub async fn test_text_field() -> Result<()> {
             4  792 -  89 124 149
             400  792 -  89 124 149
             792  792 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
 
+fn check_large_unicode_text(view: Weak<TextField>) -> Result<()> {
     from_main(move || {
         view.field.set_text_size(140);
         view.field.clear();
@@ -110,7 +108,7 @@ pub async fn test_text_field() -> Result<()> {
     inject_keys("ŽĖЎФЪ");
 
     check_colors(
-        r#"
+        r"
             4    4 -  89 124 149
             792    4 -  89 124 149
             304  212 - 255 255 255
@@ -143,8 +141,17 @@ pub async fn test_text_field() -> Result<()> {
             4  792 -  89 124 149
             376  792 -  89 124 149
             792  792 -  89 124 149
-        "#,
-    )?;
+        ",
+    )
+}
+
+pub async fn test_text_field() -> Result<()> {
+    let view = UITest::start::<TextField>();
+
+    AppRunner::set_window_size((800, 800));
+
+    check_typed_text()?;
+    check_large_unicode_text(view)?;
 
     Ok(())
 }

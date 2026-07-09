@@ -127,16 +127,16 @@ mod test {
 
         let result: String = touches.into_iter().map(|t| t.to_string() + "\n").collect();
 
-        println!("{}", result);
+        println!("{result}");
 
         assert_eq!(
             result,
-            r#"0    0    b
+            r"0    0    b
 2000 10   e
 100  4000 e
 1    4000 m
 4000 1    m
-"#
+"
         );
 
         assert_eq!(touches.as_slice(), &Touch::vec_from_str(&result));
@@ -144,13 +144,13 @@ mod test {
         assert_eq!(
             touches.as_slice(),
             &Touch::vec_from_str(
-                r#"
+                r"
                                        0             0 b
                                     2000            10 e
                                      100          4000 e
                                        1          4000 m
                                     4000             1 m
-                "#
+                "
             )
         );
 
