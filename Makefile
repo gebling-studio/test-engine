@@ -46,6 +46,13 @@ ios-debug:
 fix-lint:
 	cargo clippy --fix --allow-dirty --allow-staged --workspace --all-targets
 
+.PHONY: ci
+ci:
+	typos
+	cargo fmt --all -- --check
+	cargo clippy --workspace --all-targets -- -D warnings
+	cargo machete
+
 lint:
 	cargo clippy --workspace --all-targets -- -D warnings
 
