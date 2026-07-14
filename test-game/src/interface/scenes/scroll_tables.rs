@@ -2,8 +2,8 @@ use test_engine::{
     gm::LossyConvert,
     refs::Weak,
     ui::{
-        Anchor, CellRegistry, Container, Label, ScrollView, Setup, TableData, TableView, TextAlignment,
-        View, ViewData, ViewFrame, ViewSubviews, view,
+        Anchor, CellRegistry, Container, Label, ScrollView, Setup, TableData, TableView, TextAlignment, View,
+        ViewData, ViewFrame, ViewSubviews, view,
     },
 };
 

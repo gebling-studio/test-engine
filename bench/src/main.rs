@@ -20,7 +20,11 @@ const REJECTED: i32 = 75;
 const SUSPECT_BELOW_MEDIAN_PERCENT: i64 = 85;
 
 /// Mode name, binary to run and extra environment variables.
-type Mode = (&'static str, &'static str, &'static [(&'static str, &'static str)]);
+type Mode = (
+    &'static str,
+    &'static str,
+    &'static [(&'static str, &'static str)],
+);
 
 const MODES: &[Mode] = &[
     ("debug", "target/debug/test-game", &[]),

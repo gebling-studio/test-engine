@@ -1,7 +1,7 @@
 # TestEngine
 
 Cross platform game engine and UI framework in Rust. Rendering on WGPU.
-Supports: Windows Linux Mac iOS and Android.
+Supports: Windows, Linux, Mac, iOS and WebAssembly. Android is temporarily unsupported.
 
 The engine is one library crate, `test-engine`, with modules like `gm`, `ui`, `window`,
 `render`, `level` under `test-engine/src/`. `deps/` holds only the proc macro crates.

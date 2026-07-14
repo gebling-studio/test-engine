@@ -7,8 +7,8 @@ use test_engine::{
     ui::{
         AddLabel, Anchor,
         Anchor::{Top, X},
-        BLACK, Button, Container, DrawingView, Image, ImageView, Label, NumberView, Point, PointsPath,
-        Setup, Size, TURQUOISE, ViewData, ViewSubviews, ViewTouch, WHITE, view,
+        BLACK, Button, Container, DrawingView, Image, ImageView, Label, NumberView, Point, PointsPath, Setup,
+        Size, TURQUOISE, ViewData, ViewSubviews, ViewTouch, WHITE, view,
     },
 };
 

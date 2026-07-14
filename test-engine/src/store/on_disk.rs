@@ -86,7 +86,7 @@ impl<T: Storable + Default> OnDisk<T> {
     }
 
     pub fn get_or_init(&self) -> T {
-        get_or_init_value(&expand_tilde(&self.path))
+        get_or_init_value(&expand_tilde(self.full_path()))
     }
 }
 
@@ -132,6 +132,7 @@ mod test {
 
     static STORED: LazyLock<OnDisk<i32>> = LazyLock::new(|| OnDisk::new("stored_i32_test.json"));
     static STORED_STRUCT: LazyLock<OnDisk<Data>> = LazyLock::new(|| OnDisk::new("stored_struct_test.json"));
+    static INITIALIZED: LazyLock<OnDisk<i32>> = LazyLock::new(|| OnDisk::new("initialized_i32_test.json"));
 
     fn check_send<T: Send>(_send: &T) {}
     fn check_sync<T: Sync>(_sync: &T) {}
@@ -159,6 +160,10 @@ mod test {
         let loaded_data = STORED_STRUCT.get();
 
         assert_eq!(data, loaded_data.unwrap());
+
+        assert_eq!(INITIALIZED.get_or_init(), 0);
+        assert_eq!(INITIALIZED.get(), Some(0));
+        INITIALIZED.reset();
     }
 
     #[test]

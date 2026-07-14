@@ -70,11 +70,11 @@ impl App for TestGameApp {
     }
 
     #[cfg(not_wasm)]
-    fn sentry_url(&self) -> PinnedFuture<String> {
+    fn sentry_url(&self) -> PinnedFuture<Option<String>> {
         Box::pin(async {
             dotenvy::dotenv()?;
             let url = secrets().await?.get("SENTRY_URL").await?;
-            Ok(url)
+            Ok(Some(url))
         })
     }
 }

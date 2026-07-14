@@ -1,6 +1,5 @@
 use std::pin::Pin;
 
-use anyhow::bail;
 use refs::Own;
 
 use crate::{app_starter::test_engine_start_with_app, gm::flat::Size, ui::View};
@@ -20,8 +19,10 @@ pub trait App {
         test_engine_start_with_app(Box::new(Self::default()));
     }
 
-    fn sentry_url(&self) -> PinnedFuture<String> {
-        Box::pin(async { bail!("Not implemented") })
+    /// Returns a Sentry DSN, `None` to disable Sentry, or a configuration
+    /// error.
+    fn sentry_url(&self) -> PinnedFuture<Option<String>> {
+        Box::pin(async { Ok(None) })
     }
 }
 

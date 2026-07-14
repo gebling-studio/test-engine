@@ -306,6 +306,12 @@ fn distribute<const AXIS: Axis>(views: &[Own<dyn View>], margin: f32) {
 }
 
 fn distribute_with_ratio(size: Size, views: &[Own<dyn View>], ratios: &[f32]) {
+    assert_eq!(
+        views.len(),
+        ratios.len(),
+        "Distribute ratio count must match the number of subviews"
+    );
+
     let total_ratio = 1.0 / ratios.iter().sum::<f32>();
 
     for i in 0..ratios.len() {

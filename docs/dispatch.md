@@ -13,6 +13,10 @@ This is strict: if nobody set the main thread, any check panics with
 
 All `Own`/`Weak` runtime checks and `MainLock` globals are built on top of this.
 
+`UIEvent::trigger()` also asserts the main thread before invoking subscribers. Its stored `Weak`
+pointer keeps dead subscribers from being called; it does not provide thread dispatch. Background
+work must use `on_main` or `from_main` before triggering a UI event.
+
 ## Sending work to main
 
 - `on_main(action)` — queue a closure. On the main thread it runs immediately, from any other

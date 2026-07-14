@@ -184,8 +184,13 @@ impl Placer {
     }
 
     pub fn distribute_ratio<const LEN: usize>(&self, ratios: [impl ToF32; LEN]) -> &Self {
-        self.all_tiling_rules()
-            .push(Tiling::Distribute(ratios.iter().map(|f| f.to_f32()).collect()).into());
+        let ratios: Vec<_> = ratios.iter().map(|ratio| ratio.to_f32()).collect();
+        assert!(!ratios.is_empty(), "Distribute ratios cannot be empty");
+        assert!(
+            ratios.iter().all(|ratio| ratio.is_finite() && *ratio > 0.0),
+            "Distribute ratios must be positive finite numbers"
+        );
+        self.all_tiling_rules().push(Tiling::Distribute(ratios).into());
         self
     }
 

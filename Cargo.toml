@@ -66,7 +66,6 @@ educe = "0.6"
 fastrand = "2.4"
 fern = "0.7"
 gloo-timers = { version = "0.4", features = ["futures"] }
-gltf = "1.4"
 hex = "0.4"
 image = "0.25"
 indexmap = "2.14"
@@ -88,7 +87,14 @@ resvg = "0.47"
 rfd = "0.17"
 rust_decimal = "1.42"
 rustybuzz = "0.20"
-sentry = { version = "0.48", default-features = false, features = ["reqwest", "rustls"] }
+sentry = { version = "0.48", default-features = false, features = [
+  "backtrace",
+  "contexts",
+  "debug-images",
+  "panic",
+  "reqwest",
+  "rustls",
+] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 syn = { version = "2.0", features = ["extra-traits", "full"] }

@@ -111,10 +111,7 @@ impl From<LayoutRuleRepr> for LayoutRule {
             PlacementRepr::Tiling(tiling) => Placement::Tiling(tiling),
         };
 
-        Self {
-            placement,
-            enabled: repr.enabled,
-        }
+        Self::from_placement(placement, repr.enabled)
     }
 }
 

@@ -60,7 +60,6 @@ impl AppRunner {
             .level(LevelFilter::Warn)
             .level_for("test_engine", LevelFilter::Debug)
             .level_for("inspector", LevelFilter::Debug)
-            .level_for("shopping", LevelFilter::Debug)
             .level_for("netrun", LevelFilter::Debug)
             .format(|out, message, record| {
                 let level_icon = match record.level() {
@@ -106,8 +105,8 @@ impl AppRunner {
             sentry_url,
             sentry::ClientOptions {
                 release: sentry::release_name!(),
-                // Capture user IPs and potentially sensitive headers when using HTTP server integrations
-                // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
+                // Apps opt into Sentry by returning a DSN. Include user context, such as IPs and
+                // HTTP headers, for richer diagnostics.
                 send_default_pii: true,
                 ..Default::default()
             },

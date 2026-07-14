@@ -15,8 +15,8 @@ use test_engine::{
     refs::{Weak, manage::DataManager},
     ui::{
         ALL_VIEWS, AfterSetup, Alert, Anchor, Button, Container, Font, InfiniteScrollTest, Label, Point,
-        ScrollView, Setup, Shadow, Spinner, TextAlignment, UIManager, ViewData, ViewSubviews,
-        all_view_tests, all_views, view,
+        ScrollView, Setup, Shadow, Spinner, TextAlignment, UIManager, ViewData, ViewSubviews, all_view_tests,
+        all_views, view,
     },
 };
 

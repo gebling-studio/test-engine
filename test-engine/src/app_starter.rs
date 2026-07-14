@@ -17,7 +17,7 @@ fn run_app(event_loop: EventLoop<Window>, app: &'static mut AppHandler) {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn run_app(event_loop: EventLoop<Window>, app: &mut AppHandler) {
-    let _ = event_loop.run_app(app);
+    event_loop.run_app(app).expect("Event loop failed");
 }
 
 #[cfg(not(target_os = "android"))]

@@ -172,16 +172,7 @@ impl TableView {
             return;
         }
 
-        if self.data.variable_height() {
-            assert_eq!(
-                self.columns, 1,
-                "Variable height supported only for tables with 1 column"
-            );
-            unimplemented!()
-            // layout_variable_sized_cells(self, number_of_cells);
-        } else {
-            self.layout_fixed_cells(number_of_cells, self.columns, mode);
-        }
+        self.layout_fixed_cells(number_of_cells, self.columns, mode);
     }
 }
 

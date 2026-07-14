@@ -12,15 +12,11 @@ use crate::{
 
 // The iOS system greens and grays, converted from their sRGB hex values
 // to the linear floats the render pipeline expects.
-const ON_TRACK: DynamicColor = DynamicColor::new(
-    Color::rgb(0.034, 0.571, 0.1),
-    Color::rgb(0.03, 0.638, 0.098),
-);
+const ON_TRACK: DynamicColor =
+    DynamicColor::new(Color::rgb(0.034, 0.571, 0.1), Color::rgb(0.03, 0.638, 0.098));
 
-const OFF_TRACK: DynamicColor = DynamicColor::new(
-    Color::rgb(0.815, 0.815, 0.819),
-    Color::rgb(0.041, 0.041, 0.047),
-);
+const OFF_TRACK: DynamicColor =
+    DynamicColor::new(Color::rgb(0.815, 0.815, 0.819), Color::rgb(0.041, 0.041, 0.047));
 
 const KNOB_MARGIN: f32 = 2.0;
 
