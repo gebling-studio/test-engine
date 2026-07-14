@@ -1,9 +1,11 @@
 use anyhow::{Result, ensure};
 use hreads::{from_main, wait_for_next_frame};
 use refs::Weak;
-use crate::ui::{Setup, ViewTest, view_test};
-use crate::window::Window;
 
+use crate::{
+    ui::{Setup, ViewTest, view_test},
+    window::Window,
+};
 
 // Regression test. Setting a custom title used to stop the frame counter,
 // freezing fps, frame_time and frame_drawn forever.

@@ -1,8 +1,10 @@
-use crate::gm::{color::BLACK, flat::Point};
 use refs::Weak;
 use ui_proc::view;
 
-use crate::ui::{Container, Label, Setup, UIEvent, ViewData, ViewFrame, ViewTouch};
+use crate::{
+    gm::{color::BLACK, flat::Point},
+    ui::{Container, Label, Setup, UIEvent, ViewData, ViewFrame, ViewTouch},
+};
 
 #[view]
 pub struct PositionView {

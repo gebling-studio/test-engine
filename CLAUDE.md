@@ -1,7 +1,7 @@
 # TestEngine
 
 Cross platform game engine and UI framework in Rust. Rendering on WGPU.
-Supports: Windows Linux Mac iOS and Android.
+Supports: Windows, Linux, Mac, iOS and WebAssembly. Android is temporarily unsupported.
 
 The engine is one library crate, `test-engine`, with modules like `gm`, `ui`, `window`,
 `render`, `level` under `test-engine/src/`. `deps/` holds only the proc macro crates.
@@ -50,6 +50,7 @@ cargo run -p ui-test -- --stop-on-failure --headless --test-name <ViewName>  # s
 cargo run -p ui-test -- --test-name <ViewName> --human                       # watchable run, space to advance
 cargo run -p ui-test -- --stop-on-failure --headless --test-name <ViewName> --record-colors  # print check_colors blocks
 cargo run -p render-test                                                     # render tests
+make ci                                                                      # typos, formatting, lints, unused dependencies
 make lint                                                                    # clippy, pedantic, zero warnings
 cargo machete                                                                # unused dependencies, zero findings
 make bench                                                                   # UI benchmark suite, saves bench/<date>-<commit>.json
@@ -63,3 +64,5 @@ Without `--stop-on-failure` a failed UI test leaves the app window running. Alwa
 
 After touching any `Cargo.toml` or removing code, run `cargo machete`. It must report
 zero unused dependencies.
+
+Always run `make ci` before every commit.

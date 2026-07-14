@@ -47,7 +47,7 @@ pub async fn test_gradient() -> Result<()> {
     UITest::start::<Gradient>();
 
     check_colors(
-        r#"
+        r"
              592    4 -  89 124 149
               52   24 - 250  60   0
              288   24 - 250 250 250
@@ -80,7 +80,7 @@ pub async fn test_gradient() -> Result<()> {
               48  348 - 255  95  95
              144  352 - 255  77  77
              592  592 -  89 124 149
-        "#,
+        ",
     )?;
 
     Ok(())

@@ -1,8 +1,6 @@
+use rapier2d::prelude::{ColliderBuilder, Vec2};
 
 use crate::gm::{checked_usize_to_u32, flat::Shape};
-use rapier2d::{
-    prelude::{ColliderBuilder, Vec2},
-};
 
 pub trait ToCollider {
     fn make_collider(&self) -> ColliderBuilder;
@@ -40,4 +38,3 @@ fn convex_collider(points: &[crate::gm::flat::Point]) -> ColliderBuilder {
     let (points, _indices) = make_indices(points);
     ColliderBuilder::convex_hull(&points).expect("Can't convex hull")
 }
-

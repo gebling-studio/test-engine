@@ -1,11 +1,13 @@
-use crate::gm::{LossyConvert, Toggle, color::WHITE, flat::Size};
 use refs::Weak;
-use crate::ui::{Button, Label, Setup, ToLabel, View, ViewData, ViewFrame, ViewSubviews, view};
 use vents::Event;
 
 use crate::{
     self as test_engine,
-    ui::{CellRegistry, TableData, TableView},
+    gm::{LossyConvert, Toggle, color::WHITE, flat::Size},
+    ui::{
+        Button, CellRegistry, Label, Setup, TableData, TableView, ToLabel, View, ViewData, ViewFrame,
+        ViewSubviews, view,
+    },
 };
 
 #[view]

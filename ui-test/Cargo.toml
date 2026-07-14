@@ -20,3 +20,6 @@ serde_json = { workspace = true }
 
 test-engine = { workspace = true }
 test-game = { workspace = true }
+
+[lints]
+workspace = true

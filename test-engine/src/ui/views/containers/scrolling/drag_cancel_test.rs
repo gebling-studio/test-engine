@@ -1,12 +1,12 @@
-#![allow(clippy::float_cmp)]
-
-use crate::ui::view_test;
 use anyhow::Result;
 use hreads::from_main;
 use refs::Weak;
-use crate::ui::{Button, Setup, ViewData, ViewSubviews, ViewTest};
 
-use crate::{self as test_engine, ui::ScrollView, ui_test::inject_touches};
+use crate::{
+    self as test_engine,
+    ui::{Button, ScrollView, Setup, ViewData, ViewSubviews, ViewTest, view_test},
+    ui_test::inject_touches,
+};
 
 /// Drag scrolling must not tap the view the drag began on.
 /// Before the fix releasing a drag over a button pressed it, because the

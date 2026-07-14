@@ -1,5 +1,6 @@
 use std::any::type_name;
 
+use hreads::assert_main_thread;
 use netrun::Function;
 use parking_lot::Mutex;
 use refs::Weak;
@@ -61,6 +62,8 @@ impl<T: Send + Clone> UIEvent<T> {
 
     pub fn trigger(&self, val: T)
     where T: Clone {
+        assert_main_thread();
+
         let actions: Vec<_> = {
             let mut subs = self.subscribers.lock();
             // A subscriber may be freed by the time the event fires.

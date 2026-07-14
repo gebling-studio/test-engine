@@ -4,7 +4,7 @@ use test_engine::{
     ui::{Button, Setup, ViewData, view},
 };
 
-use crate::{interface::test_game_view::TestGameView, no_physics::NoPhysicsLevel};
+use crate::{interface::HomeView, no_physics::NoPhysicsLevel};
 
 #[view]
 pub struct NoPhysicsView {
@@ -18,6 +18,6 @@ impl Setup for NoPhysicsView {
 
         self.back.set_text("Back");
         self.back.place().size(100, 50).t(100).l(20);
-        self.back.add_transition::<Self, TestGameView>();
+        self.back.add_transition::<Self, HomeView>();
     }
 }

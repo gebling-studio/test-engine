@@ -1,6 +1,6 @@
 use chrono::Utc;
 
-use crate::gm::LossyConvert;
+use crate::gm::{LossyConvert, ToF32};
 
 const SEC: f32 = 1_000.0;
 
@@ -13,15 +13,15 @@ pub struct Animation {
 }
 
 impl Animation {
-    pub fn new(start: impl Into<f32>, end: impl Into<f32>, duration: impl Into<f32>) -> Self {
-        let start = start.into() * SEC;
-        let end = end.into() * SEC;
+    pub fn new(start: impl ToF32, end: impl ToF32, duration: impl ToF32) -> Self {
+        let start = start.to_f32() * SEC;
+        let end = end.to_f32() * SEC;
         let span = end - start;
         assert_ne!(span.to_bits(), 0);
         Self {
             start,
             span,
-            duration: duration.into() * SEC,
+            duration: duration.to_f32() * SEC,
             stamp: Utc::now().timestamp_millis(),
         }
     }
@@ -58,7 +58,7 @@ mod test {
     use crate::gm::Animation;
 
     #[test]
-    #[ignore] // Flaky
+    #[ignore = "flaky, sleep based timing"]
     fn test() {
         let anim = Animation::new(0.0, 1.0, 0.5);
 
@@ -67,11 +67,11 @@ mod test {
             "Actual: {}",
             anim.value()
         );
-        assert_eq!(anim.finished(), false);
+        assert!(!anim.finished());
 
         sleep(Duration::from_secs_f32(0.25));
 
-        assert_eq!(anim.finished(), false);
+        assert!(!anim.finished());
         assert!(
             anim.value() >= 0.48 && anim.value() <= 0.52,
             "Actual: {}",
@@ -80,7 +80,7 @@ mod test {
 
         sleep(Duration::from_secs_f32(0.10));
 
-        assert_eq!(anim.finished(), false);
+        assert!(!anim.finished());
         assert!(
             anim.value() >= 0.70 && anim.value() <= 0.74,
             "Actual: {}",
@@ -89,7 +89,7 @@ mod test {
 
         sleep(Duration::from_secs_f32(0.15));
 
-        assert_eq!(anim.finished(), true);
+        assert!(anim.finished());
         assert!(
             anim.value() >= 0.92 && anim.value() <= 1.04,
             "Actual: {}",
@@ -98,7 +98,7 @@ mod test {
 
         sleep(Duration::from_secs_f32(0.25));
 
-        assert_eq!(anim.finished(), true);
+        assert!(anim.finished());
         assert!(
             anim.value() >= 0.40 && anim.value() <= 0.60,
             "Actual: {}",

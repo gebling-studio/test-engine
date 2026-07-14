@@ -1,11 +1,13 @@
-use crate::gm::{color::CLEAR, flat::Size};
 use hreads::{from_main, on_main};
 use refs::{Own, Weak};
 use vents::OnceEvent;
 
-use crate::ui::{
-    BlurView, ScrimView, Setup, TouchStack, UIColor, UIManager, View, ViewData, ViewFrame,
-    view::ViewSubviews,
+use crate::{
+    gm::{color::CLEAR, flat::Size},
+    ui::{
+        BlurView, ScrimView, Setup, TouchStack, UIColor, UIManager, View, ViewData, ViewFrame,
+        view::ViewSubviews,
+    },
 };
 
 pub trait ModalView<In = (), Out: 'static = ()>: 'static + View + Default {

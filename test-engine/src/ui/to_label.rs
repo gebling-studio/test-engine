@@ -1,8 +1,9 @@
 use std::{net::IpAddr, path::PathBuf};
 
 use chrono::NaiveDateTime;
-use crate::gm::flat::Point;
 use rust_decimal::Decimal;
+
+use crate::gm::flat::Point;
 
 pub trait ToLabel {
     fn to_label(&self) -> String;

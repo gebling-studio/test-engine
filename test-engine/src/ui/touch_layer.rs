@@ -1,10 +1,12 @@
-use crate::gm::flat::Point;
 use refs::{
     Weak,
     vec::{WeakVec, WeakVecHelper},
 };
 
-use crate::ui::{Touch, View, ViewData, WeakView};
+use crate::{
+    gm::flat::Point,
+    ui::{Touch, View, ViewData, WeakView},
+};
 
 pub(crate) trait Scrollable: View {
     fn __process_scroll_touch(&mut self, touch: Touch) -> bool;

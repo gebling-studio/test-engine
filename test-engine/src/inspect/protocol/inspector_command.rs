@@ -1,5 +1,6 @@
-use crate::gm::color::Color;
 use serde::{Deserialize, Serialize};
+
+use crate::gm::color::Color;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InspectorCommand {

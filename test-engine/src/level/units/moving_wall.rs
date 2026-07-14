@@ -1,6 +1,5 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::gm::flat::{Point, Shape};
 use rapier2d::{
     dynamics::RigidBodyHandle,
     geometry::ColliderHandle,
@@ -8,7 +7,10 @@ use rapier2d::{
 };
 use refs::{Own, Weak, weak_from_ref};
 
-use crate::level::{LevelManager, Sprite, SpriteData, ToCollider};
+use crate::{
+    gm::flat::{Point, Shape},
+    level::{LevelManager, Sprite, SpriteData, ToCollider},
+};
 
 pub struct MovingWall {
     rigid_handle:    RigidBodyHandle,

@@ -1,25 +1,27 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::gm::{
-    LossyConvert,
-    color::{CLEAR, TURQUOISE},
-    flat::{CornerRadii, Rect, Size},
-};
 use refs::{Weak, main_lock::MainLock};
-use crate::render::{
-    UIBackdropPipeline, UIBlurPipeline, UIGradientPipeline, UIImageRectPipeline, UIRectPipeline,
-    UIShadowPipeline,
-    data::{RectView, UIGradientInstance, UIImageInstance, UIRectInstance, UIShadowInstance},
-};
-use crate::ui::{
-    BlurView, ImageView, Label, ScrimView, TextAlignment, UIManager, View, ViewData, ViewFrame,
-    ViewLayout, ViewSubviews,
-};
 use wgpu::RenderPass;
 use wgpu_text::glyph_brush::{HorizontalAlign, Section, Text};
-use crate::window::{Font, RenderFrame, ShapedParams};
 
-use crate::pipelines::Pipelines;
+use crate::{
+    gm::{
+        LossyConvert,
+        color::{CLEAR, TURQUOISE},
+        flat::{CornerRadii, Rect, Size},
+    },
+    pipelines::Pipelines,
+    render::{
+        UIBackdropPipeline, UIBlurPipeline, UIGradientPipeline, UIImageRectPipeline, UIRectPipeline,
+        UIShadowPipeline,
+        data::{RectView, UIGradientInstance, UIImageInstance, UIRectInstance, UIShadowInstance},
+    },
+    ui::{
+        BlurView, ImageView, Label, ScrimView, TextAlignment, UIManager, View, ViewData, ViewFrame,
+        ViewLayout, ViewSubviews,
+    },
+    window::{Font, RenderFrame, ShapedParams},
+};
 
 static GRADIENT_DRAWER: MainLock<UIGradientPipeline> = MainLock::new();
 static IMAGE_RECT_DRAWER: MainLock<UIImageRectPipeline> = MainLock::new();
@@ -42,7 +44,6 @@ struct DrawContext<'a> {
     /// What the current pass has set, reapplied after a blur barrier
     /// reopens the pass.
     scissor:       Rect<u32>,
-    display:       Rect<u32>,
 }
 
 pub struct UIDrawer;
@@ -72,7 +73,6 @@ impl UIDrawer {
             scale: UIManager::scale(),
             resolution,
             scissor: display_rect,
-            display: display_rect,
         };
 
         Self::draw_view(render_frame, UIManager::root_view_static(), &mut ctx);
@@ -201,10 +201,15 @@ impl UIDrawer {
 
         view.before_render(render_frame.pass());
 
-        let clips = view.clips_to_bounds();
+        let clips = view.__internal_clips_to_bounds();
+        let parent_scissor = ctx.scissor;
 
         if clips {
+            // Text is deferred, so everything queued outside this clip
+            // flushes now under the parent scissor. The subtree's text
+            // then flushes under this clip before it is restored.
             Self::flush_pipelines(render_frame.pass(), ctx.resolution);
+            Self::flush_text(render_frame.pass(), &mut ctx.text_sections);
             let mut frame = frame * ctx.scale;
             frame.origin.clip_positive();
 
@@ -216,7 +221,15 @@ impl UIDrawer {
                 frame.size.height -= frame.max_y() - ctx.resolution.height;
             }
 
+            // A clip view fully past the right or bottom edge drives these
+            // subtractions negative. Converting a negative Rect to Rect<u32>
+            // panics, so clamp the clipped size to an empty rect instead.
+            // max(0.0) also turns a NaN size into 0.
+            frame.size.width = frame.size.width.max(0.0);
+            frame.size.height = frame.size.height.max(0.0);
+
             let clip_rect: Rect<u32> = frame.lossy_convert();
+            let clip_rect = clip_rect.intersection(&parent_scissor);
             scissor(render_frame.pass(), clip_rect);
             ctx.scissor = clip_rect;
         }
@@ -226,13 +239,13 @@ impl UIDrawer {
             && shadow.color.a > 0.0
         {
             SHADOW_DRAWER.get_mut().add(UIShadowInstance {
-                position: frame.origin + shadow.offset,
-                size: frame.size,
-                color: shadow.color,
+                position:     frame.origin + shadow.offset,
+                size:         frame.size,
+                color:        shadow.color,
                 corner_radii: view.corner_radii(),
-                blur: shadow.radius,
-                z_position: view.z_position(),
-                scale: ctx.scale,
+                blur:         shadow.radius,
+                z_position:   view.z_position(),
+                scale:        ctx.scale,
             });
         }
 
@@ -254,13 +267,13 @@ impl UIDrawer {
             }
         } else if view.end_gradient_color().a > 0.0 {
             GRADIENT_DRAWER.get_mut().add(UIGradientInstance {
-                position: frame.origin,
-                size: frame.size,
-                start_color: *view.color(),
-                end_color: *view.end_gradient_color(),
+                position:     frame.origin,
+                size:         frame.size,
+                start_color:  *view.color(),
+                end_color:    *view.end_gradient_color(),
                 corner_radii: view.corner_radii(),
-                z_position: view.z_position(),
-                scale: ctx.scale,
+                z_position:   view.z_position(),
+                scale:        ctx.scale,
             });
         } else if view.color().a > 0.0 || view.border_color().a > 0.0 {
             Pipelines::rect().add(UIRectInstance::new(
@@ -281,6 +294,7 @@ impl UIDrawer {
                 IMAGE_RECT_DRAWER.get_mut().add_with_image(
                     UIImageInstance::new(
                         image_view.image_frame(),
+                        image_view.uv_rect(),
                         *view.border_color(),
                         view.border_width(),
                         view.corner_radii(),
@@ -322,8 +336,9 @@ impl UIDrawer {
 
         if clips {
             Self::flush_pipelines(render_frame.pass(), ctx.resolution);
-            scissor(render_frame.pass(), ctx.display);
-            ctx.scissor = ctx.display;
+            Self::flush_text(render_frame.pass(), &mut ctx.text_sections);
+            scissor(render_frame.pass(), parent_scissor);
+            ctx.scissor = parent_scissor;
         }
     }
 

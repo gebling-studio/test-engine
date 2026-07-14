@@ -18,6 +18,5 @@ pub mod views;
 pub use self::protocol::{AppCommand, InspectorCommand, ui::ViewRepr};
 #[cfg(debug_assertions)]
 pub use self::view_conversion::ViewToInspect;
-
 #[cfg(debug_assertions)]
 pub use crate::inspect::inspect_service::InspectService;

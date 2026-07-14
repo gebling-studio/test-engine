@@ -5,25 +5,29 @@ fn android_main(app: test_game::test_engine::AndroidApp) {
 }
 
 use jni::{
-    JNIEnv,
+    EnvUnowned,
     objects::{JClass, JString},
 };
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn Java_com_example_test_1game_MainActivity_setFilesDir(
-    mut env: JNIEnv,
-    _: JClass,
-    input: JString,
+pub unsafe extern "C" fn Java_com_example_test_1game_MainActivity_setFilesDir<'local>(
+    mut env: EnvUnowned<'local>,
+    _: JClass<'local>,
+    input: JString<'local>,
 ) {
-    let input: String = env.get_string(&input).expect("Couldn't get java string!").into();
-    test_game::test_engine::filesystem::Paths::set_storage_path(input);
+    env.with_env(|env| -> Result<(), jni::errors::Error> {
+        let input: String = input.try_to_string(env)?;
+        test_game::test_engine::filesystem::Paths::set_storage_path(input);
+        Ok(())
+    })
+    .resolve::<jni::errors::ThrowRuntimeExAndDefault>();
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn Java_com_example_test_1game_MainActivity_setAssetManager(
-    _env: JNIEnv,
-    _: JClass,
-    _input: JClass,
+pub unsafe extern "C" fn Java_com_example_test_1game_MainActivity_setAssetManager<'local>(
+    _env: EnvUnowned<'local>,
+    _: JClass<'local>,
+    _input: JClass<'local>,
 ) {
     dbg!("Java_com_example_test_1game_MainActivity_setAssetManager");
 }

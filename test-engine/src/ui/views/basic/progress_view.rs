@@ -1,7 +1,9 @@
-use crate::gm::{ToF32, color::BLUE};
 use refs::Weak;
 
-use crate::ui::{Container, Setup, ViewData, view};
+use crate::{
+    gm::{ToF32, color::BLUE},
+    ui::{Container, Setup, ViewData, view},
+};
 
 #[view]
 pub struct ProgressView {
@@ -15,7 +17,7 @@ impl ProgressView {
         self.set_progress(self.progress + progress.to_f32())
     }
 
-    pub(crate) fn set_progress(mut self: Weak<Self>, progress: impl ToF32) -> Weak<Self> {
+    pub fn set_progress(mut self: Weak<Self>, progress: impl ToF32) -> Weak<Self> {
         self.progress = progress.to_f32();
         self.bar.place().clear().tlb(0).relative_width(self, self.progress);
         self

@@ -4,14 +4,16 @@ use std::{
     sync::Arc,
 };
 
-use crate::gm::{
-    RefCell,
-    flat::{Rect, Size},
-};
 use parking_lot::Mutex;
 use refs::{Rglica, ToRglica};
 
-use crate::ui::{View, WeakView, layout::layout_rule::LayoutRule};
+use crate::{
+    gm::{
+        RefCell,
+        flat::{Rect, Size},
+    },
+    ui::{View, WeakView, layout::layout_rule::LayoutRule},
+};
 
 #[derive(Clone)]
 pub struct Placer {

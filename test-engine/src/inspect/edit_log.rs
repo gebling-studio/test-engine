@@ -6,10 +6,10 @@ use std::{
 };
 
 use anyhow::Result;
-use crate::filesystem::Paths;
-use crate::inspect::protocol::EditEntry;
 use log::error;
 use parking_lot::Mutex;
+
+use crate::{filesystem::Paths, inspect::protocol::EditEntry};
 
 static EDITS: Mutex<Vec<EditEntry>> = Mutex::new(Vec::new());
 

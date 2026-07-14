@@ -1,13 +1,15 @@
 use educe::Educe;
-use crate::gm::{
-    color::Color,
-    flat::{Point, PointsPath, Shape, Size},
-};
 use refs::Weak;
 use vents::Event;
-use crate::window::{VertexBuffer, image::Image};
 
-use crate::level::Sprite;
+use crate::{
+    gm::{
+        color::Color,
+        flat::{Point, PointsPath, Shape, Size},
+    },
+    level::Sprite,
+    window::{VertexBuffer, image::Image},
+};
 
 #[derive(Educe)]
 #[educe(Default)]

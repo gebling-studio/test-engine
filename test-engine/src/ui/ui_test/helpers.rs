@@ -1,16 +1,18 @@
 use anyhow::Result;
-use crate::gm::{
-    LossyConvert,
-    color::{LIGHT_GRAY, U8Color},
-    flat::Point,
-};
-use crate::ui::{Button, Setup, UIManager, View, ViewData};
 
-use crate::ui_test::{
-    TEST_NAME,
-    checks::check_colors_structured,
-    human::{human_mode, show_probes},
-    record::{next_check_index, print_recorded_colors, recording_colors},
+use crate::{
+    gm::{
+        LossyConvert,
+        color::{LIGHT_GRAY, U8Color},
+        flat::Point,
+    },
+    ui::{Button, Setup, UIManager, View, ViewData},
+    ui_test::{
+        TEST_NAME,
+        checks::check_colors_structured,
+        human::{human_mode, show_probes},
+        record::{next_check_index, print_recorded_colors, recording_colors},
+    },
 };
 
 #[allow(dead_code)]

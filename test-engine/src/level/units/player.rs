@@ -1,9 +1,11 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::gm::flat::{Point, Shape};
 use refs::{Own, Weak, weak_from_ref};
 
-use crate::level::{LevelManager, Sprite, SpriteData, Unit, Weapon};
+use crate::{
+    gm::flat::{Point, Shape},
+    level::{LevelManager, Sprite, SpriteData, Unit, Weapon},
+};
 
 pub struct Player {
     pub unit:   Own<Unit>,

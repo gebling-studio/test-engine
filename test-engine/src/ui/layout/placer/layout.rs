@@ -1,20 +1,22 @@
 use std::ops::Deref;
 
-use crate::gm::{
-    LossyConvert,
-    axis::Axis,
-    flat::{Rect, Size},
-};
 use refs::{Own, ToRglica};
 
 use super::Placer;
-use crate::ui::{
-    Label, View, ViewSubviews, WeakView,
-    layout::{
-        Anchor, Tiling,
-        layout_rule::{LayoutRule, Placement},
+use crate::{
+    gm::{
+        LossyConvert,
+        axis::Axis,
+        flat::{Rect, Size},
     },
-    view::{ViewData, ViewFrame, ViewLayout},
+    ui::{
+        Label, View, ViewSubviews, WeakView,
+        layout::{
+            Anchor, Tiling,
+            layout_rule::{LayoutRule, Placement},
+        },
+        view::{ViewData, ViewFrame, ViewLayout},
+    },
 };
 
 type RMut<'a> = &'a mut Rect;
@@ -304,6 +306,12 @@ fn distribute<const AXIS: Axis>(views: &[Own<dyn View>], margin: f32) {
 }
 
 fn distribute_with_ratio(size: Size, views: &[Own<dyn View>], ratios: &[f32]) {
+    assert_eq!(
+        views.len(),
+        ratios.len(),
+        "Distribute ratio count must match the number of subviews"
+    );
+
     let total_ratio = 1.0 / ratios.iter().sum::<f32>();
 
     for i in 0..ratios.len() {

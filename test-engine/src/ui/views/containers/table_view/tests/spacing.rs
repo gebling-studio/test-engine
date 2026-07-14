@@ -1,14 +1,13 @@
 use std::ops::Deref;
 
 use anyhow::Result;
-use crate::gm::color::{BLUE, Color, GREEN, PURPLE, RED, YELLOW};
 use parking_lot::Mutex;
 use refs::Weak;
-use crate::ui::{Container, Setup, View, ViewData, ViewTest, view_test};
 
 use crate::{
     self as test_engine,
-    ui::{CellRegistry, TableData, TableView},
+    gm::color::{BLUE, Color, GREEN, PURPLE, RED, YELLOW},
+    ui::{CellRegistry, Container, Setup, TableData, TableView, View, ViewData, ViewTest, view_test},
     ui_test::{check_colors, inject_scroll, inject_touches, set_record_probe_count},
 };
 

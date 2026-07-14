@@ -1,16 +1,17 @@
 use std::ops::Range;
 
-use refs::main_lock::MainLock;
-
 use bytemuck::{Pod, Zeroable};
-use crate::gm::{
-    color::Color,
-    flat::{Point, Size},
-};
+use refs::main_lock::MainLock;
 use wgpu::{BindGroup, BindGroupLayout, Buffer, BufferUsages, ShaderStages};
-use crate::window::Window;
 
-use crate::render::{buffer_helper::BufferHelper, device_helper::DeviceHelper, uniform::make_uniform_layout};
+use crate::{
+    gm::{
+        color::Color,
+        flat::{Point, Size},
+    },
+    render::{buffer_helper::BufferHelper, device_helper::DeviceHelper, uniform::make_uniform_layout},
+    window::Window,
+};
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Zeroable, Pod, PartialEq)]

@@ -3,11 +3,6 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crate::gm::{
-    ToF32,
-    color::Color,
-    flat::{Point, Shape, Size},
-};
 use rapier2d::{
     dynamics::RigidBodyHandle,
     geometry::{Collider, ColliderHandle},
@@ -15,9 +10,16 @@ use rapier2d::{
     prelude::{CoefficientCombineRule, Pose2, RigidBody, Rotation},
 };
 use refs::{Own, Weak, weak_from_ref};
-use crate::window::image::ToImage;
 
-use crate::level::{LevelManager, SpriteData};
+use crate::{
+    gm::{
+        ToF32,
+        color::Color,
+        flat::{Point, Shape, Size},
+    },
+    level::{LevelManager, SpriteData},
+    window::image::ToImage,
+};
 
 pub trait Sprite: Deref<Target = SpriteData> + DerefMut {
     fn make(shape: Shape, position: Point) -> Own<Self>

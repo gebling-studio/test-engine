@@ -1,12 +1,14 @@
 use bit_ops::BitOps;
 use bytemuck::{Pod, Zeroable};
-use crate::gm::{
-    color::Color,
-    flat::{CornerRadii, Point, Rect, Size},
-};
 use wgpu::{BufferAddress, VertexBufferLayout, VertexStepMode};
 
-use crate::render::vertex_layout::VertexLayout;
+use crate::{
+    gm::{
+        color::Color,
+        flat::{CornerRadii, Point, Rect, Size},
+    },
+    render::vertex_layout::VertexLayout,
+};
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Zeroable, Pod)]
@@ -19,6 +21,8 @@ pub struct UIImageInstance {
     pub z_position:   f32,
     pub flags:        u32,
     pub scale:        f32,
+    pub uv_position:  Point,
+    pub uv_size:      Size,
 }
 
 impl UIImageInstance {
@@ -28,6 +32,7 @@ impl UIImageInstance {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         rect: Rect,
+        uv: Rect,
         border_color: Color,
         border_width: f32,
         corner_radii: CornerRadii,
@@ -45,6 +50,8 @@ impl UIImageInstance {
             scale,
             border_color,
             border_width,
+            uv_position: uv.origin,
+            uv_size: uv.size,
         };
 
         result.set_flip_x(flip_x);
@@ -71,7 +78,7 @@ impl UIImageInstance {
 }
 
 impl VertexLayout for UIImageInstance {
-    const ATTRIBS: &'static [wgpu::VertexAttribute] = &wgpu::vertex_attr_array![2 => Float32x2, 3 => Float32x2, 4 => Float32x4, 5 => Float32, 6 => Float32x4, 7 => Float32, 8 => Uint32, 9 => Float32];
+    const ATTRIBS: &'static [wgpu::VertexAttribute] = &wgpu::vertex_attr_array![2 => Float32x2, 3 => Float32x2, 4 => Float32x4, 5 => Float32, 6 => Float32x4, 7 => Float32, 8 => Uint32, 9 => Float32, 10 => Float32x2, 11 => Float32x2];
     const VERTEX_LAYOUT: VertexBufferLayout<'static> = VertexBufferLayout {
         array_stride: size_of::<Self>() as BufferAddress,
         step_mode:    VertexStepMode::Instance,

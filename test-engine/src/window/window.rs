@@ -4,27 +4,30 @@ use std::sync::{
     mpsc::Receiver,
 };
 
-use crate::gm::{
-    LossyConvert,
-    color::Color,
-    flat::{Point, Size},
-};
+use anyhow::{Context, Result, bail};
 use hreads::on_main;
 use log::{info, warn};
 use plat::Platform;
 use wgpu::{
     Adapter, CompositeAlphaMode, Device, DeviceDescriptor, ExperimentalFeatures, Features, Instance, Limits,
-    MemoryHints, PowerPreference, PresentMode, Queue, RequestAdapterOptions, SurfaceConfiguration,
-    TextureUsages, Trace,
+    MemoryHints, PowerPreference, PresentMode, Queue, RequestAdapterOptions, SurfaceColorSpace,
+    SurfaceConfiguration, TextureUsages, Trace,
 };
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
-use crate::window::{
-    Screenshot,
-    app_handler::AppHandler,
-    screen::Screen,
-    state::{SURFACE_TEXTURE_FORMAT, State},
-    surface::Surface,
+use crate::{
+    gm::{
+        LossyConvert,
+        color::Color,
+        flat::{Point, Size},
+    },
+    window::{
+        Screenshot,
+        app_handler::AppHandler,
+        screen::Screen,
+        state::{SURFACE_TEXTURE_FORMAT, State},
+        surface::Surface,
+    },
 };
 
 static VSYNC: AtomicBool = AtomicBool::new(true);
@@ -154,8 +157,19 @@ impl Window {
         on_main(AppHandler::close);
     }
 
-    async fn request_device(adapter: &Adapter) -> (Device, Queue) {
-        let mut required_limits = Limits::default();
+    /// The limits we ask the GPU for. Based on what the adapter reports it can
+    /// do, so the request never exceeds the adapter and gets rejected. The iOS
+    /// Simulator exposes lower Metal limits than `Limits::default`, so asking
+    /// for the defaults there failed device creation.
+    fn required_limits(adapter_limits: Limits) -> Limits {
+        let mut required_limits = if Platform::WASM {
+            let mut limits = Limits::downlevel_webgl2_defaults();
+            limits.max_texture_dimension_1d = 8192;
+            limits.max_texture_dimension_2d = 8192;
+            limits
+        } else {
+            adapter_limits
+        };
 
         if Platform::IOS {
             required_limits.max_color_attachments = 4;
@@ -174,11 +188,13 @@ impl Window {
             required_limits.max_texture_dimension_3d = 1024;
             required_limits.max_texture_dimension_2d = 4096;
             required_limits.max_texture_dimension_1d = 4096;
-        } else if Platform::WASM {
-            required_limits = Limits::downlevel_webgl2_defaults();
-            required_limits.max_texture_dimension_1d = 8192;
-            required_limits.max_texture_dimension_2d = 8192;
         }
+
+        required_limits
+    }
+
+    async fn request_device(adapter: &Adapter) -> Result<(Device, Queue)> {
+        let required_limits = Self::required_limits(adapter.limits());
 
         #[cfg(feature = "bench")]
         let required_features = {
@@ -203,33 +219,36 @@ impl Window {
                 experimental_features: ExperimentalFeatures::default(),
             })
             .await
-            .expect("Failed to request device")
+            .context("Failed to request GPU device")
     }
 
     pub(crate) async fn start_internal(
         size: PhysicalSize<u32>,
         window: winit::window::Window,
         proxy: EventLoopProxy<Window>,
-    ) {
+    ) -> Result<()> {
         let winit_window = Arc::new(window);
 
         let instance = Instance::default();
-        let surface = instance.create_surface(winit_window.clone()).unwrap();
+        let surface = instance
+            .create_surface(winit_window.clone())
+            .context("Failed to create surface")?;
         let adapter = instance
             .request_adapter(&RequestAdapterOptions {
                 power_preference:       PowerPreference::HighPerformance,
                 force_fallback_adapter: false,
 
-                compatible_surface: Some(&surface),
+                compatible_surface:  Some(&surface),
+                apply_limit_buckets: false,
             })
             .await
-            .expect("Could not get an adapter (GPU).");
+            .context("Could not get a GPU adapter")?;
 
         let info = adapter.get_info();
 
-        info!("Backend: {}", &info.backend);
+        info!("Backend: {}", info.backend);
 
-        let (device, queue) = Self::request_device(&adapter).await;
+        let (device, queue) = Self::request_device(&adapter).await?;
 
         let surface = if size.width != 0 && size.height != 0 {
             Surface::new(
@@ -239,7 +258,7 @@ impl Window {
                 surface_config_with_size((size.width, size.height)),
                 winit_window.clone(),
             )
-            .expect("Failed to create surface")
+            .context("Failed to create surface")?
             .into()
         } else {
             None
@@ -261,32 +280,35 @@ impl Window {
         };
 
         if proxy.send_event(window).is_err() {
-            panic!("Failed to send window event")
+            bail!("Failed to send window event");
         }
+
+        Ok(())
     }
 
     #[cfg(not_wasm)]
-    pub(crate) async fn create_headless(size: Size<u32>) -> Self {
+    pub(crate) async fn create_headless(size: Size<u32>) -> Result<Self> {
         let instance = Instance::default();
         let adapter = instance
             .request_adapter(&RequestAdapterOptions {
                 power_preference:       PowerPreference::HighPerformance,
                 force_fallback_adapter: false,
 
-                compatible_surface: None,
+                compatible_surface:  None,
+                apply_limit_buckets: false,
             })
             .await
-            .expect("Could not get an adapter (GPU).");
+            .context("Could not get a GPU adapter")?;
 
         let info = adapter.get_info();
 
-        info!("Backend: {} (headless)", &info.backend);
+        info!("Backend: {} (headless)", info.backend);
 
         HEADLESS.store(true, Ordering::Relaxed);
 
-        let (device, queue) = Self::request_device(&adapter).await;
+        let (device, queue) = Self::request_device(&adapter).await?;
 
-        Self {
+        Ok(Self {
             state: State::default(),
             instance,
             adapter,
@@ -296,7 +318,7 @@ impl Window {
             #[cfg(desktop)]
             is_resizing: false,
             title_set: false,
-        }
+        })
     }
 
     pub fn set_title(title: impl Into<String>) {
@@ -395,7 +417,7 @@ impl Window {
 
     /// Index of the frame currently being rendered. Bumps once per rendered
     /// frame, before any draw code runs.
-    pub(crate) fn render_frame() -> u64 {
+    pub fn render_frame() -> u64 {
         RENDER_FRAME.load(Ordering::Relaxed)
     }
 
@@ -436,6 +458,7 @@ pub(crate) fn surface_config_with_size(size: impl Into<Size<u32>>) -> SurfaceCon
             TextureUsages::RENDER_ATTACHMENT
         },
         format:       SURFACE_TEXTURE_FORMAT,
+        color_space:  SurfaceColorSpace::Auto,
         width:        size.width,
         height:       size.height,
         present_mode: if VSYNC.load(Ordering::Relaxed) || Platform::MOBILE {
@@ -447,5 +470,28 @@ pub(crate) fn surface_config_with_size(size: impl Into<Size<u32>>) -> SurfaceCon
         view_formats: vec![],
 
         desired_maximum_frame_latency: MAX_FRAME_LATENCY.load(Ordering::Relaxed),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use wgpu::Limits;
+
+    use super::Window;
+
+    // Regression: the device request must never exceed what the adapter
+    // reports. The iOS Simulator exposes lower Metal limits than
+    // Limits::default, and asking for the defaults there aborted the app
+    // during GPU init.
+    #[test]
+    fn required_limits_stay_within_adapter() {
+        let adapter = Limits::downlevel_defaults();
+        let required = Window::required_limits(adapter.clone());
+
+        assert!(required.max_texture_dimension_1d <= adapter.max_texture_dimension_1d);
+        assert!(required.max_texture_dimension_2d <= adapter.max_texture_dimension_2d);
+        assert!(required.max_texture_dimension_3d <= adapter.max_texture_dimension_3d);
+        assert!(required.max_buffer_size <= adapter.max_buffer_size);
+        assert!(required.max_color_attachments <= adapter.max_color_attachments);
     }
 }

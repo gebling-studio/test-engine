@@ -1,16 +1,18 @@
-use crate::gm::{
-    ToF32,
-    color::{BLACK, CLEAR, Color, GRAY, LIGHTER_GRAY, WHITE},
-};
 use refs::{Weak, weak_from_ref};
 use ui_proc::view;
 use vents::Event;
-use crate::window::NamedKey;
 
-use crate::ui::{
-    Label, Setup, TextAlignment, TextFieldConstraint, ToLabel, UIEvents, UIManager,
-    text_field_constraint::AcceptChar,
-    view::{ViewData, ViewFrame, ViewTouch},
+use crate::{
+    gm::{
+        ToF32,
+        color::{BLACK, CLEAR, Color, GRAY, LIGHTER_GRAY, WHITE},
+    },
+    ui::{
+        Label, Setup, TextAlignment, TextFieldConstraint, ToLabel, UIEvents, UIManager,
+        text_field_constraint::AcceptChar,
+        view::{ViewData, ViewFrame, ViewTouch},
+    },
+    window::NamedKey,
 };
 
 #[view]

@@ -107,7 +107,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic = "is not allowed"]
     fn invalid_global_style_type() {
         STYLE.apply_globally::<Switch>();
     }

@@ -1,9 +1,11 @@
-use crate::gm::{Apply, ToF32, flat::Point};
 use refs::Weak;
 use ui_proc::view;
 use vents::Event;
 
-use crate::ui::{NumberView, Setup, view::ViewData};
+use crate::{
+    gm::{Apply, ToF32, flat::Point},
+    ui::{NumberView, Setup, view::ViewData},
+};
 
 #[view]
 pub struct PointView {

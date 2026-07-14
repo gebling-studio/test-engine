@@ -1,10 +1,14 @@
-use crate::gm::{LossyConvert, color::LIGHT_GRAY};
-use crate::inspect::protocol::{UIRequest, ui::ViewRepr};
 use refs::Weak;
-use crate::ui::{CheckBox, Setup, TextField, UIEvent, ViewData, ViewFrame};
 use ui_proc::view;
 
-use crate::inspect::views::AnchorView;
+use crate::{
+    gm::{LossyConvert, color::LIGHT_GRAY},
+    inspect::{
+        protocol::{UIRequest, ui::ViewRepr},
+        views::AnchorView,
+    },
+    ui::{CheckBox, Setup, TextField, UIEvent, ViewData, ViewFrame},
+};
 
 #[view(crate = crate)]
 pub(crate) struct LayoutRuleCell {

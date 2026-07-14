@@ -14,19 +14,31 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  typos:
-    name: Spell Check
+  quality:
+    name: Code Quality
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Actions
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          submodules: recursive
 
-      - name: Check for Typos
-        uses: crate-ci/typos@master
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake pkg-config libssl-dev xorg-dev libasound2-dev
+
+      - name: Install quality tools
+        run: |
+          cargo install typos-cli --version 1.48.0 --locked
+          cargo install cargo-machete --version 0.9.2 --locked
+
+      - name: Run quality checks
+        run: make ci
 
   wasm:
     name: Wasm
-    needs: [typos]
+    needs: [quality]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +51,7 @@ jobs:
 
   ui-tests:
     name: UI Tests
-    needs: [typos]
+    needs: [quality]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -58,7 +70,7 @@ jobs:
 
   build:
     name: Build
-    needs: [typos]
+    needs: [quality]
     env:
       SKIP_UI_TESTS: 1
     strategy:
@@ -85,21 +97,17 @@ jobs:
         if: ${{ matrix.target.os != 'windows' }}
         run: bun build/scripts/free_action_runner.ts
 
-      - name: Build
+      - name: Build and test
         if: ${{ matrix.target.os != 'windows' }}
         run: bun build/build.ts ${{ matrix.target.os }}
 
-      - name: Build windows
+      - name: Build and test Windows
         if: ${{ matrix.target.os == 'windows' }}
         run: bun build/build.ts
 
-      - name: Test
-        if: ${{ matrix.target.os != 'ios' && matrix.target.os != 'android' }}
-        run: make test
-
   linux:
     name: Build Linux
-    needs: [typos]
+    needs: [quality]
     env:
       SKIP_UI_TESTS: 1
     strategy:

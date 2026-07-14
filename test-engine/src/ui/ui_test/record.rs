@@ -4,16 +4,16 @@ use std::{
 };
 
 use anyhow::Result;
-use crate::gm::color::U8Color;
 use parking_lot::Mutex;
-use crate::window::Screenshot;
 
 use crate::{
     AppRunner,
+    gm::color::U8Color,
     ui_test::{
         TEST_NAME,
         human::{human_mode, show_probes},
     },
+    window::Screenshot,
 };
 
 static RECORD_COLORS: AtomicBool = AtomicBool::new(false);

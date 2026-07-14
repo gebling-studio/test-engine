@@ -1,5 +1,6 @@
 use bytemuck::{Pod, Zeroable};
 use educe::Educe;
+
 use crate::gm::flat::{Point, Size};
 
 #[repr(C)]

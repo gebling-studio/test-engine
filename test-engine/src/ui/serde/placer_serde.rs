@@ -1,6 +1,5 @@
 use std::fmt;
 
-use crate::gm::RefCell;
 use refs::Rglica;
 use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
@@ -8,7 +7,7 @@ use serde::{
     ser::SerializeStruct,
 };
 
-use crate::ui::Placer;
+use crate::{gm::RefCell, ui::Placer};
 
 impl Serialize for Placer {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

@@ -23,3 +23,6 @@ doc = false
 name = "u8_color_to_hex"
 path = "fuzz_targets/u8_color_to_hex.rs"
 test = false
+
+[lints]
+workspace = true

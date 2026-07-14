@@ -2,11 +2,13 @@
 #![allow(clippy::used_underscore_binding)]
 
 use educe::Educe;
-use crate::gm::ToF32;
 
-use crate::ui::{
-    WeakView,
-    layout::{Anchor, Tiling},
+use crate::{
+    gm::ToF32,
+    ui::{
+        WeakView,
+        layout::{Anchor, Tiling},
+    },
 };
 
 #[derive(Clone, Educe)]
@@ -45,6 +47,74 @@ pub enum Placement {
         view: WeakView,
     },
     Tiling(Tiling),
+}
+
+impl Placement {
+    fn validate(&self) {
+        let (name, side, valid) = match self {
+            Self::Side { side, .. } => (
+                "Side",
+                *side,
+                matches!(
+                    side,
+                    Anchor::Top
+                        | Anchor::Bot
+                        | Anchor::Left
+                        | Anchor::Right
+                        | Anchor::Width
+                        | Anchor::Height
+                        | Anchor::MaxWidth
+                        | Anchor::MaxHeight
+                        | Anchor::MinWidth
+                        | Anchor::MinHeight
+                        | Anchor::CenterX
+                        | Anchor::CenterY
+                        | Anchor::Center
+                ),
+            ),
+            Self::Anchor { side, .. } => (
+                "Anchor",
+                *side,
+                matches!(
+                    side,
+                    Anchor::Top
+                        | Anchor::Bot
+                        | Anchor::Left
+                        | Anchor::Right
+                        | Anchor::Width
+                        | Anchor::Height
+                        | Anchor::X
+                        | Anchor::Y
+                ),
+            ),
+            Self::Relative { side, .. } => (
+                "Relative",
+                *side,
+                matches!(side, Anchor::Width | Anchor::Height | Anchor::X | Anchor::Y),
+            ),
+            Self::Same { side, .. } => (
+                "Same",
+                *side,
+                matches!(
+                    side,
+                    Anchor::Width
+                        | Anchor::Height
+                        | Anchor::CenterX
+                        | Anchor::CenterY
+                        | Anchor::X
+                        | Anchor::Y
+                ),
+            ),
+            Self::BetweenSuper { side, .. } => (
+                "BetweenSuper",
+                *side,
+                matches!(side, Anchor::Top | Anchor::Bot | Anchor::Left | Anchor::Right),
+            ),
+            Self::Between { .. } | Self::Tiling(_) => return,
+        };
+
+        assert!(valid, "{name} placement does not support {side:?}");
+    }
 }
 
 impl PartialEq for Placement {
@@ -108,10 +178,16 @@ pub struct LayoutRule {
 
 impl LayoutRule {
     fn new(placement: Placement) -> Self {
+        placement.validate();
         Self {
             placement,
             enabled: true,
         }
+    }
+
+    pub(crate) fn from_placement(placement: Placement, enabled: bool) -> Self {
+        placement.validate();
+        Self { placement, enabled }
     }
 
     pub(crate) fn make(side: Anchor, offset: impl ToF32) -> Self {
@@ -197,5 +273,30 @@ impl From<Anchor> for LayoutRule {
 impl From<Tiling> for LayoutRule {
     fn from(tiling: Tiling) -> Self {
         Self::new(Placement::Tiling(tiling))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use refs::Weak;
+
+    use super::{Anchor, LayoutRule};
+
+    #[test]
+    #[should_panic(expected = "Anchor placement does not support Center")]
+    fn invalid_anchor_panics_at_creation() {
+        LayoutRule::anchor(Anchor::Center, 0, Weak::default());
+    }
+
+    #[test]
+    #[should_panic(expected = "Same placement does not support Top")]
+    fn invalid_same_panics_at_creation() {
+        LayoutRule::same(Anchor::Top, Weak::default());
+    }
+
+    #[test]
+    #[should_panic(expected = "BetweenSuper placement does not support Center")]
+    fn invalid_between_super_panics_at_creation() {
+        LayoutRule::between_super(Weak::default(), Anchor::Center);
     }
 }

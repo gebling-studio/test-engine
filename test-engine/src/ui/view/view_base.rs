@@ -1,14 +1,16 @@
 #![allow(clippy::struct_excessive_bools)]
 
 use educe::Educe;
-use crate::gm::{
-    color::Color,
-    flat::{CornerRadii, Rect},
-};
 use refs::{Own, Weak};
 use vents::{Event, OnceEvent};
 
-use crate::ui::{DynamicColor, NavigationView, Shadow, Touch, UIEvent, View, WeakView, layout::Placer};
+use crate::{
+    gm::{
+        color::Color,
+        flat::{CornerRadii, Rect},
+    },
+    ui::{DynamicColor, NavigationView, Shadow, Touch, UIEvent, View, WeakView, layout::Placer},
+};
 
 #[derive(Educe)]
 #[educe(Default, Debug)]

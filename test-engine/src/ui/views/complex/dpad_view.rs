@@ -1,11 +1,13 @@
-use crate::gm::{Apply, flat::Direction};
 use refs::Weak;
 use ui_proc::view;
 use vents::Event;
 
-use crate::ui::{
-    Button, Setup, UIImages, ViewCallbacks,
-    view::{ViewData, ViewFrame},
+use crate::{
+    gm::{Apply, flat::Direction},
+    ui::{
+        Button, Setup, UIImages, ViewCallbacks,
+        view::{ViewData, ViewFrame},
+    },
 };
 
 #[view]

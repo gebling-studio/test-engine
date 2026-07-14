@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 #[cfg(not_wasm)]
 use crate::gm::flat::Size;
-
 use crate::window::surface::Surface;
 
 /// Where rendered frames go. `Windowed` presents to a real window,
@@ -14,9 +13,7 @@ pub(crate) enum Screen {
         surface:      Option<Surface>,
     },
     #[cfg(not_wasm)]
-    Headless {
-        size: Size<u32>,
-    },
+    Headless { size: Size<u32> },
 }
 
 impl Screen {

@@ -29,9 +29,7 @@ impl Setup for Slider {
     }
 }
 
-pub async fn test_slider() -> Result<()> {
-    let mut view = UITest::start::<Slider>();
-
+fn tap_sets_value(view: Weak<Slider>) {
     inject_touches(
         r"
             306  202  b
@@ -39,9 +37,11 @@ pub async fn test_slider() -> Result<()> {
     ",
     );
 
-    assert_eq!(view.slider.value(), 0.78);
+    assert!((view.slider.value() - 0.78).abs() < f32::EPSILON);
     assert_eq!(view.label.text(), "0.78");
+}
 
+fn drag_outside_does_not_change_value(view: Weak<Slider>) {
     inject_touches(
         r"
             177  137  m
@@ -67,9 +67,11 @@ pub async fn test_slider() -> Result<()> {
     ",
     );
 
-    assert_eq!(view.slider.value(), 0.78);
+    assert!((view.slider.value() - 0.78).abs() < f32::EPSILON);
     assert_eq!(view.label.text(), "0.78");
+}
 
+fn drag_sets_value(view: Weak<Slider>) {
     inject_touches(
         r"
             317  218  m
@@ -106,9 +108,11 @@ pub async fn test_slider() -> Result<()> {
     ",
     );
 
-    assert_eq!(view.slider.value(), 0.122_857_15);
+    assert!((view.slider.value() - 0.122_857_15).abs() < f32::EPSILON);
     assert_eq!(view.label.text(), "0.12");
+}
 
+fn drag_below_bottom_clamps_to_zero(view: Weak<Slider>) {
     inject_touches(
         r"
             322  443  m
@@ -127,9 +131,11 @@ pub async fn test_slider() -> Result<()> {
     ",
     );
 
-    assert_eq!(view.slider.value(), 0.0);
+    assert!(view.slider.value().abs() < f32::EPSILON);
     assert_eq!(view.label.text(), "0.00");
+}
 
+fn drag_above_top_clamps_to_one(view: Weak<Slider>) {
     inject_touches(
         r"
             337  478  m
@@ -151,16 +157,20 @@ pub async fn test_slider() -> Result<()> {
     ",
     );
 
-    assert_eq!(view.slider.value(), 1.0);
+    assert!((view.slider.value() - 1.0).abs() < f32::EPSILON);
     assert_eq!(view.label.text(), "1.00");
+}
 
+fn set_range_updates_value(mut view: Weak<Slider>) {
     from_main(move || {
         view.slider.set_range(-5, 5);
     });
 
-    assert_eq!(view.slider.value(), 5.0);
+    assert!((view.slider.value() - 5.0).abs() < f32::EPSILON);
     assert_eq!(view.label.text(), "5.00");
+}
 
+fn drag_to_bottom_of_range(view: Weak<Slider>) {
     inject_touches(
         "
             301  136  b
@@ -173,9 +183,11 @@ pub async fn test_slider() -> Result<()> {
         ",
     );
 
-    assert_eq!(view.slider.value(), -5.0);
+    assert!((view.slider.value() + 5.0).abs() < f32::EPSILON);
     assert_eq!(view.label.text(), "-5.00");
+}
 
+fn check_labels_at_indicator_positions(mut view: Weak<Slider>) -> Result<()> {
     for i in -5..=5 {
         from_main(move || {
             view.slider.set_value(i);
@@ -189,39 +201,54 @@ pub async fn test_slider() -> Result<()> {
     }
 
     check_colors(
-        r#"
-             370  507 -  89 124 149
-             371  504 -  89 124 149
-             369  491 -  89 124 149
-             365  484 - 255 255 255
-             361  466 - 255 255 255
-             361  459 -  89 124 149
-             362  440 - 151 151 151
-             362  418 -  89 124 149
-             362  410 - 252 252 252
-             362  390 -  89 124 149
-             363  373 - 222 222 222
-             363  361 - 153 153 153
-             363  354 -  89 124 149
-             365  342 - 255 255 255
-             365  330 - 255 255 255
-             364  313 -  89 124 149
-             362  286 -  89 124 149
-             364  264 - 176 176 176
-             363  238 - 162 162 162
-             363  218 -  89 124 149
-             363  208 -  89 124 149
-             363  188 - 255 255 255
-             363  170 -  89 124 149
-             366  148 -  89 124 149
-             368  145 -  89 124 149
-             371  136 -  89 124 149
-             372  129 - 254 254 254
-             373  113 -  89 124 149
-             373  107 -  89 124 149
-             373   77 -  89 124 149
-        "#,
-    )?;
+        r"
+            4    4 -  89 124 149
+            160    4 -  89 124 149
+            428    4 -  89 124 149
+            592    4 -  89 124 149
+            276  104 - 255 255 255
+            348  116 - 255 255 255
+            316  160 - 255 255 255
+            384  160 - 255 255 255
+            4  176 -  89 124 149
+            348  196 - 255 255 255
+            276  216 - 255 255 255
+            380  228 - 255 255 255
+            296  272 - 255 255 255
+            136  280 - 255 255 255
+            592  288 -  89 124 149
+            208  300 - 255 255 255
+            348  300 - 255 255 255
+            164  320 - 255 255 255
+            280  332 - 255 255 255
+            384  336 - 255 255 255
+            344  368 - 255 255 255
+            368  396 - 255 255 255
+            4  408 -  89 124 149
+            276  408 - 255 255 255
+            344  440 - 255 255 255
+            384  440 - 255 255 255
+            544  440 -  89 124 149
+            388  476 - 255 255 255
+            300  496 - 255 255 255
+            4  592 -  89 124 149
+            168  592 -  89 124 149
+            592  592 -  89 124 149
+        ",
+    )
+}
+
+pub async fn test_slider() -> Result<()> {
+    let view = UITest::start::<Slider>();
+
+    tap_sets_value(view);
+    drag_outside_does_not_change_value(view);
+    drag_sets_value(view);
+    drag_below_bottom_clamps_to_zero(view);
+    drag_above_top_clamps_to_one(view);
+    set_range_updates_value(view);
+    drag_to_bottom_of_range(view);
+    check_labels_at_indicator_positions(view)?;
 
     Ok(())
 }

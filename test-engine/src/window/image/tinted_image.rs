@@ -1,8 +1,10 @@
-use crate::gm::color::Color;
 use log::error;
 use refs::{Weak, manage::DataManager};
 
-use crate::window::image::{DEFAULT_IMAGE_DATA, Image, ToImage};
+use crate::{
+    gm::color::Color,
+    window::image::{DEFAULT_IMAGE_DATA, Image, ToImage},
+};
 
 /// Image with tint color
 /// Works only with SVG files

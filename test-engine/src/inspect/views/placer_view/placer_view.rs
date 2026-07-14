@@ -1,11 +1,12 @@
-use crate::inspect::protocol::{UIRequest, ui::ViewRepr};
 use refs::Weak;
-use crate::ui::{Setup, UIEvent, View, ViewData};
 use ui_proc::view;
 
 use crate::{
-    inspect::views::LayoutRuleCell,
-    ui::{CellRegistry, TableData, TableView},
+    inspect::{
+        protocol::{UIRequest, ui::ViewRepr},
+        views::LayoutRuleCell,
+    },
+    ui::{CellRegistry, Setup, TableData, TableView, UIEvent, View, ViewData},
 };
 
 #[view(crate = crate)]

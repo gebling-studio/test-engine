@@ -16,6 +16,11 @@ self.button.on_tap(move || self.do_thing());
 
 No `clone()`, no `borrow_mut()`, no lifetimes.
 
+This is an intentional framework tradeoff. TestEngine prioritizes convenient application and UI
+code over idiomatic Rust ownership purity. `Own` and `Weak` provide runtime checks for the
+single-main-thread UI model instead of trying to express the whole UI graph through lifetimes and
+standard smart pointers.
+
 ## How it works
 
 - `Own<T>` — the single owner of an object. When `Own` drops, the object is freed.
@@ -28,11 +33,32 @@ and the stamp matches. If not — panic with the type name, instead of use-after
 The stamp protects from address reuse: when the allocator gives the same address to a new object,
 the old `Weak` still reports dead, because the stamp differs.
 
+## Runtime checks
+
+TestEngine enables the `refs` crate's default `checks` feature. These are regular runtime
+assertions, so they run in release builds too:
+
+- Immutable `Weak` dereference verifies that the pointer was initialized, its allocation is still
+  alive, and its stamp still matches. Immutable access is allowed from background threads.
+- Mutable `Weak` dereference performs the same lifetime checks and asserts that it runs on the main
+  thread.
+- Mutable `Own` dereference asserts that it runs on the main thread.
+- Dropping an `Own` outside the main thread always panics.
+
+The checks catch dangling pointers and background mutation while preserving copyable `Weak`
+pointers and direct method receivers. The explicitly unsafe unchecked APIs bypass these checks and
+must uphold the same rules themselves.
+
 ## In views
 
 The `#[view]` macro rewrites `#[init]` fields to `Weak<Field>`. Real ownership lives in
 `ViewBase.subviews: Vec<Own<dyn View>>` — the view tree owns children, like in Swift.
 Methods take `self: Weak<Self>`, so closures capture `self` by copy.
+
+This is also why TestEngine requires nightly Rust. `Weak<Self>` is a custom smart-pointer method
+receiver, enabled by `arbitrary_self_types`. Replacing it with a stable receiver would change the
+framework's method syntax and callback ownership model rather than being a mechanical toolchain
+change.
 
 ## Managed resources
 

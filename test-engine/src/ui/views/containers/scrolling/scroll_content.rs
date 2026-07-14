@@ -1,7 +1,8 @@
-use crate::gm::flat::Size;
-use crate::ui::{View, ViewCallbacks, view};
-
-use crate::{self as test_engine};
+use crate::{
+    gm::flat::Size,
+    ui::{View, ViewCallbacks, view},
+    {self as test_engine},
+};
 
 #[view]
 pub(crate) struct ScrollContent {

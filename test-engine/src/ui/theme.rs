@@ -1,11 +1,13 @@
-use crate::gm::{
-    ToF32,
-    color::{Color, U8Color},
-};
 use refs::main_lock::MainLock;
-use crate::window::Theme as OsTheme;
 
-use crate::ui::{UIEvents, UIManager, View, WeakView, view::ViewSubviews};
+use crate::{
+    gm::{
+        ToF32,
+        color::{Color, U8Color},
+    },
+    ui::{UIEvents, UIManager, View, WeakView, view::ViewSubviews},
+    window::Theme as OsTheme,
+};
 
 static THEME: MainLock<ThemeState> = MainLock::new();
 
@@ -111,7 +113,7 @@ impl DynamicColor {
         Self { light, dark }
     }
 
-    pub(crate) fn resolve(&self) -> Color {
+    pub fn resolve(&self) -> Color {
         match Theme::current() {
             Theme::Light => self.light,
             Theme::Dark => self.dark,

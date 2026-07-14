@@ -7,18 +7,20 @@ use std::{
     },
 };
 
-use crate::gm::{
-    ToF32,
-    color::Color,
-    flat::{Point, Rect, Size},
-};
 use hreads::{assert_main_thread, from_main, on_main};
 use parking_lot::Mutex;
 use plat::Platform;
 use refs::{Own, Weak};
-use crate::window::Window;
 
-use crate::ui::{Keymap, RootView, Setup, TouchStack, UIAnimation, UIEvent, View, ViewData, WeakView};
+use crate::{
+    gm::{
+        ToF32,
+        color::Color,
+        flat::{Point, Rect, Size},
+    },
+    ui::{Keymap, RootView, Setup, TouchStack, UIAnimation, UIEvent, View, ViewData, WeakView},
+    window::Window,
+};
 
 pub(crate) static DELETED_VIEWS: Mutex<Vec<Own<dyn View>>> = Mutex::new(Vec::new());
 

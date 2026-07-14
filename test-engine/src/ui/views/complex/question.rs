@@ -4,18 +4,20 @@ use std::{
     sync::mpsc::channel,
 };
 
-use crate::gm::{
-    color::{BLACK, BLUE, GRAY},
-    flat::Size,
-};
 use hreads::from_main;
 use refs::Weak;
 use ui_proc::view;
 use vents::OnceEvent;
 
-use crate::ui::{Anchor::Width, Button, Label, ViewSubviews};
 // use vents::OnceEvent;
 use crate::ui::{ModalView, Setup, view::ViewData};
+use crate::{
+    gm::{
+        color::{BLACK, BLUE, GRAY},
+        flat::Size,
+    },
+    ui::{Anchor::Width, Button, Label, ViewSubviews},
+};
 
 #[view]
 pub struct Question {

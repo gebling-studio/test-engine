@@ -1,4 +1,3 @@
-
 pub use crate::render::shader_data::SpriteView;
 mod buffer_helper;
 pub mod data;

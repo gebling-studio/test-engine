@@ -1,7 +1,8 @@
 use std::mem::size_of;
 
-use crate::gm::flat::{Point, Vertex2D};
 use wgpu::{BufferAddress, VertexAttribute, VertexBufferLayout, VertexStepMode};
+
+use crate::gm::flat::{Point, Vertex2D};
 
 pub(crate) trait VertexLayout: Sized {
     const ATTRIBS: &'static [VertexAttribute];

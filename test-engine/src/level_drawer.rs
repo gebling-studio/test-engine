@@ -1,11 +1,14 @@
-use crate::level::LevelManager;
 use refs::{main_lock::MainLock, manage::ExistsManaged};
-use crate::render::{
-    BackgroundPipeline, PolygonPipeline, SpriteBoxPipeline, SpriteView, TexturedSpriteBoxPipeline,
-    data::{SpriteInstance, TexturedSpriteInstance},
-};
-use crate::ui::UIManager;
 use wgpu::RenderPass;
+
+use crate::{
+    level::LevelManager,
+    render::{
+        BackgroundPipeline, PolygonPipeline, SpriteBoxPipeline, SpriteView, TexturedSpriteBoxPipeline,
+        data::{SpriteInstance, TexturedSpriteInstance},
+    },
+    ui::UIManager,
+};
 
 static SPRITE_DRAWER: MainLock<SpriteBoxPipeline> = MainLock::new();
 static TEXTURED_SPRITE_DRAWER: MainLock<TexturedSpriteBoxPipeline> = MainLock::new();

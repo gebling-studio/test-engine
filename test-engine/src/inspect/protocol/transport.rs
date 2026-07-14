@@ -4,13 +4,13 @@ use hreads::on_main;
 #[cfg(debug_assertions)]
 use log::debug;
 use serde_json::{from_slice, to_vec};
-#[cfg(debug_assertions)]
-use tokio::{net::TcpListener, spawn};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpStream, ToSocketAddrs},
     sync::Mutex,
 };
+#[cfg(debug_assertions)]
+use tokio::{net::TcpListener, spawn};
 
 use crate::inspect::protocol::{AppCommand, InspectorCommand};
 

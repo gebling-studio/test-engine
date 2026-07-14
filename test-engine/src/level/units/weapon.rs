@@ -1,14 +1,16 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::gm::{
-    color::Color,
-    flat::{Point, Shape},
-};
 use rapier2d::dynamics::CoefficientCombineRule;
 use refs::{Own, Weak, weak_from_ref};
-use crate::window::image::Image;
 
-use crate::level::{Body, LevelManager, Sprite, SpriteData, SpriteTemplates, level::LevelCreation};
+use crate::{
+    gm::{
+        color::Color,
+        flat::{Point, Shape},
+    },
+    level::{Body, LevelManager, Sprite, SpriteData, SpriteTemplates, level::LevelCreation},
+    window::image::Image,
+};
 
 pub struct Weapon {
     sprite:              SpriteData,

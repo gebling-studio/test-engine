@@ -12,6 +12,54 @@ Inspired by `Cross++`: https://github.com/maxon887/Cross
 
 ---
 
+## Rust toolchain
+
+TestEngine requires nightly Rust. The repository pins a known working nightly in
+`rust-toolchain.toml`.
+
+Two nightly features are fundamental to the view API.
+
+Views are owned by `Own<T>`, while application code uses the copyable, non-owning `Weak<T>`
+handle. View methods therefore use `Weak<Self>` as the receiver:
+
+```rust
+fn setup(self: Weak<Self>) {
+    self.button.on_tap(move || self.do_something());
+}
+```
+
+Using a custom smart pointer as `self` requires `arbitrary_self_types`. It keeps ordinary method
+syntax and allows `self` to be copied into `'static` callbacks without `Rc<RefCell<_>>`, explicit
+lifetimes or cloning an owning pointer.
+
+The engine also provides default behavior for every view through blanket implementations, while
+individual views override only the methods they need:
+
+```rust
+impl<T: View + 'static> Setup for T {
+    default fn setup(self: Weak<Self>) {}
+}
+
+impl Setup for MainScreen {
+    fn setup(self: Weak<Self>) {
+        // Configure this view.
+    }
+}
+```
+
+These overlapping implementations require `specialization`. Supporting stable Rust would require
+redesigning both the method receiver and the default view behavior, not just removing feature
+flags.
+
+---
+
+## Platform support
+
+TestEngine currently supports Windows, Linux, macOS, iOS and WebAssembly. Android support is
+temporarily disabled and is not covered by CI.
+
+---
+
 Simplest example:
 
 ```rust

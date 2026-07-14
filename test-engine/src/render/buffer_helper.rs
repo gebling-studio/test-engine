@@ -1,7 +1,6 @@
 use wgpu::Buffer;
-use crate::window::Window;
 
-use crate::render::to_bytes::ToBytes;
+use crate::{render::to_bytes::ToBytes, window::Window};
 
 pub(crate) trait BufferHelper {
     fn update<T: ToBytes>(&self, data: T);

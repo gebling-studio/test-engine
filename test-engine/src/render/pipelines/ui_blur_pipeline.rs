@@ -1,16 +1,18 @@
 use bytemuck::{Pod, Zeroable};
-use crate::gm::flat::{Point, Size};
 use wgpu::{
     AddressMode, BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindingResource,
     BlendState, Color, ColorTargetState, ColorWrites, CommandEncoder, Extent3d, FilterMode, FragmentState,
     FrontFace, LoadOp, MultisampleState, Operations, PipelineCompilationOptions, PipelineLayoutDescriptor,
     PolygonMode, PrimitiveState, PrimitiveTopology, RenderPassColorAttachment, RenderPassDescriptor,
-    RenderPipeline, Sampler, SamplerDescriptor, ShaderModuleDescriptor, ShaderSource, ShaderStages,
-    StoreOp, TextureDescriptor, TextureDimension, TextureUsages, TextureView, TextureViewDescriptor,
+    RenderPipeline, Sampler, SamplerDescriptor, ShaderModuleDescriptor, ShaderSource, ShaderStages, StoreOp,
+    TextureDescriptor, TextureDimension, TextureUsages, TextureView, TextureViewDescriptor,
 };
-use crate::window::{SURFACE_TEXTURE_FORMAT, Window, image::Image};
 
-use crate::render::uniform::{UniformBind, make_uniform_layout};
+use crate::{
+    gm::flat::{Point, Size},
+    render::uniform::{UniformBind, make_uniform_layout},
+    window::{SURFACE_TEXTURE_FORMAT, Window, image::Image},
+};
 
 const BLUR_CODE: &str = include_str!("shaders/blur.wgsl");
 
@@ -109,7 +111,13 @@ impl UIBlurPipeline {
     /// Encodes the blur chain for the current scene content. The draws
     /// already recorded execute first, so the result is the blur of
     /// everything drawn before this call.
-    pub(crate) fn blur(&mut self, encoder: &mut CommandEncoder, scene: &TextureView, size: Size<u32>, radius: f32) {
+    pub(crate) fn blur(
+        &mut self,
+        encoder: &mut CommandEncoder,
+        scene: &TextureView,
+        size: Size<u32>,
+        radius: f32,
+    ) {
         self.ensure_targets(size);
 
         let sigma = (radius / 4.0).max(0.5);
@@ -130,7 +138,13 @@ impl UIBlurPipeline {
         let targets = self.targets.as_ref().expect("blur targets ensured");
 
         effect_pass(encoder, &targets.half.view, &self.copy, &scene_bind, None);
-        effect_pass(encoder, &targets.quarter_a.view, &self.copy, &targets.half.bind, None);
+        effect_pass(
+            encoder,
+            &targets.quarter_a.view,
+            &self.copy,
+            &targets.half.bind,
+            None,
+        );
         effect_pass(
             encoder,
             &targets.quarter_b.view,
@@ -265,13 +279,13 @@ fn effect_pipeline(
         }
         .into(),
         primitive:      PrimitiveState {
-            topology: PrimitiveTopology::TriangleList,
+            topology:           PrimitiveTopology::TriangleList,
             strip_index_format: None,
-            front_face: FrontFace::Ccw,
-            cull_mode: None,
-            polygon_mode: PolygonMode::Fill,
-            unclipped_depth: false,
-            conservative: false,
+            front_face:         FrontFace::Ccw,
+            cull_mode:          None,
+            polygon_mode:       PolygonMode::Fill,
+            unclipped_depth:    false,
+            conservative:       false,
         },
         depth_stencil:  None,
         multisample:    MultisampleState {

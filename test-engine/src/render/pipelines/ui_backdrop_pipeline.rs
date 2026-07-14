@@ -1,17 +1,19 @@
-use crate::gm::flat::Point;
 use wgpu::{
     BindGroup, Buffer, PipelineLayoutDescriptor, PrimitiveTopology, RenderPass, RenderPipeline,
     ShaderModuleDescriptor, ShaderSource, ShaderStages,
 };
-use crate::window::{PolygonMode, Window, image::Image};
 
-use crate::render::{
-    data::{RectView, UIRectInstance},
-    device_helper::DeviceHelper,
-    pipelines::pipeline_type::PipelineType,
-    uniform::{UniformBind, make_uniform_layout},
-    vec_buffer::VecBuffer,
-    vertex_layout::VertexLayout,
+use crate::{
+    gm::flat::Point,
+    render::{
+        data::{RectView, UIRectInstance},
+        device_helper::DeviceHelper,
+        pipelines::pipeline_type::PipelineType,
+        uniform::{UniformBind, make_uniform_layout},
+        vec_buffer::VecBuffer,
+        vertex_layout::VertexLayout,
+    },
+    window::{PolygonMode, Window, image::Image},
 };
 
 const UI_BACKDROP_CODE: &str = include_str!("shaders/ui_backdrop.wgsl");

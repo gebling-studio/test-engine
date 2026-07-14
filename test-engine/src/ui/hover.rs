@@ -1,10 +1,13 @@
-#[cfg(desktop)]
-use crate::gm::flat::Point;
 use refs::main_lock::MainLock;
 
 #[cfg(desktop)]
-use crate::ui::{TouchStack, view::{ViewData, ViewFrame}};
+use crate::gm::flat::Point;
 use crate::ui::WeakView;
+#[cfg(desktop)]
+use crate::ui::{
+    TouchStack,
+    view::{ViewData, ViewFrame},
+};
 
 static HOVERED: MainLock<WeakView> = MainLock::new();
 

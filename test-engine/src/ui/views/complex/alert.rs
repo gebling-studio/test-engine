@@ -1,12 +1,12 @@
-use crate::gm::{
-    color::{BLACK, BLUE, GRAY, WHITE},
-    flat::Size,
-};
 use parking_lot::Mutex;
 use refs::Weak;
 use ui_proc::view;
 use vents::OnceEvent;
 
+use crate::gm::{
+    color::{BLACK, BLUE, GRAY, WHITE},
+    flat::Size,
+};
 // use vents::OnceEvent;
 use crate::ui::{Button, Label, ModalView, Setup, view::ViewData};
 #[allow(clippy::type_complexity)]

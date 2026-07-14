@@ -1,11 +1,13 @@
 use bytemuck::{Pod, Zeroable};
-use crate::gm::{
-    color::Color,
-    flat::{CornerRadii, Point, Size},
-};
 use wgpu::{BufferAddress, VertexBufferLayout, VertexStepMode};
 
-use crate::render::vertex_layout::VertexLayout;
+use crate::{
+    gm::{
+        color::Color,
+        flat::{CornerRadii, Point, Size},
+    },
+    render::vertex_layout::VertexLayout,
+};
 
 /// A drop shadow under a rounded rect. `position` and `size` are the
 /// casting rect, the quad is expanded by `blur` in the shader.

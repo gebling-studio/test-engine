@@ -9,3 +9,6 @@ name = "example-app"
 
 [dependencies]
 test-engine = { workspace = true }
+
+[lints]
+workspace = true

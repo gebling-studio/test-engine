@@ -1,7 +1,9 @@
-use crate::gm::flat::{Point, Rect, Shape};
 use refs::{Own, Weak};
 
-use crate::level::{Banner, Level, LevelManager, Sprite};
+use crate::{
+    gm::flat::{Point, Rect, Shape},
+    level::{Banner, Level, LevelManager, Sprite},
+};
 
 pub trait LevelCreation {
     fn add_sprite<S: 'static + Sprite>(&mut self, sprite: Own<S>) -> Weak<S>;

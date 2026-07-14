@@ -1,3 +1,5 @@
+mod auto_content_test;
+mod clip_test;
 mod drag_cancel_test;
 mod scroll_content;
 mod scroll_test;

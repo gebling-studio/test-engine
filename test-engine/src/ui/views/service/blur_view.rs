@@ -1,5 +1,6 @@
-use crate::gm::ToF32;
 use ui_proc::view;
+
+use crate::gm::ToF32;
 
 /// Shows a blurred copy of everything drawn before it in tree order,
 /// inside its own frame and corner radii. Its color is a tint mixed

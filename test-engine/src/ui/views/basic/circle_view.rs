@@ -1,10 +1,12 @@
-use crate::gm::{ToF32, color::Color, flat::PointsPath};
 use refs::Weak;
 use ui_proc::view;
 
-use crate::ui::{
-    DrawingView, Setup,
-    view::{ViewData, ViewFrame},
+use crate::{
+    gm::{ToF32, color::Color, flat::PointsPath},
+    ui::{
+        DrawingView, Setup,
+        view::{ViewData, ViewFrame},
+    },
 };
 
 #[view]
@@ -17,7 +19,7 @@ pub struct CircleView {
 }
 
 impl CircleView {
-    pub(crate) fn set_radius(&mut self, radius: impl ToF32) -> &mut Self {
+    pub fn set_radius(&mut self, radius: impl ToF32) -> &mut Self {
         let radius = radius.to_f32();
 
         if (radius - self.radius).abs() < f32::EPSILON {

@@ -1,6 +1,9 @@
-use crate::inspect::protocol::ui::ViewRepr;
 use refs::Own;
-use crate::ui::{Button, Label, TextField, View, ViewData, ViewFrame, ViewSubviews, WeakView};
+
+use crate::{
+    inspect::protocol::ui::ViewRepr,
+    ui::{Button, Label, TextField, View, ViewData, ViewFrame, ViewSubviews, WeakView},
+};
 
 pub trait ViewToInspect {
     fn view_to_inspect(&self) -> Own<ViewRepr>;

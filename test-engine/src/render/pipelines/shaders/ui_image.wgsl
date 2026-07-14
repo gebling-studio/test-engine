@@ -18,6 +18,8 @@ struct UIImageInstance {
     @location(7) z_position:    f32,
     @location(8) flags:         u32,
     @location(9) scale:         f32,
+    @location(10) uv_position:  vec2<f32>,
+    @location(11) uv_size:      vec2<f32>,
 }
 
 @group(0) @binding(0)
@@ -80,7 +82,7 @@ fn v_main(
 
     var out: VertexOutput;
     out.pos = out_pos;
-    out.uv  = model.uv;
+    out.uv  = instance.uv_position + model.uv * instance.uv_size;
     // Screen orientation, not texture orientation: x follows the
     // flipped pos, y is negated to undo the extra negation above,
     // so negative y is the top like in the other UI shaders.

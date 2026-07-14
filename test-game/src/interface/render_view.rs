@@ -4,7 +4,7 @@ use test_engine::{
     ui::{NumberView, Setup, ViewCallbacks, ViewData, view},
 };
 
-use crate::interface::test_game_view::HAS_BACK_BUTTON;
+use crate::interface::HAS_BACK_BUTTON;
 
 #[view]
 pub struct RenderView {

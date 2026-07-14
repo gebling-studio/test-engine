@@ -2,9 +2,8 @@ use std::{any::type_name, collections::HashMap};
 
 use netrun::Function;
 use refs::{Own, Weak};
-use crate::ui::{View, ViewData, ViewSubviews};
 
-use crate::ui::TableView;
+use crate::ui::{TableView, View, ViewData, ViewSubviews};
 
 #[derive(Default)]
 pub struct CellRegistry {

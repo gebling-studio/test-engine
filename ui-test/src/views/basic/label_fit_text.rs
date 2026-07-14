@@ -36,48 +36,13 @@ impl Setup for LabelFitText {
 
 impl ViewTest for LabelFitText {
     fn perform_test(view: Weak<Self>) -> Result<()> {
-        check_colors(
-            r"
-              64   24 -   0 255   0
-              44   40 -   0 255   0
-              60   44 -   0 255   0
-              80   44 -   0 255   0
-             352  124 - 255 255   0
-             468  128 -   0   0   0
-             168  136 - 255 255   0
-             292  136 -   0   0   0
-              80  140 -  13  13   0
-             528  140 -   0   0   0
-             400  144 - 255 255   0
-             116  148 -  13  13   0
-             228  148 -  13  13   0
-             308  164 -   0   0   0
-             484  184 - 255 255   0
-             160  188 -   0   0   0
-             272  188 - 255 255   0
-             340  188 - 255 255   0
-              24  196 - 255 255   0
-             104  196 - 255 255   0
-             424  196 -  13  13   0
-             576  196 - 255 255   0
-             592  360 -  89 124 149
-              64  396 -  89 124 149
-             272  404 -   0 255   0
-             316  404 -   0 255   0
-             320  420 -   0 255   0
-             292  436 -   0 255   0
-             328  436 -   0 255   0
-               4  592 -  89 124 149
-             192  592 -  89 124 149
-             592  592 -  89 124 149
-            ",
-        )?;
+        fitted_text_colors()?;
 
         let (tag, panel, centered) =
             from_main(move || (*view.tag.frame(), *view.panel.frame(), *view.centered.frame()));
 
         assert!(
-            tag.origin.x == 20.0 && tag.origin.y == 20.0,
+            (tag.origin.x - 20.0).abs() < f32::EPSILON && (tag.origin.y - 20.0).abs() < f32::EPSILON,
             "fit_text moved the anchored origin: {tag:?}"
         );
         assert!(
@@ -85,7 +50,7 @@ impl ViewTest for LabelFitText {
             "fitted frame does not hug the text: {tag:?}"
         );
         assert!(
-            panel.size.width == 560.0,
+            (panel.size.width - 560.0).abs() < f32::EPSILON,
             "fit_text_height changed the width set by side rules: {panel:?}"
         );
         assert!(
@@ -93,52 +58,7 @@ impl ViewTest for LabelFitText {
             "fitted label is not centered: {centered:?}"
         );
 
-        from_main(move || {
-            view.tag.set_text("much longer tag");
-            view.panel.set_text(
-                "Grumpy wizards make toxic brew for the jovial queen and jack, then brew even more",
-            );
-            view.centered.set_text("wide middle");
-        });
-
-        wait_for_next_frame();
-
-        check_colors(
-            r"
-             320   24 -   0 255   0
-             100   36 -   0 255   0
-             228   36 -   0 255   0
-             272   44 -   0   0   0
-              24   56 -   0 255   0
-             184   56 -   0 255   0
-             392  124 - 255 255   0
-             468  128 -   0   0   0
-             260  132 -   0   0   0
-              64  136 - 255 255   0
-             332  144 - 255 255   0
-             116  148 -  13  13   0
-             216  148 -  13  13   0
-             164  176 - 255 255   0
-             516  180 -  13  13   0
-             232  220 -   0   0   0
-             472  220 -   0   0   0
-             104  224 - 255 255   0
-             308  228 - 255 255   0
-              24  236 - 255 255   0
-             420  236 - 255 255   0
-             576  236 - 255 255   0
-             592  368 -  89 124 149
-             240  404 -   0 255   0
-             356  404 -   0 255   0
-               4  412 -  89 124 149
-             396  416 -   0 255   0
-             304  420 -   0   0   0
-             196  436 -   0 255   0
-               4  592 -  89 124 149
-             356  592 -  89 124 149
-             592  592 -  89 124 149
-            ",
-        )?;
+        grown_text_colors(view)?;
 
         let (grown_tag, grown_panel, grown_centered) =
             from_main(move || (*view.tag.frame(), *view.panel.frame(), *view.centered.frame()));
@@ -162,6 +82,93 @@ impl ViewTest for LabelFitText {
 
         Ok(())
     }
+}
+
+fn fitted_text_colors() -> Result<()> {
+    check_colors(
+        r"
+                24   24 -   0 255   0
+                44   40 -   0 255   0
+                64   40 -   0   0   0
+                56   44 -   0 255   0
+                80   44 -   0 255   0
+                24   56 -   0 255   0
+                360  124 - 255 255   0
+                576  124 - 255 255   0
+                116  132 -   0   0   0
+                260  132 -   0   0   0
+                292  136 -   0   0   0
+                488  136 - 255 255   0
+                428  140 - 255 255   0
+                528  140 -   0   0   0
+                24  144 - 255 255   0
+                80  144 -   1   1   0
+                216  148 -   1   1   0
+                316  180 -   0   0   0
+                128  184 - 255 255   0
+                284  184 - 255 255   0
+                352  188 - 255 255   0
+                424  196 -   1   1   0
+                576  196 - 255 255   0
+                592  360 -  89 124 149
+                4  368 -  89 124 149
+                272  404 -   0 255   0
+                316  404 -   0 255   0
+                320  424 -   0 255   0
+                288  436 -   0 255   0
+                4  592 -  89 124 149
+                404  592 -  89 124 149
+                592  592 -  89 124 149
+            ",
+    )
+}
+
+fn grown_text_colors(view: Weak<LabelFitText>) -> Result<()> {
+    from_main(move || {
+        view.tag.set_text("much longer tag");
+        view.panel
+            .set_text("Grumpy wizards make toxic brew for the jovial queen and jack, then brew even more");
+        view.centered.set_text("wide middle");
+    });
+
+    wait_for_next_frame();
+
+    check_colors(
+        r"
+                220   24 -   0 255   0
+                100   36 -   0 255   0
+                168   40 -   0 255   0
+                272   44 -   0   0   0
+                24   56 -   0 255   0
+                384  124 - 255 255   0
+                64  136 - 255 255   0
+                292  136 -   0   0   0
+                528  140 -   0   0   0
+                116  148 -   0   0   0
+                228  148 -   1   1   0
+                164  176 - 255 255   0
+                424  176 - 255 255   0
+                516  180 -   1   1   0
+                552  184 -   1   1   0
+                232  220 -   0   0   0
+                472  220 -   0   0   0
+                104  224 - 255 255   0
+                308  228 - 255 255   0
+                24  236 - 255 255   0
+                392  236 - 255 255   0
+                576  236 - 255 255   0
+                592  380 -  89 124 149
+                240  404 -   0 255   0
+                292  404 -   0 255   0
+                4  412 -  89 124 149
+                396  416 -   0 255   0
+                344  420 -   0 255   0
+                196  436 -   0 255   0
+                4  592 -  89 124 149
+                288  592 -  89 124 149
+                592  592 -  89 124 149
+            ",
+    )
 }
 
 pub async fn test_label_fit_text() -> Result<()> {

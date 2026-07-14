@@ -39,6 +39,7 @@ pub mod window;
 pub use app::*;
 pub use app_starter::*;
 pub use educe;
+
 pub use crate::ui::{launch_app, ui_test};
 
 pub mod refs {
@@ -60,6 +61,7 @@ pub mod time {
 
 pub use app_runner::AppRunner;
 pub use vents::{Event, OnceEvent};
+
 pub use crate::window::{RenderPass, VertexBuffer, Window, cast_slice, image::ToImage};
 
 pub mod net {
@@ -73,8 +75,7 @@ pub mod dispatch {
     pub use ::hreads::first_ok;
     pub use ::hreads::{after, from_main, ok_main, on_main, sleep, spawn, wait_async, wait_for_next_frame};
 
-    pub use crate::dispatch_tools::*;
-    pub use crate::gm::drop_on_main;
+    pub use crate::{dispatch_tools::*, gm::drop_on_main};
 }
 
 pub mod __internal_macro_deps {

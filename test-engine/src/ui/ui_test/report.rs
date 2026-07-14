@@ -5,11 +5,14 @@ use std::{
 };
 
 use anyhow::Result;
-use crate::gm::flat::Rect;
 use hreads::{from_main, is_main_thread, wait_for_next_frame};
-use crate::ui::{UIManager, View, ViewData, ViewFrame, ViewSubviews};
 
-use crate::{AppRunner, ui_test::TEST_NAME};
+use crate::{
+    AppRunner,
+    gm::flat::Rect,
+    ui::{UIManager, View, ViewData, ViewFrame, ViewSubviews},
+    ui_test::TEST_NAME,
+};
 
 const MAX_CHILDREN: usize = 30;
 

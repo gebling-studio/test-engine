@@ -47,8 +47,11 @@ is always center.
 
 ## Matching other renderers
 
-The engine blends glyph coverage in linear space, browsers blend perceptually.
-Light text on dark renders slightly thicker here, dark on light slightly
-thinner, so a pixel perfect port tunes `wght` per polarity instead of using the
-nominal weight. Measuring workflow, scripts and the trak table details live in
-the test-engine skill's migration chapter, next to this repo's users.
+Browsers composite text in sRGB space, an sRGB render target blends in linear
+space. The wgpu_text fragment shader compensates on sRGB targets: it remaps
+glyph coverage so the linear blend lands where the sRGB space blend would.
+The destination pixel is not readable in the pass, so the background is
+assumed to contrast with the glyph luminance, exact for dark on light and
+light on dark, close in between. Ports therefore use nominal font weights on
+both polarities. Measuring workflow, scripts and the trak table details live
+in the test-engine skill's migration chapter, next to this repo's users.

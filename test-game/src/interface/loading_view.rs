@@ -11,7 +11,7 @@ use test_engine::{
     },
 };
 
-use crate::interface::test_game_view::TestGameView;
+use crate::interface::HomeView;
 
 #[view]
 pub struct LoadingView {
@@ -75,7 +75,7 @@ impl LoadingView {
             });
         }
 
-        UIManager::set_view(TestGameView::new());
+        UIManager::set_view(HomeView::new());
 
         Ok(())
     }

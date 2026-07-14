@@ -15,3 +15,6 @@ mdns-sd = { workspace = true }
 parking_lot = { workspace = true }
 
 test-engine = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,12 +1,13 @@
 use std::path::Path;
 
 use anyhow::Result;
+use image::{ColorType::Rgba8, save_buffer};
+
 use crate::gm::{
     LossyConvert,
     color::{Color, U8Color},
     flat::{Point, Size},
 };
-use image::{ColorType::Rgba8, save_buffer};
 
 #[derive(Debug, Default)]
 pub struct Screenshot {

@@ -1,17 +1,19 @@
 use std::ops::{DerefMut, Neg};
 
-use crate::gm::{
-    ToF32,
-    flat::{Point, Size},
-};
 use refs::{Own, Weak, weak_from_ref};
-use crate::ui::{
-    NO_TOUCH_ID, Scrollable, Setup, Touch, TouchStack, UIAnimation, UIEvent, View, ViewData, ViewFrame,
-    ViewSubviews, view,
-};
 use vents::Event;
 
-use crate::{self as test_engine, ui::views::containers::scrolling::ScrollContent};
+use crate::{
+    self as test_engine,
+    gm::{
+        ToF32,
+        flat::{Point, Size},
+    },
+    ui::{
+        NO_TOUCH_ID, Scrollable, Setup, Touch, TouchStack, UIAnimation, UIEvent, View, ViewCallbacks,
+        ViewData, ViewFrame, ViewSubviews, view, views::containers::scrolling::ScrollContent,
+    },
+};
 
 /// A captured touch becomes a drag only after moving this far. Until then
 /// taps on views inside the scroll work; after, the drag claims the touch.
@@ -19,12 +21,14 @@ const DRAG_SLOP: f32 = 10.0;
 
 #[view]
 pub struct ScrollView {
-    inertia:            f32,
-    began_touch:        Point,
-    previous_touch:     Point,
-    dragging:           bool,
-    pub on_scroll:      Event<f32>,
-    pub bottom_reached: UIEvent,
+    inertia:               f32,
+    began_touch:           Point,
+    previous_touch:        Point,
+    dragging:              bool,
+    manual_content_width:  bool,
+    manual_content_height: bool,
+    pub on_scroll:         Event<f32>,
+    pub bottom_reached:    UIEvent,
 
     #[init]
     pub(crate) content: ScrollContent,
@@ -40,7 +44,7 @@ impl ScrollView {
         (self.content.content_size.height - self.height()).neg().min(0.0)
     }
 
-    pub(crate) fn set_content_offset(&mut self, offset: impl ToF32) -> &mut Self {
+    pub fn set_content_offset(&mut self, offset: impl ToF32) -> &mut Self {
         self.content.__base_view().__content_offset = offset.to_f32();
 
         if self.content.__base_view().__content_offset < self.max_offset() {
@@ -50,24 +54,30 @@ impl ScrollView {
         self
     }
 
-    pub(crate) fn set_content_size(&mut self, size: impl Into<Size>) -> &mut Self {
+    pub fn set_content_size(&mut self, size: impl Into<Size>) -> &mut Self {
+        self.manual_content_width = true;
+        self.manual_content_height = true;
         self.content.content_size = size.into();
         self
     }
 
-    pub(crate) fn set_content_width(&mut self, width: impl ToF32) -> &mut Self {
+    pub fn set_content_width(&mut self, width: impl ToF32) -> &mut Self {
+        self.manual_content_width = true;
         self.content.content_size.width = width.to_f32();
         self
     }
 
-    pub(crate) fn set_content_height(&mut self, height: impl ToF32) -> &mut Self {
+    pub fn set_content_height(&mut self, height: impl ToF32) -> &mut Self {
+        self.manual_content_height = true;
         self.content.content_size.height = height.to_f32();
+        self.clamp_offset();
+        self
+    }
 
+    fn clamp_offset(&mut self) {
         if self.content.__base_view().__content_offset < self.max_offset() {
             self.content.__base_view().__content_offset = self.max_offset();
         }
-
-        self
     }
 
     pub(crate) fn get_scroll_content_offset(&self) -> f32 {
@@ -75,7 +85,34 @@ impl ScrollView {
     }
 }
 
+impl ViewCallbacks for ScrollView {
+    /// Content dimensions the app never set follow the layout on their
+    /// own: width tracks the viewport, height tracks the lowest subview
+    /// edge. Frames are read from the previous layout pass, so the size
+    /// settles a frame after the content does.
+    fn update(&mut self) {
+        if !self.manual_content_width {
+            self.content.content_size.width = self.width();
+        }
+        if !self.manual_content_height {
+            let bottom = self
+                .content
+                .subviews()
+                .iter()
+                .filter(|view| !view.is_hidden())
+                .map(|view| view.frame().max_y())
+                .fold(0.0, f32::max);
+            self.content.content_size.height = bottom;
+            self.clamp_offset();
+        }
+    }
+}
+
 impl Setup for ScrollView {
+    fn clips_to_bounds(&self) -> bool {
+        true
+    }
+
     fn setup(mut self: Weak<Self>) {
         self.content.__base_view().dont_hide_off_screen = true;
         self.content.place().back();

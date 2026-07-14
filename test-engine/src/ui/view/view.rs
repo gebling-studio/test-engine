@@ -1,6 +1,6 @@
 use refs::{AsAny, Weak};
 
-use crate::ui::{CellCallbacks, ViewBase, ViewCallbacks, view::view_callbacks::__ViewInternalSetup};
+use crate::ui::{CellCallbacks, ViewBase, ViewCallbacks, view::setup::__ViewInternalSetup};
 
 #[allow(clippy::mut_from_ref)]
 pub trait View: ViewCallbacks + __ViewInternalSetup + AsAny {

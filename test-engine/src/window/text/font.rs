@@ -1,7 +1,6 @@
 use std::fs::read;
 
 use anyhow::{Result, anyhow, bail};
-use crate::gm::{LossyConvert, ToF32, flat::Size};
 use log::error;
 use refs::{
     Weak,
@@ -19,10 +18,13 @@ use wgpu_text::{
     },
 };
 
-use crate::window::{
-    SURFACE_TEXTURE_FORMAT,
-    text::{ShapedLayout, ShapedParams},
-    window::Window,
+use crate::{
+    gm::{LossyConvert, ToF32, flat::Size},
+    window::{
+        SURFACE_TEXTURE_FORMAT,
+        text::{ShapedLayout, ShapedParams},
+        window::Window,
+    },
 };
 
 pub struct Font {
@@ -40,11 +42,7 @@ impl Font {
         Self::new_with_variations(name, data, &[])
     }
 
-    fn new_with_variations(
-        name: impl ToString,
-        data: &[u8],
-        variations: &[([u8; 4], f32)],
-    ) -> Result<Self> {
+    fn new_with_variations(name: impl ToString, data: &[u8], variations: &[([u8; 4], f32)]) -> Result<Self> {
         let window = Window::current();
 
         let render_size = Window::render_size();
@@ -99,7 +97,13 @@ impl Font {
     /// Size the text takes when drawn at `size`. `width` bounds wrapping,
     /// `None` measures a single unbounded line. Layout params must mirror
     /// `draw_label` or measured sizes will not match rendering.
-    pub(crate) fn measure(&mut self, text: &str, size: impl ToF32, width: Option<f32>, tracking: f32) -> Size {
+    pub(crate) fn measure(
+        &mut self,
+        text: &str,
+        size: impl ToF32,
+        width: Option<f32>,
+        tracking: f32,
+    ) -> Size {
         if text.is_empty() {
             return Size::default();
         }
@@ -146,7 +150,7 @@ static DEFAULT_FONT: MainLock<Option<Weak<Font>>> = MainLock::new();
 
 impl Font {
     #[allow(clippy::should_implement_trait)]
-    pub(crate) fn default() -> Weak<Font> {
+    pub fn default() -> Weak<Font> {
         if let Some(font) = *DEFAULT_FONT
             && font.is_ok()
         {
@@ -167,11 +171,7 @@ impl Font {
     /// weight `(*b"wght", 600.0)`, optical size `(*b"opsz", 17.0)` or
     /// grade `(*b"GRAD", 430.0)`. Each combination is a separate managed
     /// instance, cache it under a name that includes the values.
-    pub fn with_variations(
-        name: &str,
-        data: &[u8],
-        variations: &[([u8; 4], f32)],
-    ) -> Result<Weak<Font>> {
+    pub fn with_variations(name: &str, data: &[u8], variations: &[([u8; 4], f32)]) -> Result<Weak<Font>> {
         Self::store_with_name(name, || Self::new_with_variations(name, data, variations))
     }
 

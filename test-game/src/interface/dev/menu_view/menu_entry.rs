@@ -1,12 +1,11 @@
 use netrun::Function;
 
-use crate::interface::test_game_view::Node;
+use crate::interface::dev::Node;
 
 #[derive(Default, Clone, Debug)]
 pub struct MenuEntry {
     pub label: &'static str,
     action:    Function<(), ()>,
-    enabled:   bool,
 }
 
 impl MenuEntry {
@@ -14,7 +13,6 @@ impl MenuEntry {
         Self {
             label,
             action: Function::default(),
-            enabled: true,
         }
     }
 
@@ -23,15 +21,6 @@ impl MenuEntry {
             action();
         });
         self
-    }
-
-    pub fn enabled(mut self, enabled: bool) -> Self {
-        self.enabled = enabled;
-        self
-    }
-
-    pub fn is_enabled(&self) -> bool {
-        self.enabled
     }
 
     pub fn run(&self) {

@@ -5,10 +5,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::filesystem::Paths;
 use parking_lot::Mutex;
 
-use crate::store::storable::Storable;
+use crate::{filesystem::Paths, store::storable::Storable};
 
 static ROOT_PATH: Mutex<Option<PathBuf>> = Mutex::new(None);
 
@@ -62,7 +61,7 @@ impl<T: Storable> OnDisk<T> {
         set_value(val, &expand_tilde(self.full_path()));
     }
 
-    pub(crate) fn get(&self) -> Option<T> {
+    pub fn get(&self) -> Option<T> {
         get_value(&expand_tilde(self.full_path()))
     }
 
@@ -87,7 +86,7 @@ impl<T: Storable + Default> OnDisk<T> {
     }
 
     pub fn get_or_init(&self) -> T {
-        get_or_init_value(&expand_tilde(&self.path))
+        get_or_init_value(&expand_tilde(self.full_path()))
     }
 }
 
@@ -121,11 +120,9 @@ mod test {
 
     use std::sync::LazyLock;
 
-    use anyhow::Result;
-    use crate::filesystem::Paths;
     use serde::{Deserialize, Serialize};
 
-    use crate::store::OnDisk;
+    use crate::{filesystem::Paths, store::OnDisk};
 
     #[derive(Debug, PartialEq, Default, Serialize, Deserialize, Clone)]
     struct Data {
@@ -135,12 +132,13 @@ mod test {
 
     static STORED: LazyLock<OnDisk<i32>> = LazyLock::new(|| OnDisk::new("stored_i32_test.json"));
     static STORED_STRUCT: LazyLock<OnDisk<Data>> = LazyLock::new(|| OnDisk::new("stored_struct_test.json"));
+    static INITIALIZED: LazyLock<OnDisk<i32>> = LazyLock::new(|| OnDisk::new("initialized_i32_test.json"));
 
     fn check_send<T: Send>(_send: &T) {}
     fn check_sync<T: Sync>(_sync: &T) {}
 
     #[test]
-    fn stored() -> Result<()> {
+    fn stored() {
         OnDisk::<()>::set_root_path("~/.test_on_disk/");
 
         check_send(&STORED);
@@ -163,7 +161,9 @@ mod test {
 
         assert_eq!(data, loaded_data.unwrap());
 
-        Ok(())
+        assert_eq!(INITIALIZED.get_or_init(), 0);
+        assert_eq!(INITIALIZED.get(), Some(0));
+        INITIALIZED.reset();
     }
 
     #[test]

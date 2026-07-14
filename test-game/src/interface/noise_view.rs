@@ -7,13 +7,13 @@ use test_engine::{
     ui::{
         AddLabel, Anchor,
         Anchor::{Top, X},
-        BLACK, Button, DrawingView, Image, ImageView, Label, NumberView, Point, PointsPath, Setup, Size,
-        TURQUOISE, ViewData, ViewTouch, WHITE, view,
+        BLACK, Button, Container, DrawingView, Image, ImageView, Label, NumberView, Point, PointsPath, Setup,
+        Size, TURQUOISE, ViewData, ViewSubviews, ViewTouch, WHITE, view,
     },
 };
 
 use crate::{
-    interface::{polygon_view::PolygonView, test_game_view::HAS_BACK_BUTTON},
+    interface::{polygon_view::PolygonView, scenes::add_back_button},
     levels::NoiseLevel,
 };
 
@@ -25,17 +25,19 @@ pub struct NoiseView {
 
     islands: Vec<Vec<Point>>,
 
+    threshold_view: Weak<NumberView>,
+    x_view:         Weak<NumberView>,
+    y_view:         Weak<NumberView>,
+    size_view:      Weak<NumberView>,
+    skip_view:      Weak<NumberView>,
+
     #[init]
-    drawing_view:   DrawingView,
-    threshold_view: NumberView,
-    x_view:         NumberView,
-    y_view:         NumberView,
-    size_view:      NumberView,
-    skip_view:      NumberView,
-    image_view:     ImageView,
-    counter_label:  Label,
-    update_level:   Button,
-    polygon:        PolygonView,
+    drawing_view:  DrawingView,
+    controls:      Container,
+    image_view:    ImageView,
+    counter_label: Label,
+    update_level:  Button,
+    polygon:       PolygonView,
 }
 
 impl NoiseView {
@@ -93,9 +95,7 @@ impl NoiseView {
 }
 
 impl Setup for NoiseView {
-    fn setup(self: Weak<Self>) {
-        const WIDTH: u32 = 100;
-
+    fn setup(mut self: Weak<Self>) {
         LevelManager::set_level(NoiseLevel::default());
 
         self.drawing_view.place().back();
@@ -105,6 +105,12 @@ impl Setup for NoiseView {
 
         let update_image = move |_| self.update_image();
 
+        // Steppers live in a wrapped row pinned to the bottom, so on a
+        // narrow screen they fold into several rows instead of running
+        // past the right edge.
+        self.controls.place().b(10).lr(10).all(8).all_wrap();
+
+        self.threshold_view = self.controls.add_view::<NumberView>();
         self.threshold_view
             .set_color(WHITE)
             .set_value(124.0)
@@ -112,53 +118,48 @@ impl Setup for NoiseView {
             .add_label("there")
             .on_change(update_image)
             .place()
-            .size(WIDTH, 150)
-            .bl(10);
+            .size(90, 120);
 
+        self.x_view = self.controls.add_view::<NumberView>();
         self.x_view
             .set_color(WHITE)
             .set_value(65.0)
             .set_step(0.5)
             .add_label("x")
-            .on_change(update_image);
-        self.x_view
+            .on_change(update_image)
             .place()
-            .size(WIDTH, 150)
-            .b(10)
-            .anchor(Anchor::Left, self.threshold_view, 10);
+            .size(90, 120);
 
+        self.y_view = self.controls.add_view::<NumberView>();
         self.y_view
             .set_color(WHITE)
             .set_value(8.0)
             .set_step(0.5)
             .add_label("y")
-            .on_change(update_image);
-        self.y_view.place().size(WIDTH, 150).b(10).anchor(Anchor::Left, self.x_view, 10);
+            .on_change(update_image)
+            .place()
+            .size(90, 120);
 
+        self.size_view = self.controls.add_view::<NumberView>();
         self.size_view
             .set_color(WHITE)
             .set_value(6.0)
             .set_step(2.0)
             .add_label("size")
-            .on_change(update_image);
-        self.size_view
+            .on_change(update_image)
             .place()
-            .size(WIDTH, 150)
-            .b(10)
-            .anchor(Anchor::Left, self.y_view, 10);
+            .size(90, 120);
 
+        self.skip_view = self.controls.add_view::<NumberView>();
         self.skip_view
             .set_color(WHITE)
             .set_min(1.0)
             .set_step(1.0)
             .set_value(6.0)
             .add_label("size")
-            .on_change(update_image);
-        self.skip_view
+            .on_change(update_image)
             .place()
-            .size(WIDTH, 150)
-            .b(10)
-            .anchor(Anchor::Left, self.size_view, 10);
+            .size(90, 120);
 
         self.update_level.set_text("Level");
         self.update_level
@@ -169,11 +170,11 @@ impl Setup for NoiseView {
             self.update_level();
         });
 
-        self.image_view.place().size(400, 400).br(0);
+        self.image_view.place().size(200, 200).tr(0);
 
-        self.apply_style(HAS_BACK_BUTTON);
+        add_back_button(self);
 
-        self.counter_label.place().t(200).r(5).size(100, 50);
+        self.counter_label.place().t(70).l(20).size(90, 40);
 
         self.polygon.place().size(800, 800).center_x();
 

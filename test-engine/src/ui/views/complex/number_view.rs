@@ -1,13 +1,15 @@
-use crate::gm::{
-    CheckedSub, MyAdd, ToF32,
-    color::{CLEAR, Color, LIGHT_GRAY},
-};
 use refs::{Weak, weak_from_ref};
 use ui_proc::view;
 use vents::Event;
-use crate::window::image::NoImage;
 
-use crate::ui::{Button, Container, Setup, Style, ToLabel, UIColor, UIImages, view::ViewData};
+use crate::{
+    gm::{
+        CheckedSub, MyAdd, ToF32,
+        color::{CLEAR, Color, LIGHT_GRAY},
+    },
+    ui::{Button, Container, Setup, Style, ToLabel, UIColor, UIImages, view::ViewData},
+    window::image::NoImage,
+};
 
 #[view]
 pub struct NumberView {

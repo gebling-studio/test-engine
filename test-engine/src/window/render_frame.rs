@@ -1,9 +1,9 @@
-use crate::gm::color::Color;
 use wgpu::{
     CommandEncoder, LoadOp, Operations, RenderPass, RenderPassColorAttachment,
-    RenderPassDepthStencilAttachment, RenderPassDescriptor, RenderPassTimestampWrites, StoreOp,
-    TextureView,
+    RenderPassDepthStencilAttachment, RenderPassDescriptor, RenderPassTimestampWrites, StoreOp, TextureView,
 };
+
+use crate::gm::color::Color;
 
 /// One frame's render encoding. Owns the encoder and the render pass
 /// together, which `forget_lifetime` makes possible, so the frame can

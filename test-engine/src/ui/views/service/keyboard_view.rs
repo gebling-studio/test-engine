@@ -1,8 +1,10 @@
-use crate::gm::color::GRAY;
 use refs::Weak;
 use ui_proc::view;
 
-use crate::ui::{Button, Container, Setup, ViewData, ViewSubviews};
+use crate::{
+    gm::color::GRAY,
+    ui::{Button, Container, Setup, ViewData, ViewSubviews},
+};
 
 const A: &[char] = &['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'];
 const B: &[char] = &['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'];

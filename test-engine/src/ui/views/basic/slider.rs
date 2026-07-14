@@ -1,11 +1,13 @@
-use crate::gm::{ToF32, color::BLUE, converter::Converter};
 use refs::Weak;
 use ui_proc::view;
 use vents::Event;
 
-use crate::ui::{
-    CircleView, Setup, Touch, ViewCallbacks,
-    view::{ViewFrame, ViewTouch},
+use crate::{
+    gm::{ToF32, color::BLUE, converter::Converter},
+    ui::{
+        CircleView, Setup, Touch, ViewCallbacks,
+        view::{ViewFrame, ViewTouch},
+    },
 };
 
 #[view]

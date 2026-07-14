@@ -1,12 +1,12 @@
 use anyhow::{Result, bail};
-use crate::gm::{color::U8Color, flat::Point};
 use hreads::from_main;
-use crate::ui::{HighlightView, Setup, UIManager, ViewFrame, ViewSubviews};
-use crate::window::Screenshot;
 
 use crate::{
     AppRunner,
+    gm::{color::U8Color, flat::Point},
+    ui::{HighlightView, Setup, UIManager, ViewFrame, ViewSubviews},
     ui_test::{TEST_NAME, failure_report},
+    window::Screenshot,
 };
 
 pub(super) fn check_pixel_color(screenshot: &Screenshot, pos: Point, color: U8Color) -> Result<()> {

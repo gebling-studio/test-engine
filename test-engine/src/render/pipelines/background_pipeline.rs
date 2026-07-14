@@ -1,19 +1,21 @@
 use std::ops::Range;
 
 use bytemuck::{Pod, Zeroable};
-use crate::gm::{
-    checked_usize_to_u32,
-    flat::{Point, Size, Vertex2D},
-};
 use wgpu::{
     BindGroup, Buffer, BufferUsages, PipelineLayoutDescriptor, PolygonMode, PrimitiveTopology, RenderPass,
     RenderPipeline, ShaderStages,
 };
-use crate::window::{Window, image::Image};
 
-use crate::render::{
-    buffer_helper::BufferHelper, device_helper::DeviceHelper, uniform::make_uniform_layout,
-    vertex_layout::VertexLayout,
+use crate::{
+    gm::{
+        checked_usize_to_u32,
+        flat::{Point, Size, Vertex2D},
+    },
+    render::{
+        buffer_helper::BufferHelper, device_helper::DeviceHelper, uniform::make_uniform_layout,
+        vertex_layout::VertexLayout,
+    },
+    window::{Window, image::Image},
 };
 
 const VAL: f32 = 100_000.0;

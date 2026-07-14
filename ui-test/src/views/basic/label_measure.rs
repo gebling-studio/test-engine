@@ -59,7 +59,7 @@ impl ViewTest for LabelMeasure {
         });
 
         assert!(
-            mono.width != long.width,
+            (mono.width - long.width).abs() > f32::EPSILON,
             "different font measured the same width: {mono:?}"
         );
 

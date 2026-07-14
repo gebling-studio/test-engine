@@ -5,19 +5,21 @@ use std::{
 
 #[cfg(feature = "bench")]
 use anyhow::Result;
-use crate::gm::{
-    LossyConvert,
-    color::{Color, GRAY_BLUE},
-};
 use log::{info, warn};
 use plat::Platform;
 use refs::manage::DataManager;
 use web_time::Instant;
 use wgpu::{CurrentSurfaceTexture, TextureFormat};
 
-use crate::window::{
-    Font, RenderFrame, Screenshot, Window, app_handler::AppHandler, frame_counter::FrameCounter,
-    image::Texture, screen::Screen, surface::Surface, window::surface_config_with_size,
+use crate::{
+    gm::{
+        LossyConvert,
+        color::{Color, GRAY_BLUE},
+    },
+    window::{
+        Font, RenderFrame, Screenshot, Window, app_handler::AppHandler, frame_counter::FrameCounter,
+        image::Texture, screen::Screen, surface::Surface, window::surface_config_with_size,
+    },
 };
 
 type ReadDisplayRequest = Sender<Screenshot>;
@@ -128,9 +130,12 @@ impl State {
 
                 surface.as_ref().unwrap().presentable.configure(
                     &window.device,
-                    &surface_config_with_size((new_size.width.lossy_convert(), new_size.height.lossy_convert())),
+                    &surface_config_with_size((
+                        new_size.width.lossy_convert(),
+                        new_size.height.lossy_convert(),
+                    )),
                 );
-        }
+            }
             #[cfg(not_wasm)]
             Screen::Headless { .. } => {}
         }
@@ -312,7 +317,7 @@ impl State {
         self.frame_work_time = self.update_work + work_started.elapsed().as_secs_f32();
 
         if let Some(surface_texture) = surface_texture {
-            surface_texture.present();
+            Window::queue().present(surface_texture);
         }
 
         // After the work timer closes and the frame is presented, so resolving
@@ -399,7 +404,7 @@ impl State {
 
             let period = Window::queue().get_timestamp_period();
             let stamps: [u64; 2] = {
-                let data = slice.get_mapped_range();
+                let data = slice.get_mapped_range()?;
                 bytemuck::pod_read_unaligned(&data[..])
             };
             timer.readback.unmap();
@@ -508,7 +513,10 @@ impl State {
         let row_bytes =
             real_row_bytes.next_multiple_of(usize::try_from(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT).unwrap());
 
-        let bytes: &[u8] = &buff.slice(..).get_mapped_range();
+        let bytes: &[u8] = &buff
+            .slice(..)
+            .get_mapped_range()
+            .expect("buffer should be mapped before readback");
 
         let mut data: Vec<crate::gm::color::U8Color> = Vec::with_capacity(width * height);
 
@@ -581,7 +589,8 @@ impl State {
             },
         );
 
-        let size: crate::gm::flat::Size<u32> = crate::gm::flat::Size::new(texture.size().width, texture.size().height);
+        let size: crate::gm::flat::Size<u32> =
+            crate::gm::flat::Size::new(texture.size().width, texture.size().height);
 
         (buffer, size)
     }

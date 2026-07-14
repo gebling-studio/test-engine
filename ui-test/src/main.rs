@@ -1,6 +1,4 @@
 #![allow(incomplete_features)]
-#![allow(clippy::float_cmp)]
-#![allow(clippy::too_many_lines)]
 #![feature(specialization)]
 #![feature(arbitrary_self_types)]
 
@@ -49,12 +47,30 @@ struct Args {
     #[arg(long, short)]
     test_name: Option<String>,
 
+    #[command(flatten)]
+    run: RunArgs,
+
+    #[command(flatten)]
+    display: DisplayArgs,
+}
+
+/// How the run reacts to failures and what it reports.
+#[derive(clap::Args)]
+struct RunArgs {
     #[arg(long)]
     stop_on_failure: bool,
 
     #[arg(long)]
     fps_report: bool,
 
+    /// Print ready to paste `check_colors` blocks instead of asserting them.
+    #[arg(long)]
+    record_colors: bool,
+}
+
+/// Where and how the frames are shown.
+#[derive(clap::Args)]
+struct DisplayArgs {
     #[arg(long)]
     headless: bool,
 
@@ -62,29 +78,25 @@ struct Args {
     /// each test until space is pressed.
     #[arg(long)]
     human: bool,
-
-    /// Print ready to paste check_colors blocks instead of asserting them.
-    #[arg(long)]
-    record_colors: bool,
 }
 
 fn run(args: Args) -> Result<()> {
-    if args.fps_report {
+    if args.run.fps_report {
         enable_fps_report();
     }
 
-    if args.human {
-        if args.headless {
+    if args.display.human {
+        if args.display.headless {
             bail!("--human requires a window, remove --headless");
         }
         enable_human_mode();
     }
 
-    if args.record_colors {
+    if args.run.record_colors {
         enable_color_recording();
     }
 
-    if args.stop_on_failure {
+    if args.run.stop_on_failure {
         let default_hook = take_hook();
         set_hook(Box::new(move |info| {
             default_hook(info);
@@ -100,7 +112,7 @@ fn run(args: Args) -> Result<()> {
     }
 
     let test_name = args.test_name;
-    let human = args.human;
+    let human = args.display.human;
 
     let actor = async move {
         Label::set_default_text_size(32);
@@ -128,15 +140,12 @@ fn run(args: Args) -> Result<()> {
                 return Ok(());
             }
 
-            let test = match te_tests.get(&test_name) {
-                Some(test) => test,
-                None => {
-                    // Exit directly. Erroring out of here panics the worker
-                    // and the stop_on_failure hook then deadlocks collecting
-                    // a report from the already stopped main loop.
-                    println!("Test: {test_name} not found");
-                    exit(1);
-                }
+            let Some(test) = te_tests.get(&test_name) else {
+                // Exit directly. Erroring out of here panics the worker
+                // and the stop_on_failure hook then deadlocks collecting
+                // a report from the already stopped main loop.
+                println!("Test: {test_name} not found");
+                exit(1);
             };
             test()?;
             UITest::finish();
@@ -150,7 +159,7 @@ fn run(args: Args) -> Result<()> {
             test().await?;
             info!("Cycle {i}: OK");
 
-            for (_name, test) in te_tests.iter() {
+            for test in te_tests.values() {
                 test()?;
             }
         }
@@ -161,7 +170,7 @@ fn run(args: Args) -> Result<()> {
         Ok(())
     };
 
-    if args.headless {
+    if args.display.headless {
         AppRunner::start_headless_with_actor(actor)?;
     } else {
         AppRunner::start_with_actor(actor)?;

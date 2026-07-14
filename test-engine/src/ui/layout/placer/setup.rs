@@ -1,13 +1,15 @@
 use std::{ops::Deref, sync::Arc};
 
-use crate::gm::{ToF32, flat::Rect};
 use parking_lot::Mutex;
 
 use super::Placer;
-use crate::ui::{
-    View, WeakView,
-    layout::{Anchor, Tiling, layout_rule::LayoutRule},
-    view::{ViewFrame, ViewSubviews},
+use crate::{
+    gm::{ToF32, flat::Rect},
+    ui::{
+        View, WeakView,
+        layout::{Anchor, Tiling, layout_rule::LayoutRule},
+        view::{ViewFrame, ViewSubviews},
+    },
 };
 
 impl Placer {
@@ -57,7 +59,7 @@ impl Placer {
         self.anchor(Anchor::Height, view, 1)
     }
 
-    pub(crate) fn relative_width(&self, view: impl Deref<Target = impl View>, multiplier: impl ToF32) -> &Self {
+    pub fn relative_width(&self, view: impl Deref<Target = impl View>, multiplier: impl ToF32) -> &Self {
         self.relative(Anchor::Width, view, multiplier)
     }
 
@@ -167,7 +169,7 @@ impl Placer {
         self
     }
 
-    pub(crate) fn all_hor(&self) -> &Self {
+    pub fn all_hor(&self) -> &Self {
         self.all_tiling_rules().push(Tiling::Horizontally.into());
         self
     }
@@ -182,8 +184,13 @@ impl Placer {
     }
 
     pub fn distribute_ratio<const LEN: usize>(&self, ratios: [impl ToF32; LEN]) -> &Self {
-        self.all_tiling_rules()
-            .push(Tiling::Distribute(ratios.iter().map(|f| f.to_f32()).collect()).into());
+        let ratios: Vec<_> = ratios.iter().map(|ratio| ratio.to_f32()).collect();
+        assert!(!ratios.is_empty(), "Distribute ratios cannot be empty");
+        assert!(
+            ratios.iter().all(|ratio| ratio.is_finite() && *ratio > 0.0),
+            "Distribute ratios must be positive finite numbers"
+        );
+        self.all_tiling_rules().push(Tiling::Distribute(ratios).into());
         self
     }
 
@@ -234,7 +241,7 @@ impl Placer {
         self
     }
 
-    pub(crate) fn relative(
+    pub fn relative(
         &self,
         side: Anchor,
         view: impl Deref<Target = impl View + ?Sized>,
@@ -291,7 +298,7 @@ impl Placer {
         self
     }
 
-    pub(crate) fn custom(&self, custom: impl FnMut(&mut Rect) + Send + 'static) -> &Self {
+    pub fn custom(&self, custom: impl FnMut(&mut Rect) + Send + 'static) -> &Self {
         *self.custom.borrow_mut() = Some(Arc::new(Mutex::new(custom)));
         self
     }

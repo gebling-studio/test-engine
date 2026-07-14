@@ -1,15 +1,17 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::gm::{
-    color::WHITE,
-    flat::{Point, Size},
-};
 use plat::Platform;
 use refs::Weak;
 use ui_proc::view;
 
-use crate::ui::{
-    Anchor::Top, ImageView, Label, Setup, UIImages, View, ViewData, ViewFrame, ViewSubviews, ViewTouch,
+use crate::{
+    gm::{
+        color::WHITE,
+        flat::{Point, Size},
+    },
+    ui::{
+        Anchor::Top, ImageView, Label, Setup, UIImages, View, ViewData, ViewFrame, ViewSubviews, ViewTouch,
+    },
 };
 
 #[view]

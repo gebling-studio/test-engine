@@ -6,9 +6,11 @@ use wgpu::{
     VertexState,
     util::{BufferInitDescriptor, DeviceExt},
 };
-use crate::window::{BufferUsages, PolygonMode, SURFACE_TEXTURE_FORMAT};
 
-use crate::render::to_bytes::ToBytes;
+use crate::{
+    render::to_bytes::ToBytes,
+    window::{BufferUsages, PolygonMode, SURFACE_TEXTURE_FORMAT},
+};
 
 pub(crate) trait DeviceHelper {
     fn buffer<T: ToBytes + ?Sized>(&self, data: &T, usage: BufferUsages) -> Buffer;
@@ -61,6 +63,7 @@ impl DeviceHelper for Device {
         topology: PrimitiveTopology,
         vertex_layout: &'static [VertexBufferLayout],
     ) -> RenderPipeline {
+        let buffers: Vec<Option<VertexBufferLayout>> = vertex_layout.iter().cloned().map(Some).collect();
         self.create_render_pipeline(&RenderPipelineDescriptor {
             label:          label.into(),
             layout:         layout.into(),
@@ -68,7 +71,7 @@ impl DeviceHelper for Device {
                 module:              shader,
                 entry_point:         "v_main".into(),
                 compilation_options: PipelineCompilationOptions::default(),
-                buffers:             vertex_layout,
+                buffers:             &buffers,
             },
             fragment:       FragmentState {
                 module:              shader,

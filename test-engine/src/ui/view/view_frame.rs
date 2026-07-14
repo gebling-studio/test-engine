@@ -1,11 +1,10 @@
-#![allow(clippy::float_cmp)]
-
-use crate::gm::{
-    ToF32,
-    flat::{Point, Rect, Size},
+use crate::{
+    gm::{
+        ToF32,
+        flat::{Point, Rect, Size},
+    },
+    ui::{UIManager, View, ViewSubviews},
 };
-
-use crate::ui::{UIManager, View, ViewSubviews};
 
 pub trait ViewFrame {
     fn z_position(&self) -> f32;
@@ -93,7 +92,8 @@ impl<T: ?Sized + View> ViewFrame for T {
     fn set_x(&mut self, x: impl ToF32) -> &mut Self {
         let x = x.to_f32();
         let frame = &mut self.__base_view().frame;
-        let pos_changed = frame.origin.x != x;
+        // Bit compare: any value change counts, epsilon would miss tiny moves.
+        let pos_changed = frame.origin.x.to_bits() != x.to_bits();
         frame.origin.x = x;
         self.__base_view().trigger_pos_changed |= pos_changed;
 
@@ -103,7 +103,7 @@ impl<T: ?Sized + View> ViewFrame for T {
     fn set_y(&mut self, y: impl ToF32) -> &mut Self {
         let y = y.to_f32();
         let frame = &mut self.__base_view().frame;
-        let pos_changed = frame.origin.y != y;
+        let pos_changed = frame.origin.y.to_bits() != y.to_bits();
         frame.origin.y = y;
         self.__base_view().trigger_pos_changed |= pos_changed;
 
@@ -113,7 +113,7 @@ impl<T: ?Sized + View> ViewFrame for T {
     fn set_height(&mut self, height: impl ToF32) -> &mut Self {
         let height = height.to_f32();
         let frame = &mut self.__base_view().frame;
-        let size_changed = frame.size.height != height;
+        let size_changed = frame.size.height.to_bits() != height.to_bits();
         frame.size.height = height;
         self.__base_view().trigger_size_changed |= size_changed;
 
