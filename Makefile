@@ -76,15 +76,6 @@ wasm:
 	cargo install --locked trunk
 	cd ./test-game && trunk build
 
-enc:
-	sops -e secrets/decrypted/test-game.yml > secrets/test-game.enc.yml
-	rm -rf secrets/decrypted
-
-decr:
-	mkdir secrets/decrypted
-	sops -d secrets/test-game.enc.yml > secrets/decrypted/test-game.yml
-
-
 .PHONY: import
 import:
 	cargo fix --allow-dirty --allow-staged --all --all-targets
