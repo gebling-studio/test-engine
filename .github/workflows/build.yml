@@ -97,17 +97,13 @@ jobs:
         if: ${{ matrix.target.os != 'windows' }}
         run: bun build/scripts/free_action_runner.ts
 
-      - name: Build
+      - name: Build and test
         if: ${{ matrix.target.os != 'windows' }}
         run: bun build/build.ts ${{ matrix.target.os }}
 
-      - name: Build windows
+      - name: Build and test Windows
         if: ${{ matrix.target.os == 'windows' }}
         run: bun build/build.ts
-
-      - name: Test
-        if: ${{ matrix.target.os != 'ios' && matrix.target.os != 'android' }}
-        run: make test
 
   linux:
     name: Build Linux
