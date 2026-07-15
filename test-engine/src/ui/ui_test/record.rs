@@ -20,6 +20,7 @@ static RECORD_COLORS: AtomicBool = AtomicBool::new(false);
 static CHECK_INDEX: AtomicUsize = AtomicUsize::new(0);
 static LAST_TEST: Mutex<String> = Mutex::new(String::new());
 static PROBE_COUNT_OVERRIDE: AtomicUsize = AtomicUsize::new(0);
+static CANVAS: Mutex<Option<(u32, u32)>> = Mutex::new(None);
 
 const DEFAULT_PROBE_COUNT: usize = 32;
 const GRID_STEP: u32 = 4;
@@ -59,6 +60,12 @@ pub fn set_record_probe_count(count: usize) {
 
 pub(crate) fn reset_record_probe_count() {
     PROBE_COUNT_OVERRIDE.store(0, Ordering::Relaxed);
+}
+
+/// The window around the canvas is not part of the test and does not even
+/// exist on a device screen, so no probe may land there.
+pub(crate) fn set_record_canvas(width: u32, height: u32) {
+    *CANVAS.lock() = Some((width, height));
 }
 
 fn probe_count() -> usize {
@@ -118,8 +125,10 @@ type Probe = ((u32, u32), U8Color);
 /// spread spatially, so text bodies get pinned alongside backgrounds.
 /// Small enclosed features cluster separately and go first.
 fn pick_probes(shot: &Screenshot) -> Vec<Probe> {
-    let width = shot.size.width;
-    let height = shot.size.height;
+    let (width, height) = match *CANVAS.lock() {
+        Some((width, height)) => (width.min(shot.size.width), height.min(shot.size.height)),
+        None => (shot.size.width, shot.size.height),
+    };
 
     let margin = GRID_STEP.max(STABLE_RADIUS);
 

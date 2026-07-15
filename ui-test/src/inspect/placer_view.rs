@@ -1,6 +1,5 @@
 use anyhow::Result;
 use test_engine::{
-    AppRunner,
     dispatch::from_main,
     inspect::{ViewRepr, ViewToInspect, views::PlacerView},
     refs::{Own, Weak},
@@ -31,7 +30,6 @@ impl Setup for PlacerViewTest {
 pub(crate) async fn test_placer_view() -> Result<()> {
     let view = UITest::start::<PlacerViewTest>();
     // UIManager::enable_debug_frames();
-    AppRunner::set_window_size((1000, 1000));
 
     from_main(move || {
         let mut view = view;

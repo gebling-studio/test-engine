@@ -54,6 +54,7 @@ pub fn register_test_runner(runner: TestRunner) {
     *TEST_RUNNER.lock() = Some(runner);
 }
 
+#[cfg(feature = "inspect")]
 pub(crate) fn test_runner() -> Option<TestRunner> {
     *TEST_RUNNER.lock()
 }

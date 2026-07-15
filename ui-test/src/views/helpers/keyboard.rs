@@ -1,7 +1,6 @@
 use anyhow::Result;
 use log::debug;
 use test_engine::{
-    AppRunner,
     refs::Weak,
     ui::{KeyboardView, Setup, ViewData, view},
     ui_test::UITest,
@@ -21,8 +20,6 @@ impl Setup for KeyboardViewTest {
 
 pub async fn test_keyboard_view() -> Result<()> {
     let _view = UITest::start::<KeyboardViewTest>();
-
-    AppRunner::set_window_size((800, 400));
 
     //  record_ui_test().await;
 

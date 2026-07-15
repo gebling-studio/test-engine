@@ -287,7 +287,7 @@ impl crate::window::WindowEvents for AppRunner {
                 {
                     Window::current().set_size(self.app.initial_size().lossy_convert());
                 }
-                #[cfg(debug_assertions)]
+                #[cfg(feature = "inspect")]
                 crate::inspect::InspectService::start_listening();
             }
 

@@ -12,7 +12,7 @@ mod theme;
 mod to_label;
 mod touch_layer;
 mod touch_stack;
-mod ui_drawer;
+pub(crate) mod ui_drawer;
 mod ui_event;
 mod ui_manager;
 mod view;

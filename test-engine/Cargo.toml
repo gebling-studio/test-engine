@@ -10,6 +10,9 @@ name = "test_engine"
 
 [features]
 bench = []
+# The inspect server listens on the network and can edit any view, so it must
+# never reach a shipped app by accident. Off unless an app asks for it.
+inspect = []
 webgl = ["wgpu/webgl"]
 
 [dependencies]

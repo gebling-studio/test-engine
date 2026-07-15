@@ -18,7 +18,7 @@ use crate::{
         color::Color,
         flat::{Point, Rect, Size},
     },
-    ui::{Keymap, RootView, Setup, TouchStack, UIAnimation, UIEvent, View, ViewData, WeakView},
+    ui::{Keymap, RootView, Setup, TouchStack, UIAnimation, UIEvent, View, ViewData, ViewFrame, WeakView},
     window::Window,
 };
 
@@ -113,7 +113,7 @@ impl UIManager {
         Self::set_scale(scale);
     }
 
-    pub(crate) fn on_scale_changed<U>(subscriber: Weak<U>, mut cb: impl FnMut(f32) + Send + 'static) {
+    pub(crate) fn on_scale_changed<U: ?Sized>(subscriber: Weak<U>, mut cb: impl FnMut(f32) + Send + 'static) {
         Self::get().scale_changed.val(subscriber, move |scale| {
             cb(scale);
         });
@@ -186,6 +186,15 @@ impl UIManager {
             Window::inner_size()
         };
         (size.width, size.height).into()
+    }
+
+    /// Pixels the app renders into. The same as the window in an app, because
+    /// the root fills it. A UI test pins the root to a fixed canvas instead, so
+    /// a game or a level lands on the same pixels on any screen.
+    pub(crate) fn render_area() -> Size {
+        let size = Self::root_view().size();
+        let scale = Self::scale();
+        (size.width * scale, size.height * scale).into()
     }
 
     pub(crate) fn display_scale() -> f32 {

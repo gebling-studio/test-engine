@@ -13,11 +13,10 @@ use test_engine::{
     ui::{Label, UIManager},
     ui_test::{
         TestFailure, UITest, clear_failures, current_test_name, enable_color_recording, enable_fps_report,
-        enable_human_mode, push_failure, run_test_sync, take_failures,
+        enable_human_mode, push_failure, ran_any, run_only, run_test_sync, take_failures,
     },
 };
 
-#[cfg(debug_assertions)]
 use crate::inspect::test_inspect;
 use crate::{
     base::test_base_ui,
@@ -33,7 +32,6 @@ use crate::{
 };
 
 mod base;
-#[cfg(debug_assertions)]
 mod inspect;
 mod level;
 mod views;
@@ -128,13 +126,22 @@ fn run(args: Args) -> Result<()> {
         if let Some(test_name) = test_name {
             if let Some(test) = my_tests.get(&test_name).or_else(|| te_tests.get(&test_name)) {
                 run_test_sync(&test_name, test);
-                UITest::finish();
-                AppRunner::stop();
-                return Ok(());
+            } else {
+                // The aggregated units are futures rather than map entries, so
+                // the only way to pick one out is to run the aggregator with
+                // every other unit filtered away.
+                run_only(&test_name);
+                test().await?;
+
+                if !ran_any() {
+                    println!("Test: {test_name} not found");
+                    exit(1);
+                }
             }
 
-            println!("Test: {test_name} not found");
-            exit(1);
+            UITest::finish();
+            AppRunner::stop();
+            return Ok(());
         }
 
         let cycles: u32 = var("UI_TEST_CYCLES").unwrap_or("2".to_string()).parse().unwrap();
@@ -219,7 +226,6 @@ fn main() -> Result<()> {
 async fn test() -> Result<()> {
     test_base_ui().await?;
     test_base_views().await?;
-    #[cfg(debug_assertions)]
     test_inspect().await?;
     test_layout().await?;
     test_complex_views().await?;

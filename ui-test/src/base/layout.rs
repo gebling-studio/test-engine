@@ -1,12 +1,11 @@
 use anyhow::Result;
 use test_engine::{
-    AppRunner,
     refs::Weak,
     ui::{
         Anchor, Button, GREEN, ORANGE, Setup, ViewData, ViewSubviews,
         ui_test::{
             inject_touches,
-            state::{append_state, clear_state, get_state},
+            state::{append_state, get_state},
         },
         view,
     },
@@ -101,15 +100,11 @@ impl Setup for LayoutPlace {
 }
 
 pub async fn test_layout() -> Result<()> {
-    UITest::start::<LayoutPlace>();
-
-    AppRunner::set_window_size((240, 240));
+    UITest::start_sized::<LayoutPlace>(240, 240);
 
     check_taps_at_240();
 
-    AppRunner::set_window_size((400, 400));
-
-    clear_state();
+    UITest::reload_sized::<LayoutPlace>(400, 400);
 
     check_taps_at_400();
 

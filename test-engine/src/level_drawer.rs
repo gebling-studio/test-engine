@@ -7,7 +7,7 @@ use crate::{
         BackgroundPipeline, PolygonPipeline, SpriteBoxPipeline, SpriteView, TexturedSpriteBoxPipeline,
         data::{SpriteInstance, TexturedSpriteInstance},
     },
-    ui::UIManager,
+    ui::{UIManager, ui_drawer::set_viewport},
 };
 
 static SPRITE_DRAWER: MainLock<SpriteBoxPipeline> = MainLock::new();
@@ -26,7 +26,8 @@ impl LevelDrawer {
         if LevelManager::no_level() {
             return;
         }
-        let resolution = UIManager::window_resolution();
+        let resolution = UIManager::render_area();
+        set_viewport(pass, resolution);
 
         let level = LevelManager::level();
         let camera_pos = *LevelManager::camera_pos();
@@ -106,5 +107,7 @@ impl LevelDrawer {
                 _padding: 0,
             },
         );
+
+        set_viewport(pass, UIManager::window_resolution());
     }
 }

@@ -391,3 +391,12 @@ impl UIDrawer {
 fn scissor(pass: &mut RenderPass, rect: Rect<u32>) {
     pass.set_scissor_rect(rect.x(), rect.y(), rect.width(), rect.height());
 }
+
+/// Map the clip space of what comes next onto `area` at the frame origin,
+/// instead of onto the whole frame. A game or a level fills the root view, and
+/// a UI test pins the root to a canvas smaller than the window. Without this
+/// the scene would stretch across the whole frame and land on different pixels
+/// on every screen. Reset it with the full window once the scene is drawn.
+pub(crate) fn set_viewport(pass: &mut RenderPass, area: Size) {
+    pass.set_viewport(0.0, 0.0, area.width, area.height, 0.0, 1.0);
+}

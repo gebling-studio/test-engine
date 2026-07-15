@@ -10,9 +10,9 @@ use parking_lot::Mutex;
 use refs::{Own, Weak};
 
 use crate::{
-    gm::LossyConvert,
+    gm::{LossyConvert, color::GRAY_BLUE},
     ui::{Setup, UIManager, View, ViewData, ViewTest},
-    ui_test::{clear_state, hold_for_human, human_mode, reset_record_probe_count},
+    ui_test::{clear_state, hold_for_human, human_mode, reset_record_probe_count, set_record_canvas},
     window::Window,
 };
 
@@ -92,8 +92,19 @@ impl UITest {
         Self::set(T::new(), 600, 600, true, get_test_name::<T>())
     }
 
+    /// A canvas other than the default 600 by 600. It must still fit the
+    /// smallest supported screen, which is 640 by 1136 pixels.
+    pub fn start_sized<T: View + ViewTest + Default + 'static>(width: u32, height: u32) -> Weak<T> {
+        Self::set(T::new(), width, height, true, get_test_name::<T>())
+    }
+
     pub fn reload<T: View + ViewTest + Default + 'static>() -> Weak<T> {
         Self::set(T::new(), 600, 600, false, get_test_name::<T>())
+    }
+
+    /// Rebuild the view on a different canvas without starting a new test.
+    pub fn reload_sized<T: View + ViewTest + Default + 'static>(width: u32, height: u32) -> Weak<T> {
+        Self::set(T::new(), width, height, false, get_test_name::<T>())
     }
 
     pub fn set<T: View + 'static>(
@@ -124,20 +135,21 @@ impl UITest {
 
         TEST_NAME.lock().clone_from(&new_test_name);
 
+        set_record_canvas(width, height);
+
         clear_state();
 
-        #[cfg(desktop)]
-        {
-            crate::AppRunner::set_window_size((width, height));
-        }
         wait_for_next_frame();
 
         from_main(move || {
             let weak = view.weak();
             let mut root = UIManager::root_view();
             root.clear_root();
-            let view = root.add_subview_to_root(view);
-            view.place().back();
+            root.reset_background();
+            root.set_test_canvas((width, height).into());
+            Window::set_clear_color(GRAY_BLUE);
+            root.add_subview_to_root(view).place().back();
+
             trace!("{width} - {height}");
             weak
         })

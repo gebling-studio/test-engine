@@ -90,7 +90,8 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
 
             pub fn run_ui_test() -> anyhow::Result<()> {
                 use #root::ui::ViewTest;
-                #name::perform_test(#root::ui_test::UITest::start::<#name>())
+                let (width, height) = #name::canvas();
+                #name::perform_test(#root::ui_test::UITest::start_sized::<#name>(width, height))
             }
         }
     } else {

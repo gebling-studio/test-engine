@@ -17,7 +17,8 @@ use std::{
 
 use anyhow::{Result, bail};
 pub use collect::{
-    TestFailure, any_failed, clear_failures, push_failure, run_test, run_test_sync, take_failures,
+    TestFailure, any_failed, clear_failures, push_failure, ran_any, run_only, run_test, run_test_sync,
+    take_failures,
 };
 pub use helpers::*;
 use hreads::{from_main, is_main_thread, on_main, wait_for_next_frame};
@@ -25,13 +26,14 @@ pub use human::{enable_human_mode, human_mode};
 pub(crate) use human::{hold_for_human, human_pause, human_pause_quick};
 use log::{error, warn};
 use parking_lot::Mutex;
-pub(crate) use record::reset_record_probe_count;
 pub use record::{enable_color_recording, recording_colors, set_record_probe_count};
+pub(crate) use record::{reset_record_probe_count, set_record_canvas};
 use refs::Own;
 pub use report::failure_report;
 pub use runner::run_test_app;
 use serde::de::DeserializeOwned;
 pub use state::*;
+#[cfg(feature = "inspect")]
 pub(crate) use suite::test_runner;
 pub use suite::{TestRunReport, register_test_runner, run_test_map};
 

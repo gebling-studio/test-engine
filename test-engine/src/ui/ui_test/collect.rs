@@ -3,6 +3,7 @@ use std::{
     future::Future,
     panic::{AssertUnwindSafe, catch_unwind},
     pin::Pin,
+    sync::atomic::{AtomicBool, Ordering},
     task::{Context, Poll},
 };
 
@@ -20,6 +21,28 @@ pub struct TestFailure {
 }
 
 static FAILURES: Mutex<Vec<TestFailure>> = Mutex::new(Vec::new());
+static ONLY: Mutex<Option<String>> = Mutex::new(None);
+static RAN_ANY: AtomicBool = AtomicBool::new(false);
+
+/// Run only this test unit and skip every other. The aggregated units are plain
+/// futures rather than map entries, so a caller cannot pick one out by name on
+/// its own. Matches the name given to `run_test`, which is the test fn name.
+pub fn run_only(name: &str) {
+    *ONLY.lock() = Some(name.to_string());
+}
+
+fn skipped(name: &str) -> bool {
+    match ONLY.lock().as_deref() {
+        Some(only) => only != name,
+        None => false,
+    }
+}
+
+/// Whether anything ran, so a caller can tell a misspelled `--test-name` from a
+/// test that ran and passed.
+pub fn ran_any() -> bool {
+    RAN_ANY.load(Ordering::Relaxed)
+}
 
 /// Drop every recorded failure. The full suite calls this before a run so a
 /// second run in the same process starts clean.
@@ -84,6 +107,12 @@ fn panic_message(panic: &(dyn Any + Send)) -> String {
 /// failure, and returns without propagating, so the run keeps going and every
 /// failure is reported at the end.
 pub async fn run_test(name: &str, fut: impl Future<Output = Result<()>>) {
+    if skipped(name) {
+        return;
+    }
+
+    RAN_ANY.store(true, Ordering::Relaxed);
+
     match CatchUnwind(fut).await {
         Ok(Ok(())) => {}
         Ok(Err(err)) => record(name, format!("{err:?}")),
@@ -96,6 +125,12 @@ pub async fn run_test(name: &str, fut: impl Future<Output = Result<()>>) {
 
 /// Run one synchronous test unit, used for the registered `#[view_test]` map.
 pub fn run_test_sync(name: &str, test: impl FnOnce() -> Result<()>) {
+    if skipped(name) {
+        return;
+    }
+
+    RAN_ANY.store(true, Ordering::Relaxed);
+
     match catch_unwind(AssertUnwindSafe(test)) {
         Ok(Ok(())) => {}
         Ok(Err(err)) => record(name, format!("{err:?}")),

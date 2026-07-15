@@ -1,21 +1,35 @@
 use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
-    ui::{CLEAR, GREEN, NoImage, UIManager, view},
+    refs::Weak,
+    ui::{CLEAR, GREEN, ImageMode, ImageView, NoImage, Setup, UIManager, ViewData, view},
     ui_test::{UITest, check_colors},
 };
 
+/// The image checks run against this view, not the root. The root is as big as
+/// the window, so `AspectFill` would crop it differently on every screen, while
+/// this canvas is the same everywhere.
 #[view]
-pub struct RootViewTest {}
+pub struct RootViewTest {
+    #[init]
+    image: ImageView,
+}
+
+impl Setup for RootViewTest {
+    fn setup(mut self: Weak<Self>) {
+        self.image.mode = ImageMode::AspectFill;
+        self.image.place().back();
+    }
+}
 
 pub async fn test_root_view() -> Result<()> {
-    UITest::start::<RootViewTest>();
+    let view = UITest::start::<RootViewTest>();
 
     check_default_root()?;
     check_green_root()?;
     check_clear_root()?;
-    check_image_root()?;
-    check_no_image_root()?;
+    check_image_root(view)?;
+    check_no_image_root(view)?;
 
     Ok(())
 }
@@ -151,9 +165,9 @@ fn check_clear_root() -> Result<()> {
     Ok(())
 }
 
-fn check_image_root() -> Result<()> {
-    from_main(|| {
-        UIManager::root_view().set_image("cat.png");
+fn check_image_root(view: Weak<RootViewTest>) -> Result<()> {
+    from_main(move || {
+        view.image.set_image("cat.png");
     });
 
     check_colors(
@@ -196,9 +210,9 @@ fn check_image_root() -> Result<()> {
     Ok(())
 }
 
-fn check_no_image_root() -> Result<()> {
-    from_main(|| {
-        UIManager::root_view().set_image(NoImage);
+fn check_no_image_root(view: Weak<RootViewTest>) -> Result<()> {
+    from_main(move || {
+        view.image.set_image(NoImage);
     });
 
     check_colors(
