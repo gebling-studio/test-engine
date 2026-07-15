@@ -1,10 +1,12 @@
-use std::{any::type_name, collections::HashMap, ops::DerefMut};
+use std::{any::type_name, collections::HashMap, mem::take, ops::DerefMut};
 
 use refs::{Weak, main_lock::MainLock};
 
 use crate::ui::{Button, Label, NumberView, View};
 
-static GLOBAL_STYLES: MainLock<HashMap<&'static str, Vec<Style>>> = MainLock::new();
+pub(crate) type GlobalStyles = HashMap<&'static str, Vec<Style>>;
+
+static GLOBAL_STYLES: MainLock<GlobalStyles> = MainLock::new();
 
 static ALLOWED_TYPES: &[&str] = &[
     type_name::<Button>(),
@@ -58,6 +60,14 @@ impl Style {
         );
 
         styles.push(*self);
+    }
+
+    pub(crate) fn take_globals() -> GlobalStyles {
+        take(GLOBAL_STYLES.get_mut())
+    }
+
+    pub(crate) fn restore_globals(styles: GlobalStyles) {
+        *GLOBAL_STYLES.get_mut() = styles;
     }
 
     pub fn reset_global<T: View>(&self) {

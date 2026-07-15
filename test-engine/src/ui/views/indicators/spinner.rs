@@ -183,7 +183,7 @@ impl Spinner {
         *spinner = Weak::default();
     }
 
-    pub(crate) fn start_on(view: WeakView) -> SpinnerLockOnView {
+    pub fn start_on(view: WeakView) -> SpinnerLockOnView {
         from_main(move || {
             if view.is_null() {
                 return SpinnerLockOnView {

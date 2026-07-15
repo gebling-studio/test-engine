@@ -15,14 +15,21 @@ cargo run -p ui-test -- --test-name FontZoo --human            # watch one test,
 cargo run -p ui-test -- --record-colors --headless --test-name FontZoo  # print check_colors blocks
 ```
 
-By default a failed test leaves the app running so the window can be inspected.
-`--stop-on-failure` makes the process print the failure and exit with code 1 instead.
-Always pass it when running from a script or agent, together with `--headless`, and always
-tee the output to a temp file — with a plain pipe (`| tail`) you lose everything printed
-before a hang:
+An app can also run its own suite from inside itself, which is how tests run on a device.
+`test-game` registers a runner with `ui_test::register_test_runner`, and `te-inspect
+run-tests` triggers it over the network and prints every failure. See
+[inspect.md](inspect.md).
+
+A failing test no longer stops the run. Every test executes, each failure is collected,
+and the whole report prints at the end, then the process exits 1 if anything failed. One
+run therefore shows every broken test rather than only the first. `--stop-on-failure` is
+a leftover flag that does nothing.
+
+Always pass `--headless` when running from a script or agent, and always tee the output to
+a temp file — with a plain pipe (`| tail`) you lose everything printed before a hang:
 
 ```bash
-cargo run -p ui-test -- --stop-on-failure --headless 2>&1 | tee /tmp/ui-test.log | tail -12
+cargo run -p ui-test -- --headless 2>&1 | tee /tmp/ui-test.log | tail -12
 ```
 
 Don't run the suite after every change. Run it only when the change can affect UI or

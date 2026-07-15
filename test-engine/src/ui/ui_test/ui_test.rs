@@ -18,6 +18,12 @@ use crate::{
 
 pub(crate) static TEST_NAME: Mutex<String> = Mutex::new(String::new());
 
+/// Name of the test currently running, for failure attribution from a panic
+/// hook where the returned error is not available.
+pub fn current_test_name() -> String {
+    TEST_NAME.lock().clone()
+}
+
 struct FpsRecord {
     name:    String,
     frames:  u32,

@@ -77,6 +77,7 @@ lyon = "1.0"
 mdns-sd = "0.20"
 noise = "0.9"
 nonempty = "0.12"
+objc2-foundation = { version = "0.3", features = ["NSException", "NSString"] }
 parking_lot = "0.12"
 paste = "1.0"
 pollster = "0.4"
@@ -104,8 +105,8 @@ tokio = { version = "1.52", features = ["full"] }
 usvg = "0.47"
 wasm-bindgen-futures = "0.4"
 web-time = "1.1"
-wgpu = "30.0"
-wgpu_text = { git = "https://github.com/VladasZ/wgpu-text", rev = "4a27fb8597dbb077ed65453a20b7891864a6331a" }
+wgpu = { git = "https://github.com/VladasZ/wgpu", rev = "47e55304a59f0c8d933cb3be3dc84b29a1b871f6" }
+wgpu_text = { git = "https://github.com/VladasZ/wgpu-text", rev = "deb50e912148d660e938e69eb27225753b5353a0" }
 winit = "0.30"
 
 # hreads = { path = "../deps/hreads" }

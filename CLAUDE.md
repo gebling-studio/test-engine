@@ -39,16 +39,20 @@ Do not read these upfront. Read the matching file only when the task touches tha
 - [docs/roadmap.md](docs/roadmap.md) — missing engine features found by porting a real app,
   with current state, design notes, and order. Read before planning or starting a new
   engine capability, and update it when one lands.
+- [docs/ios.md](docs/ios.md) — what keeps iOS 12 and the A7 working: `NSLog` output, the
+  ObjC exception preprocessor, the two version settings that look alike, the weak linked
+  CoreGraphics and the wgpu fork. Read before touching anything iOS, the `wgpu` pin, the
+  iOS deployment target, or when an app dies on a device with no message.
 
 Docs should be concise.
 
 ## Commands
 
 ```bash
-cargo run -p ui-test -- --stop-on-failure --headless                         # full UI test suite
-cargo run -p ui-test -- --stop-on-failure --headless --test-name <ViewName>  # single test
+cargo run -p ui-test -- --headless                                           # full UI test suite
+cargo run -p ui-test -- --headless --test-name <ViewName>                    # single test
 cargo run -p ui-test -- --test-name <ViewName> --human                       # watchable run, space to advance
-cargo run -p ui-test -- --stop-on-failure --headless --test-name <ViewName> --record-colors  # print check_colors blocks
+cargo run -p ui-test -- --headless --test-name <ViewName> --record-colors    # print check_colors blocks
 cargo run -p render-test                                                     # render tests
 make ci                                                                      # typos, formatting, lints, unused dependencies
 make lint                                                                    # clippy, pedantic, zero warnings
@@ -59,8 +63,9 @@ UI_BENCHMARK=1 cargo run -p test-game --release --features bench             # s
 
 `TE_HEADLESS=1` runs any app without a window.
 
-Without `--stop-on-failure` a failed UI test leaves the app window running. Always pass it.
-`--headless` runs without a window or a display — tests run many times faster. Always pass it too.
+The suite runs every test, prints every failure at the end, then exits 1 if any failed.
+`--stop-on-failure` is a leftover that does nothing. `--headless` runs without a window or
+a display — tests run many times faster. Always pass it.
 
 After touching any `Cargo.toml` or removing code, run `cargo machete`. It must report
 zero unused dependencies.

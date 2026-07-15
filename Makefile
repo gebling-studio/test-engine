@@ -31,15 +31,20 @@ mobile:
 
 OS := $(shell uname)
 
+# objc2 reads IPHONEOS_DEPLOYMENT_TARGET at compile time. Anything from 13.0 up
+# turns `available!(ios = 13.0)` into a constant true, which drops wgpu's runtime
+# guard and sends `supportsFamily:` to GPUs that have no such selector.
+IOS_TARGET := IPHONEOS_DEPLOYMENT_TARGET=12.0
+
 build-ios:
 ifeq ($(OS), Darwin)
-	env CFLAGS="" SDKROOT="" cargo lipo -p test-game
+	env CFLAGS="" SDKROOT="" $(IOS_TARGET) cargo lipo -p test-game
 else
 	@echo " build-ios can only be run on macOS."
 endif
 
 ios-debug:
-	cargo lipo -p test-game
+	env $(IOS_TARGET) cargo lipo -p test-game
 	rm -f ./target/universal/release/libtest_game.a
 	cp ./target/universal/debug/libtest_game.a ./target/universal/release/libtest_game.a
 

@@ -33,28 +33,30 @@ mod text_field;
 mod theme_switch;
 
 pub async fn test_base_views() -> anyhow::Result<()> {
-    test_custom_text_field().await?;
-    test_checkbox().await?;
-    test_background().await?;
-    test_label_image().await?;
-    test_label().await?;
-    test_label_font().await?;
-    test_label_measure().await?;
-    test_label_fit_text().await?;
-    test_letter_spacing().await?;
-    test_font_zoo().await?;
-    test_nine_segment().await?;
-    test_gradient().await?;
-    test_multiline().await?;
-    test_button().await?;
-    test_inject_touch().await?;
-    test_slider().await?;
-    test_switch().await?;
-    test_text_field().await?;
-    test_theme_switch().await?;
-    test_hover().await?;
-    test_corner_radii().await?;
-    test_shadow().await?;
+    use crate::run_test_unit;
+
+    run_test_unit!(test_custom_text_field);
+    run_test_unit!(test_checkbox);
+    run_test_unit!(test_background);
+    run_test_unit!(test_label_image);
+    run_test_unit!(test_label);
+    run_test_unit!(test_label_font);
+    run_test_unit!(test_label_measure);
+    run_test_unit!(test_label_fit_text);
+    run_test_unit!(test_letter_spacing);
+    run_test_unit!(test_font_zoo);
+    run_test_unit!(test_nine_segment);
+    run_test_unit!(test_gradient);
+    run_test_unit!(test_multiline);
+    run_test_unit!(test_button);
+    run_test_unit!(test_inject_touch);
+    run_test_unit!(test_slider);
+    run_test_unit!(test_switch);
+    run_test_unit!(test_text_field);
+    run_test_unit!(test_theme_switch);
+    run_test_unit!(test_hover);
+    run_test_unit!(test_corner_radii);
+    run_test_unit!(test_shadow);
 
     Ok(())
 }

@@ -2,6 +2,7 @@ use test_engine::{
     App, Window,
     refs::Own,
     ui::{Button, Setup, Size, View},
+    ui_test::{TestRunReport, register_test_runner, run_test_map},
 };
 #[cfg(not_wasm)]
 use test_engine::{PinnedFuture, net::SecretsManager};
@@ -37,12 +38,21 @@ async fn secrets() -> anyhow::Result<&'static SecretsManager> {
         .await
 }
 
+/// Every test test-game carries: its own registered views plus the engine's.
+/// Called off the main thread by the inspect server.
+fn run_ui_tests() -> TestRunReport {
+    let mut tests = crate::UI_TESTS.lock().clone();
+    tests.append(&mut test_engine::UI_TESTS.lock().clone());
+    run_test_map(&tests)
+}
+
 #[derive(Default)]
 pub struct TestGameApp;
 
 impl App for TestGameApp {
     fn before_launch(&self) {
         BUTTON.apply_globally::<Button>();
+        register_test_runner(run_ui_tests);
     }
 
     fn after_launch(&self) {

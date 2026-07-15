@@ -16,7 +16,7 @@ Two clients exist:
   `unknown field 'fit_text'` from any command means the installed CLI is older than the
   app's protocol, reinstall and retry. Commands: `apps`,
   `tree`, `view`, `ui`, `screenshot`, `edit-rule`, `set-text`, `set-color`, `set-scale`,
-  `edits`, `play-sound`. The last discovery is cached in the temp dir, so repeat calls
+  `edits`, `play-sound`, `run-tests`. The last discovery is cached in the temp dir, so repeat calls
   connect instantly and fall back to a fresh mDNS browse when the cached address is dead.
   The agent workflow is documented in
   [.claude/skills/test-engine/SKILL.md](../.claude/skills/test-engine/SKILL.md).
@@ -36,6 +36,13 @@ Lives in `test-engine/src/inspect/protocol/`. Length-prefixed JSON frames over T
 - `Screenshot` — returns the current frame as base64 PNG. Works headless too.
 - `ListEdits` — returns every edit applied in this session.
 - `PlaySound` — plays a sound in the app, for finding which instance is which.
+- `RunTests` — runs the app's whole UI test suite in the app and returns the total and
+  every failure. Only apps that called `ui_test::register_test_runner` answer it, the
+  engine cannot reach an app's `UI_TESTS` map on its own. The run happens on a tokio task,
+  never the main thread, because the tests drive the main thread through `from_main`. The
+  runner forces the harness preconditions the tests expect, scale 1 and 32 point text, and
+  takes the app's global styles away for the duration, or an app style such as a themed
+  `Button` colour would fail every color check.
 
 Edits reply with a fresh tree snapshotted one frame later, after layout ran, so the client
 never sees stale frames. Failures (unknown view id, bad rule index, view without text)

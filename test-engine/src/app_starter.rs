@@ -65,6 +65,12 @@ fn start_with_app(app: Box<dyn App>, headless: bool) -> std::ffi::c_int {
     #[cfg(not_wasm)]
     AppRunner::setup_log();
 
+    #[cfg(target_os = "ios")]
+    {
+        crate::ios_log::set_panic_hook();
+        crate::ios_log::set_exception_logger();
+    }
+
     #[cfg(wasm)]
     {
         // Sets up panics to go to the console.error in browser environments

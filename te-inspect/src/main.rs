@@ -4,6 +4,7 @@ use std::{
     fs::{read_to_string, write},
     net::{IpAddr, SocketAddr},
     path::PathBuf,
+    process::exit,
     time::Duration,
 };
 
@@ -87,6 +88,8 @@ enum Command {
     PlaySound,
     /// List all edits applied to the app in this session
     Edits,
+    /// Run the app's whole UI test suite in the app and report every failure
+    RunTests,
 }
 
 // Responses hold Own pointers which must drop on the main thread. The
@@ -149,6 +152,7 @@ async fn main() -> Result<()> {
             send(&client, InspectorCommand::PlaySound).await?;
             println!("ok");
         }
+        Command::RunTests => run_tests(&client).await?,
         Command::Edits => {
             let AppCommand::Edits(edits) = send(&client, InspectorCommand::ListEdits).await? else {
                 bail!("Unexpected response to edits");
@@ -187,6 +191,24 @@ async fn main() -> Result<()> {
             };
             print_edited(&client, request, &view_id).await?;
         }
+    }
+
+    Ok(())
+}
+
+async fn run_tests(client: &Client) -> Result<()> {
+    let AppCommand::TestResults { total, failures } = send(client, InspectorCommand::RunTests).await? else {
+        bail!("Unexpected response to run-tests");
+    };
+
+    println!("{total} tests, {} failed", failures.len());
+
+    for failure in &failures {
+        println!("\n===== {} =====\n{}", failure.name, failure.detail);
+    }
+
+    if !failures.is_empty() {
+        exit(1);
     }
 
     Ok(())

@@ -9,9 +9,11 @@ use crate::inspect::{
 };
 
 pub(crate) async fn test_inspect() -> Result<()> {
-    test_placer_view().await?;
-    test_anchor_view().await?;
-    test_inspect_parsing().await?;
+    use crate::run_test_unit;
+
+    run_test_unit!(test_placer_view);
+    run_test_unit!(test_anchor_view);
+    run_test_unit!(test_inspect_parsing);
 
     Ok(())
 }

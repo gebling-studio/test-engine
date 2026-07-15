@@ -54,35 +54,35 @@ mod transparency;
 mod view_order;
 
 pub async fn test_base_ui() -> anyhow::Result<()> {
-    test_add_on_tap().await?;
-    test_text_occlusion().await?;
-    test_corner_radius().await?;
-    test_color_checker().await?;
+    use crate::run_test_unit;
+
+    run_test_unit!(test_add_on_tap);
+    run_test_unit!(test_text_occlusion);
+    run_test_unit!(test_corner_radius);
+    run_test_unit!(test_color_checker);
 
     if !Window::headless() {
-        test_rest_request().await?;
+        run_test_unit!(test_rest_request);
     }
 
-    test_transparency().await?;
-    test_scale().await?;
-    test_root_view().await?;
-    // test_dispatch().await?;
-    test_view_order().await?;
-    // test_async_calls().await?;
-    test_out_bounds().await?;
-    test_transition().await?;
-    test_global_styles().await?;
-    test_styles().await?;
-    test_colors().await?;
-    test_modal().await?;
-    test_touch_order().await?;
-    test_template().await?;
-    test_navigation_view().await?;
-    test_touch_stack().await?;
-    test_selection().await?;
-    test_keymap().await?;
-    test_keymap_named_key().await?;
-    test_layout().await?;
+    run_test_unit!(test_transparency);
+    run_test_unit!(test_scale);
+    run_test_unit!(test_root_view);
+    run_test_unit!(test_view_order);
+    run_test_unit!(test_out_bounds);
+    run_test_unit!(test_transition);
+    run_test_unit!(test_global_styles);
+    run_test_unit!(test_styles);
+    run_test_unit!(test_colors);
+    run_test_unit!(test_modal);
+    run_test_unit!(test_touch_order);
+    run_test_unit!(test_template);
+    run_test_unit!(test_navigation_view);
+    run_test_unit!(test_touch_stack);
+    run_test_unit!(test_selection);
+    run_test_unit!(test_keymap);
+    run_test_unit!(test_keymap_named_key);
+    run_test_unit!(test_layout);
 
     Ok(())
 }

@@ -18,16 +18,18 @@ mod point_view;
 mod table_view_resize;
 
 pub async fn test_complex_views() -> anyhow::Result<()> {
-    test_alert().await?;
-    test_modal_scrim().await?;
-    test_backdrop_blur().await?;
-    test_modal_blur().await?;
-    test_table_view_resize().await?;
-    test_drop_down().await?;
-    test_number_view_design().await?;
-    test_number_view().await?;
-    test_buttons_on_table_view().await?;
-    test_point_view().await?;
+    use crate::run_test_unit;
+
+    run_test_unit!(test_alert);
+    run_test_unit!(test_modal_scrim);
+    run_test_unit!(test_backdrop_blur);
+    run_test_unit!(test_modal_blur);
+    run_test_unit!(test_table_view_resize);
+    run_test_unit!(test_drop_down);
+    run_test_unit!(test_number_view_design);
+    run_test_unit!(test_number_view);
+    run_test_unit!(test_buttons_on_table_view);
+    run_test_unit!(test_point_view);
 
     Ok(())
 }

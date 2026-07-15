@@ -1,10 +1,12 @@
 mod checks;
+mod collect;
 pub mod helpers;
 mod human;
 mod record;
 mod report;
 mod runner;
 pub mod state;
+mod suite;
 mod ui_test;
 
 use std::{
@@ -14,6 +16,9 @@ use std::{
 };
 
 use anyhow::{Result, bail};
+pub use collect::{
+    TestFailure, any_failed, clear_failures, push_failure, run_test, run_test_sync, take_failures,
+};
 pub use helpers::*;
 use hreads::{from_main, is_main_thread, on_main, wait_for_next_frame};
 pub use human::{enable_human_mode, human_mode};
@@ -27,6 +32,8 @@ pub use report::failure_report;
 pub use runner::run_test_app;
 use serde::de::DeserializeOwned;
 pub use state::*;
+pub(crate) use suite::test_runner;
+pub use suite::{TestRunReport, register_test_runner, run_test_map};
 
 pub use self::ui_test::*;
 use crate::{

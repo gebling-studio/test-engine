@@ -22,6 +22,8 @@ mod app_starter;
 mod config;
 mod dispatch_tools;
 mod game_drawer;
+#[cfg(target_os = "ios")]
+mod ios_log;
 mod pipelines;
 
 pub mod audio;
@@ -73,7 +75,9 @@ pub mod net {
 pub mod dispatch {
     #[cfg(not_wasm)]
     pub use ::hreads::first_ok;
-    pub use ::hreads::{after, from_main, ok_main, on_main, sleep, spawn, wait_async, wait_for_next_frame};
+    pub use ::hreads::{
+        after, from_main, is_main_thread, ok_main, on_main, sleep, spawn, wait_async, wait_for_next_frame,
+    };
 
     pub use crate::{dispatch_tools::*, gm::drop_on_main};
 }

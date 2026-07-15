@@ -7,8 +7,10 @@ mod keyboard;
 mod position_view;
 
 pub async fn test_helper_views() -> anyhow::Result<()> {
-    test_position_view().await?;
-    test_keyboard_view().await?;
-    test_highlight().await?;
+    use crate::run_test_unit;
+
+    run_test_unit!(test_position_view);
+    run_test_unit!(test_keyboard_view);
+    run_test_unit!(test_highlight);
     Ok(())
 }

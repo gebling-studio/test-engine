@@ -56,6 +56,11 @@ impl AppRunner {
         use fern::Dispatch;
         use log::{Level, LevelFilter};
 
+        #[cfg(target_os = "ios")]
+        let output = fern::Output::call(|record| crate::ios_log::log(&record.args().to_string()));
+        #[cfg(not(target_os = "ios"))]
+        let output = std::io::stdout();
+
         Dispatch::new()
             .level(LevelFilter::Warn)
             .level_for("test_engine", LevelFilter::Debug)
@@ -90,7 +95,7 @@ impl AppRunner {
 
                 out.finish(format_args!("{log}"));
             })
-            .chain(std::io::stdout())
+            .chain(output)
             .apply()
             .expect("Failed to initialize logging");
 

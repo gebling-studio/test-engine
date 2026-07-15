@@ -16,13 +16,15 @@ mod relative_layout;
 mod tiling_layout;
 
 pub async fn test_layout() -> anyhow::Result<()> {
-    test_near_layout().await?;
-    test_relative_layout().await?;
-    test_cell_layout().await?;
-    test_min_width().await?;
-    test_center_field().await?;
-    test_tiling_layout().await?;
-    test_flow_wrap().await?;
-    test_flow_wrap_text().await?;
+    use crate::run_test_unit;
+
+    run_test_unit!(test_near_layout);
+    run_test_unit!(test_relative_layout);
+    run_test_unit!(test_cell_layout);
+    run_test_unit!(test_min_width);
+    run_test_unit!(test_center_field);
+    run_test_unit!(test_tiling_layout);
+    run_test_unit!(test_flow_wrap);
+    run_test_unit!(test_flow_wrap_text);
     Ok(())
 }

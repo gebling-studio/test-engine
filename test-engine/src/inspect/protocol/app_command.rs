@@ -13,7 +13,17 @@ pub enum AppCommand {
         png_base64: String,
     },
     Edits(Vec<EditEntry>),
+    TestResults {
+        total:    usize,
+        failures: Vec<TestFailureRepr>,
+    },
     UI(UIResponse),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TestFailureRepr {
+    pub name:   String,
+    pub detail: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -8,3 +8,5 @@ lod = "lod"
 hd = "hd"
 # trak - OpenType tracking table
 trak = "trak"
+# UDID - Apple unique device identifier
+udid = "udid"
