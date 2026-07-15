@@ -9,7 +9,7 @@ ui:
 	cargo run -p ui-test --release
 
 uui:
-	cargo run -p ui-test --release -- --stop-on-failure --headless
+	cargo run -p ui-test --release -- --headless
 
 all:
 	order

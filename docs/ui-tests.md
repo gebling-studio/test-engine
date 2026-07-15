@@ -20,10 +20,9 @@ An app can also run its own suite from inside itself, which is how tests run on 
 run-tests` triggers it over the network and prints every failure. See
 [inspect.md](inspect.md).
 
-A failing test no longer stops the run. Every test executes, each failure is collected,
-and the whole report prints at the end, then the process exits 1 if anything failed. One
-run therefore shows every broken test rather than only the first. `--stop-on-failure` is
-a leftover flag that does nothing.
+A failing test does not stop the run. Every test executes, each failure is collected, and
+the whole report prints at the end, then the process exits 1 if anything failed. One run
+therefore shows every broken test rather than only the first.
 
 Always pass `--headless` when running from a script or agent, and always tee the output to
 a temp file — with a plain pipe (`| tail`) you lose everything printed before a hang:

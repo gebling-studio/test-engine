@@ -35,7 +35,6 @@ pub fn run_test_app(manifest_dir: &str, test_name: &str) -> Result<()> {
         "--",
         "--test-name",
         test_name,
-        "--stop-on-failure",
     ]);
 
     if no_display() {

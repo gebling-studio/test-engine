@@ -64,11 +64,6 @@ struct Args {
 /// How the run reacts to failures and what it reports.
 #[derive(clap::Args)]
 struct RunArgs {
-    /// Kept for compatibility. The suite always runs every test and reports
-    /// every failure at the end, then exits 1 if any failed.
-    #[arg(long)]
-    stop_on_failure: bool,
-
     #[arg(long)]
     fps_report: bool,
 

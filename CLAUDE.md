@@ -64,8 +64,8 @@ UI_BENCHMARK=1 cargo run -p test-game --release --features bench             # s
 `TE_HEADLESS=1` runs any app without a window.
 
 The suite runs every test, prints every failure at the end, then exits 1 if any failed.
-`--stop-on-failure` is a leftover that does nothing. `--headless` runs without a window or
-a display — tests run many times faster. Always pass it.
+`--headless` runs without a window or a display — tests run many times faster. Always pass
+it.
 
 After touching any `Cargo.toml` or removing code, run `cargo machete`. It must report
 zero unused dependencies.
