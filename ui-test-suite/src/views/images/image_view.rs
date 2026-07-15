@@ -2,8 +2,8 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{ImageMode, Setup, UIManager, ViewData, ViewTouch, ui_test, view},
-    ui_test::{UITest, helpers::check_colors},
+    ui::{ImageMode, Setup, UIManager, ViewData, ViewTest, ViewTouch, view},
+    ui_test::helpers::check_colors,
 };
 
 #[view]
@@ -21,19 +21,18 @@ impl Setup for ImageView {
     }
 }
 
-#[ui_test]
-pub fn test_image_view() -> Result<()> {
-    let view = UITest::start::<ImageView>();
+impl ViewTest for ImageView {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        check_gradient()?;
+        check_resized_gradient(view)?;
+        check_cat_with_debug_frames(view)?;
+        check_aspect_fit(view)?;
+        check_tall_aspect_fit(view)?;
 
-    check_gradient()?;
-    check_resized_gradient(view)?;
-    check_cat_with_debug_frames(view)?;
-    check_aspect_fit(view)?;
-    check_tall_aspect_fit(view)?;
+        from_main(UIManager::disable_debug_frames);
 
-    from_main(UIManager::disable_debug_frames);
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn check_gradient() -> Result<()> {

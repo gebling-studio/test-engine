@@ -8,8 +8,8 @@ use test_engine::{
     dispatch::{from_main, is_main_thread},
     ui::{Label, UIManager},
     ui_test::{
-        TestFailure, UITest, clear_failures, current_test_name, enable_color_recording, enable_fps_report,
-        enable_human_mode, push_failure, run_test, take_failures,
+        TestFailure, UITest, UITestEntry, clear_failures, current_test_name, enable_color_recording,
+        enable_fps_report, enable_human_mode, push_failure, run_test, spaced_test_name, take_failures,
     },
 };
 
@@ -66,7 +66,7 @@ fn keep_tests_linked() {
 
 /// Every registered test, from the corpus, the app and the engine. They all
 /// register into the one engine owned map, so there is nothing to merge.
-fn all_tests() -> BTreeMap<String, fn() -> Result<()>> {
+fn all_tests() -> BTreeMap<String, UITestEntry> {
     keep_tests_linked();
     test_engine::UI_TESTS.lock().clone()
 }
@@ -90,6 +90,16 @@ fn run(args: Args) -> Result<()> {
     install_fatal_panic_hook();
 
     let tests = all_tests();
+
+    // A suite that runs nothing otherwise reports success, which looks exactly
+    // like a suite that passes. Registration is a ctor nothing calls by name, so
+    // an empty map means the `ui-tests` feature is off or a linker dropped a
+    // whole crate, never that there are no tests.
+    anyhow::ensure!(
+        !tests.is_empty(),
+        "No UI tests registered. Either the `test-engine/ui-tests` feature is off, or a linker \
+         dropped a test crate whose ctors nothing references, see `keep_tests_linked`.",
+    );
 
     if args.list {
         for name in tests.keys() {
@@ -119,12 +129,20 @@ fn run(args: Args) -> Result<()> {
         clear_failures();
 
         if let Some(test_name) = test_name {
-            let Some(test) = tests.get(&test_name) else {
-                println!("Test: {test_name} not found");
+            // Also accept the struct ident, so a tool reading `impl ViewTest for
+            // ScrollViewTest` off the source can pass what it sees without
+            // deriving the spaced name itself. `spaced_test_name` is the one
+            // place that rule lives, and drifting from it is what made the old
+            // generated `#[test]` pass a name the runner rejected.
+            let key = spaced_test_name(&test_name);
+
+            let Some(test) = tests.get(&key) else {
+                eprintln!("UI test not found: {test_name}");
+                eprintln!("Run `cargo run -p ui-test -- --list` to see every registered test.");
                 exit(1);
             };
 
-            run_test(&test_name, test);
+            run_test(&key, test.run);
 
             UITest::finish();
             AppRunner::stop();
@@ -135,7 +153,7 @@ fn run(args: Args) -> Result<()> {
 
         for i in 1..=cycles {
             for (name, test) in &tests {
-                run_test(name, test);
+                run_test(name, test.run);
             }
             info!("Cycle {i}: OK");
         }

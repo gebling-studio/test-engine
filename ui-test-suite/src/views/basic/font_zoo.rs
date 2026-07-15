@@ -3,7 +3,7 @@ use test_engine::{
     dispatch::from_main,
     gm::LossyConvert,
     refs::{Weak, manage::DataManager},
-    ui::{Font, Label, Setup, TextAlignment, ViewFrame, ViewSubviews, ViewTest, view_test},
+    ui::{Font, Label, Setup, TextAlignment, ViewFrame, ViewSubviews, ViewTest, view},
     ui_test::{check_colors, set_record_probe_count},
 };
 
@@ -63,7 +63,7 @@ fn font_by_name(name: &str) -> Weak<Font> {
     }
 }
 
-#[view_test]
+#[view]
 struct FontZoo {
     labels: Vec<Weak<Label>>,
 }

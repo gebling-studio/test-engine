@@ -4,12 +4,12 @@ use test_engine::{
     refs::Weak,
     ui::{
         BLACK, BLUE, Container, GREEN, RED, Rect, Setup, ViewData, ViewFrame, ViewSubviews, ViewTest, WHITE,
-        YELLOW, view_test,
+        YELLOW, view,
     },
     ui_test::check_colors,
 };
 
-#[view_test]
+#[view]
 struct FlowWrap {
     boxes: Vec<Weak<Container>>,
 

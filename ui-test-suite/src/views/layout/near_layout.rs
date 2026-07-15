@@ -1,8 +1,8 @@
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{BLUE, Container, GREEN, Setup, ViewData, ui_test, view},
-    ui_test::{UITest, check_colors},
+    ui::{BLUE, Container, GREEN, Setup, ViewData, ViewTest, view},
+    ui_test::check_colors,
 };
 
 #[view]
@@ -23,17 +23,16 @@ impl Setup for NearLayout {
     }
 }
 
-#[ui_test]
-pub fn test_near_layout() -> anyhow::Result<()> {
-    let view = UITest::start::<NearLayout>();
+impl ViewTest for NearLayout {
+    fn perform_test(view: Weak<Self>) -> anyhow::Result<()> {
+        check_at_right()?;
+        check_below(view)?;
+        check_at_right_with_width(view)?;
+        check_below_with_width(view)?;
+        check_below_with_height(view)?;
 
-    check_at_right()?;
-    check_below(view)?;
-    check_at_right_with_width(view)?;
-    check_below_with_width(view)?;
-    check_below_with_height(view)?;
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn check_at_right() -> anyhow::Result<()> {

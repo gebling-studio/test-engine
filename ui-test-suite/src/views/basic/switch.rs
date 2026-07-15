@@ -1,8 +1,8 @@
 use anyhow::Result;
 use test_engine::{
     refs::Weak,
-    ui::{Setup, Switch, ViewData, ui_test, view},
-    ui_test::{UITest, state::set_state, test_combinations},
+    ui::{Setup, Switch, ViewData, ViewTest, view},
+    ui_test::{state::set_state, test_combinations},
 };
 
 #[view]
@@ -21,13 +21,15 @@ impl Setup for SwitchTestView {
     }
 }
 
-#[ui_test]
-pub fn test_switch() -> Result<()> {
-    UITest::start_sized::<SwitchTestView>(200, 100);
+impl ViewTest for SwitchTestView {
+    fn canvas() -> (u32, u32) {
+        (200, 100)
+    }
 
-    test_combinations([
-        (
-            r"
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        test_combinations([
+            (
+                r"
                 174.58594    49.171875    b
                 114.09766    45.835938    e
                 98.78125     10.671875    b
@@ -37,10 +39,10 @@ pub fn test_switch() -> Result<()> {
                 119.44531    86.00391     b
                 118.953125   47.95703     e
                 ",
-            false,
-        ),
-        (
-            r"
+                false,
+            ),
+            (
+                r"
                 56.40625     35.191406    b
                 56.40625     35.1875      e
                 141.73047    37.035156    b
@@ -52,25 +54,26 @@ pub fn test_switch() -> Result<()> {
                 100.87109    50.507813    b
                 100.80469    50.507813    e
                 ",
-            true,
-        ),
-        (
-            r"
+                true,
+            ),
+            (
+                r"
                 98.99219     54.15625     b
                 98.99219     54.15625     e
                 98.99219     54.15625     b
                 98.99219     54.15625     e
                 ",
-            true,
-        ),
-        (
-            r"
+                true,
+            ),
+            (
+                r"
                 98.99219     54.15625     b
                 98.99219     54.15625     e
                 ",
-            false,
-        ),
-    ])?;
+                false,
+            ),
+        ])?;
 
-    Ok(())
+        Ok(())
+    }
 }

@@ -3,8 +3,8 @@ use test_engine::{
     Window,
     dispatch::from_main,
     refs::Weak,
-    ui::{GRAY_BLUE, GREEN, NoImage, Setup, UIImages, UIManager, ui_test, view},
-    ui_test::{UITest, check_colors},
+    ui::{GRAY_BLUE, GREEN, NoImage, Setup, UIImages, UIManager, ViewTest, view},
+    ui_test::check_colors,
 };
 
 #[view]
@@ -16,16 +16,15 @@ impl Setup for Background {
     }
 }
 
-#[ui_test]
-pub fn test_background() -> Result<()> {
-    let _view = UITest::start::<Background>();
+impl ViewTest for Background {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        green_clear_color()?;
+        gray_blue_clear_color()?;
+        root_view_image()?;
+        image_removed()?;
 
-    green_clear_color()?;
-    gray_blue_clear_color()?;
-    root_view_image()?;
-    image_removed()?;
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn green_clear_color() -> Result<()> {

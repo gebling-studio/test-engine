@@ -2,36 +2,31 @@ use anyhow::Result;
 use instant::Instant;
 use test_engine::{
     dispatch::from_main,
-    refs::Weak,
+    refs::{Own, Weak},
     ui::{
-        Container, NavigationView, PRESENT_ANIMATION_DURATION, RED, Setup, TouchStack, ViewController,
-        ViewData, ui_test, view,
+        Container, NavigationView, PRESENT_ANIMATION_DURATION, RED, Setup, TouchStack, View, ViewController,
+        ViewData, ViewTest, view,
     },
-    ui_test::{UITest, helpers::check_colors},
+    ui_test::helpers::check_colors,
 };
 
 #[view]
 struct PresentTestView {}
 
-#[ui_test]
-pub fn test_navigation_view() -> Result<()> {
-    let present = PresentTestView::new();
+impl ViewTest for PresentTestView {
+    /// Presenting only works from inside a navigation stack, so the root is the
+    /// stack and the view under test is its first view.
+    fn make_root(view: Own<Self>) -> Own<dyn View> {
+        NavigationView::with_view(view)
+    }
 
-    let view = present.weak();
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        check_before_present()?;
+        check_present_animation(view)?;
+        check_presented_stays()?;
 
-    UITest::set(
-        NavigationView::with_view(present),
-        600,
-        600,
-        true,
-        "Present".to_string(),
-    );
-
-    check_before_present()?;
-    check_present_animation(view)?;
-    check_presented_stays()?;
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn check_before_present() -> Result<()> {

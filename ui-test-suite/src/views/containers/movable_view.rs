@@ -1,8 +1,8 @@
 use anyhow::Result;
 use test_engine::{
     refs::Weak,
-    ui::{Container, GREEN, MovableView, Setup, ViewData, ViewFrame, ui_test, view},
-    ui_test::{UITest, check_colors, inject_touches},
+    ui::{Container, GREEN, MovableView, Setup, ViewData, ViewFrame, ViewTest, view},
+    ui_test::{check_colors, inject_touches},
 };
 
 #[view]
@@ -19,15 +19,14 @@ impl Setup for MovableViewTestView {
     }
 }
 
-#[ui_test]
-pub fn test_movable_view() -> Result<()> {
-    let mut _view = UITest::start::<MovableViewTestView>();
+impl ViewTest for MovableViewTestView {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_dragged_by_title()?;
+        check_resized_from_corner()?;
+        check_resized_to_min_size()?;
 
-    check_dragged_by_title()?;
-    check_resized_from_corner()?;
-    check_resized_to_min_size()?;
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn check_dragged_by_title() -> Result<()> {

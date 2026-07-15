@@ -2,9 +2,7 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{
-        BlurView, Container, ImageView, Label, RED, Setup, ViewData, ViewSubviews, ViewTest, WHITE, view_test,
-    },
+    ui::{BlurView, Container, ImageView, Label, RED, Setup, ViewData, ViewSubviews, ViewTest, WHITE, view},
     ui_test::{check_colors, set_record_probe_count},
 };
 
@@ -12,7 +10,7 @@ use test_engine::{
 // strips, a photo and text. The card is tall enough to cover text and
 // the photo top, shows them blurred and tinted, its own title stays
 // crisp on top, and the rounded corners cut the blur off.
-#[view_test]
+#[view]
 struct BackdropBlurTest {
     title: Weak<Label>,
 

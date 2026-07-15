@@ -2,8 +2,8 @@ use anyhow::Result;
 use parking_lot::Mutex;
 use test_engine::{
     refs::Weak,
-    ui::{BLUE, Button, Setup, ViewData, ViewTransition, ui_test, view},
-    ui_test::{UITest, check_colors, inject_touches},
+    ui::{BLUE, Button, Setup, ViewData, ViewTest, ViewTransition, view},
+    ui_test::{check_colors, inject_touches},
 };
 
 static ACTIONS: Mutex<Vec<&str>> = Mutex::new(vec![]);
@@ -38,12 +38,10 @@ impl Setup for BlueView {
     }
 }
 
-#[ui_test]
-pub fn test_transition() -> Result<()> {
-    UITest::start::<Transition>();
-
-    check_colors(
-        r"
+impl ViewTest for Transition {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_colors(
+            r"
             452    4 -  89 124 149
             24   24 - 255 255 255
             152   24 - 255 255 255
@@ -77,18 +75,18 @@ pub fn test_transition() -> Result<()> {
             404  592 -  89 124 149
             592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    inject_touches(
-        "
+        inject_touches(
+            "
             142  88   b
             142  87   e
 
         ",
-    );
+        );
 
-    check_colors(
-        r"
+        check_colors(
+            r"
             4    4 -   0   0 231
             444    4 -   0   0 231
             592    4 -   0   0 231
@@ -122,11 +120,12 @@ pub fn test_transition() -> Result<()> {
             300  592 -   0   0 231
             592  592 -   0   0 231
         ",
-    )?;
+        )?;
 
-    assert_eq!(ACTIONS.lock().as_slice(), &["Transition callback", "Blue setup"]);
+        assert_eq!(ACTIONS.lock().as_slice(), &["Transition callback", "Blue setup"]);
 
-    ACTIONS.lock().clear();
+        ACTIONS.lock().clear();
 
-    Ok(())
+        Ok(())
+    }
 }

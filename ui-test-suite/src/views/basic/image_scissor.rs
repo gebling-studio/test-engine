@@ -2,11 +2,11 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{ImageMode, ImageView, Setup, ViewFrame, ViewTest, view_test},
+    ui::{ImageMode, ImageView, Setup, ViewFrame, ViewTest, view},
     ui_test::check_colors,
 };
 
-#[view_test]
+#[view]
 struct ImageScissor {
     #[init]
     image: ImageView,

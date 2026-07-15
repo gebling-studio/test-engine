@@ -1,11 +1,11 @@
 use anyhow::Result;
 use test_engine::{
     refs::Weak,
-    ui::{Anchor::Left, BLUE, Container, ImageView, Setup, ViewData, ViewTest, YELLOW, view_test},
+    ui::{Anchor::Left, BLUE, Container, ImageView, Setup, ViewData, ViewTest, YELLOW, view},
     ui_test::{check_colors, set_record_probe_count},
 };
 
-#[view_test]
+#[view]
 struct CornerRadius {
     #[init]
     square: Container,

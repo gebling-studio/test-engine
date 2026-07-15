@@ -1,8 +1,8 @@
 use anyhow::Result;
 use test_engine::{
     refs::Weak,
-    ui::{BLACK, BLUE, Container, GREEN, RED, Setup, ViewData, ViewSubviews, ui_test, view},
-    ui_test::{UITest, helpers::check_colors},
+    ui::{BLACK, BLUE, Container, GREEN, RED, Setup, ViewData, ViewSubviews, ViewTest, view},
+    ui_test::helpers::check_colors,
 };
 
 #[view]
@@ -23,32 +23,30 @@ impl Setup for ViewOrder {
     }
 }
 
-#[ui_test]
-pub fn test_view_order() -> Result<()> {
-    let view = UITest::start::<ViewOrder>();
+impl ViewTest for ViewOrder {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        assert_eq!(
+            view.dump_subviews(),
+            vec![
+                "ViewOrder.view_1: Container".to_string(),
+                "ViewOrder.view_2: Container".to_string(),
+                "ViewOrder.view_3: Container".to_string(),
+                "ViewOrder.view_4: Container".to_string()
+            ]
+        );
 
-    assert_eq!(
-        view.dump_subviews(),
-        vec![
-            "ViewOrder.view_1: Container".to_string(),
-            "ViewOrder.view_2: Container".to_string(),
-            "ViewOrder.view_3: Container".to_string(),
-            "ViewOrder.view_4: Container".to_string()
-        ]
-    );
+        assert_eq!(view.view_1.view_label(), "ViewOrder.view_1: Container");
+        assert_eq!(view.view_2.view_label(), "ViewOrder.view_2: Container");
+        assert_eq!(view.view_3.view_label(), "ViewOrder.view_3: Container");
+        assert_eq!(view.view_4.view_label(), "ViewOrder.view_4: Container");
 
-    assert_eq!(view.view_1.view_label(), "ViewOrder.view_1: Container");
-    assert_eq!(view.view_2.view_label(), "ViewOrder.view_2: Container");
-    assert_eq!(view.view_3.view_label(), "ViewOrder.view_3: Container");
-    assert_eq!(view.view_4.view_label(), "ViewOrder.view_4: Container");
+        assert_eq!(view.subviews()[0].label(), view.view_1.view_label());
+        assert_eq!(view.subviews()[1].label(), view.view_2.view_label());
+        assert_eq!(view.subviews()[2].label(), view.view_3.view_label());
+        assert_eq!(view.subviews()[3].label(), view.view_4.view_label());
 
-    assert_eq!(view.subviews()[0].label(), view.view_1.view_label());
-    assert_eq!(view.subviews()[1].label(), view.view_2.view_label());
-    assert_eq!(view.subviews()[2].label(), view.view_3.view_label());
-    assert_eq!(view.subviews()[3].label(), view.view_4.view_label());
-
-    check_colors(
-        r"
+        check_colors(
+            r"
             4    4 - 255   0   0
             392    4 -  89 124 149
             592    4 -  89 124 149
@@ -82,7 +80,8 @@ pub fn test_view_order() -> Result<()> {
             4  592 -  89 124 149
             196  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    Ok(())
+        Ok(())
+    }
 }

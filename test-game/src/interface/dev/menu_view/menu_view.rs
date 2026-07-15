@@ -15,8 +15,8 @@ use test_engine::{
     refs::{Weak, manage::DataManager},
     ui::{
         ALL_VIEWS, AfterSetup, Alert, Anchor, Button, Container, Font, InfiniteScrollTest, Label, Point,
-        ScrollView, Setup, Shadow, Spinner, TextAlignment, UIManager, ViewData, ViewSubviews, all_view_tests,
-        all_views, view,
+        ScrollView, Setup, Shadow, Spinner, TextAlignment, UIManager, ViewData, ViewSubviews, all_views,
+        view,
     },
     ui_test::run_all_tests,
 };
@@ -204,7 +204,9 @@ impl MenuView {
         Self::button(system, "All views", || {
             dbg!(all_views!());
             dbg!(ALL_VIEWS);
-            dbg!(all_view_tests!());
+            for (name, test) in test_engine::UI_TESTS.lock().iter() {
+                println!("{name}: {}", test.file);
+            }
         });
         Self::button(system, "Panic", || panic!("test panic"));
     }

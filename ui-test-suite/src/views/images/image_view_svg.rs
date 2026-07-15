@@ -2,8 +2,8 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{Anchor::Top, BLUE, ImageView, Setup, Tinted, ViewData, ViewTouch, ui_test, view},
-    ui_test::{UITest, helpers::check_colors},
+    ui::{Anchor::Top, BLUE, ImageView, Setup, Tinted, ViewData, ViewTest, ViewTouch, view},
+    ui_test::helpers::check_colors,
 };
 
 #[view]
@@ -25,14 +25,13 @@ impl Setup for ImageViewSVG {
     }
 }
 
-#[ui_test]
-pub fn test_image_view_svg() -> Result<()> {
-    let view = UITest::start::<ImageViewSVG>();
+impl ViewTest for ImageViewSVG {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        check_untinted_svg()?;
+        check_tinted_settings(view)?;
 
-    check_untinted_svg()?;
-    check_tinted_settings(view)?;
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn check_untinted_svg() -> Result<()> {

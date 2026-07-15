@@ -3,7 +3,7 @@ use test_engine::{
     AppRunner,
     dispatch::from_main,
     refs::Weak,
-    ui::{Label, Screenshot, Setup, U8Color, ViewFrame, ViewTest, view_test},
+    ui::{Label, Screenshot, Setup, U8Color, ViewFrame, ViewTest, view},
 };
 
 const TEXT: &str = "Grumpy wizards 123";
@@ -11,7 +11,7 @@ const TEXT: &str = "Grumpy wizards 123";
 const PLAIN_FRAME: (u32, u32, u32, u32) = (20, 20, 400, 80);
 const SPACED_FRAME: (u32, u32, u32, u32) = (20, 120, 400, 80);
 
-#[view_test]
+#[view]
 struct LetterSpacing {
     #[init]
     plain:  Label,

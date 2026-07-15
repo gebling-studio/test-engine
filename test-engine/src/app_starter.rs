@@ -10,7 +10,7 @@ use crate::{
 
 /// Names a symbol in the `ctor` crate so a linker keeps that crate's object.
 ///
-/// `#[view_test]` registers a test through a `ctor`, which only writes an entry
+/// `#[view]` registers a test through a `ctor`, which only writes an entry
 /// into a linker section. A single initializer inside the `ctor` crate walks
 /// that section and calls the entries, and it returns without a word when its
 /// guard is missing. iOS links an app against `libtest_game.a`, and a linker

@@ -1,9 +1,10 @@
+use anyhow::Result;
 use test_engine::{
     gm::Apply,
     refs::Weak,
-    ui::{BLACK, BLUE, Container, GREEN, RED, Setup, TouchStack, ViewData, ViewTouch, ui_test, view},
+    ui::{BLACK, BLUE, Container, GREEN, RED, Setup, TouchStack, ViewData, ViewTest, ViewTouch, view},
     ui_test::{
-        UITest, inject_touches,
+        inject_touches,
         state::{append_state, clear_state, get_state},
     },
 };
@@ -35,25 +36,23 @@ impl Setup for TouchOrder {
     }
 }
 
-#[ui_test]
-pub fn test_touch_order() {
-    UITest::start::<TouchOrder>();
+impl ViewTest for TouchOrder {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        assert_eq!(
+            TouchStack::dump(),
+            vec![vec![
+                "Layer: Root view".to_string(),
+                "TouchOrder.view_1: Container".to_string(),
+                "TouchOrder.view_2: Container".to_string(),
+                "TouchOrder.view_3: Container".to_string(),
+                "TouchOrder.view_4: Container".to_string(),
+            ]],
+        );
 
-    assert_eq!(
-        TouchStack::dump(),
-        vec![vec![
-            "Layer: Root view".to_string(),
-            "TouchOrder.view_1: Container".to_string(),
-            "TouchOrder.view_2: Container".to_string(),
-            "TouchOrder.view_3: Container".to_string(),
-            "TouchOrder.view_4: Container".to_string(),
-        ]],
-    );
+        clear_state();
 
-    clear_state();
-
-    inject_touches(
-        r"
+        inject_touches(
+            r"
             376  385  b
             373  383  e
             310  331  b
@@ -71,11 +70,11 @@ pub fn test_touch_order() {
             29   48   b
             29   48   e
         ",
-    );
+        );
 
-    assert_eq!(
-        get_state::<String>(),
-        r"TouchOrder.view_4: Container
+        assert_eq!(
+            get_state::<String>(),
+            r"TouchOrder.view_4: Container
 TouchOrder.view_4: Container
 TouchOrder.view_4: Container
 TouchOrder.view_4: Container
@@ -83,5 +82,8 @@ TouchOrder.view_3: Container
 TouchOrder.view_2: Container
 TouchOrder.view_1: Container
 "
-    );
+        );
+
+        Ok(())
+    }
 }

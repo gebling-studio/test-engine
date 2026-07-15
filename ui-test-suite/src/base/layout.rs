@@ -1,7 +1,8 @@
+use anyhow::Result;
 use test_engine::{
     refs::Weak,
     ui::{
-        Anchor, Button, GREEN, ORANGE, Setup, ViewData, ViewSubviews, ui_test,
+        Anchor, Button, GREEN, ORANGE, Setup, ViewData, ViewSubviews, ViewTest,
         ui_test::{
             inject_touches,
             state::{append_state, get_state},
@@ -98,15 +99,20 @@ impl Setup for LayoutPlace {
     }
 }
 
-#[ui_test]
-pub fn test_layout() {
-    UITest::start_sized::<LayoutPlace>(240, 240);
+impl ViewTest for LayoutPlace {
+    fn canvas() -> (u32, u32) {
+        (240, 240)
+    }
 
-    check_taps_at_240();
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_taps_at_240();
 
-    UITest::reload_sized::<LayoutPlace>(400, 400);
+        UITest::reload_sized::<LayoutPlace>(400, 400);
 
-    check_taps_at_400();
+        check_taps_at_400();
+
+        Ok(())
+    }
 }
 
 fn check_taps_at_240() {

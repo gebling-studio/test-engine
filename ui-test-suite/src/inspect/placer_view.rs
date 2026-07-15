@@ -1,9 +1,9 @@
+use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     inspect::{ViewRepr, ViewToInspect, views::PlacerView},
     refs::{Own, Weak},
-    ui::{Container, Setup, TURQUOISE, ViewData, ViewFrame, ui_test, view},
-    ui_test::UITest,
+    ui::{Container, Setup, TURQUOISE, ViewData, ViewFrame, ViewTest, view},
 };
 
 #[view]
@@ -26,20 +26,22 @@ impl Setup for PlacerViewTest {
     }
 }
 
-#[ui_test]
-pub(crate) fn test_placer_view() {
-    let view = UITest::start::<PlacerViewTest>();
-    // UIManager::enable_debug_frames();
+impl ViewTest for PlacerViewTest {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        // UIManager::enable_debug_frames();
 
-    from_main(move || {
-        let mut view = view;
-        view.repr = view.view.view_to_inspect();
-        view.placer_view.set_view(view.repr.weak());
-    });
+        from_main(move || {
+            let mut view = view;
+            view.repr = view.view.view_to_inspect();
+            view.placer_view.set_view(view.repr.weak());
+        });
 
-    // test_engine::ui_test::record_ui_test();
+        // test_engine::ui_test::record_ui_test();
 
-    from_main(|| {
-        test_engine::ui::UIManager::override_scale(1.0);
-    });
+        from_main(|| {
+            test_engine::ui::UIManager::override_scale(1.0);
+        });
+
+        Ok(())
+    }
 }

@@ -1,10 +1,11 @@
+use anyhow::Result;
 use test_engine::{
     refs::Weak,
     ui::{
         Button, CellRegistry, Container, Label, Setup, TableData, TableView, TouchStack, View, ViewData,
-        ViewSubviews, ui_test, view,
+        ViewSubviews, ViewTest, view,
     },
-    ui_test::{UITest, get_str_state, inject_touches, state::append_state},
+    ui_test::{get_str_state, inject_touches, state::append_state},
 };
 
 #[view]
@@ -52,21 +53,19 @@ impl TableData for ButtonsOnTableView {
     }
 }
 
-#[ui_test]
-pub fn test_buttons_on_table_view() {
-    UITest::start::<ButtonsOnTableView>();
+impl ViewTest for ButtonsOnTableView {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        assert_eq!(
+            TouchStack::dump(),
+            vec![vec![
+                "Layer: Root view".to_string(),
+                "ButtonsOnTableView.table: TableView".to_string(),
+                "Button".to_string(),
+            ]],
+        );
 
-    assert_eq!(
-        TouchStack::dump(),
-        vec![vec![
-            "Layer: Root view".to_string(),
-            "ButtonsOnTableView.table: TableView".to_string(),
-            "Button".to_string(),
-        ]],
-    );
-
-    inject_touches(
-        "
+        inject_touches(
+            "
             218  146  b
             218  146  e
             218  144  b
@@ -92,11 +91,11 @@ pub fn test_buttons_on_table_view() {
             554  34   b
             554  34   e
         ",
-    );
+        );
 
-    assert_eq!(
-        get_str_state(),
-        r"cell_selected: 0
+        assert_eq!(
+            get_str_state(),
+            r"cell_selected: 0
 cell_selected: 0
 cell_selected: 0
 cell_selected: 0
@@ -106,5 +105,8 @@ button_pressed: 0
 button_pressed: 0
 button_pressed: 0
 "
-    );
+        );
+
+        Ok(())
+    }
 }

@@ -1,12 +1,12 @@
 use anyhow::Result;
 use refs::Weak;
 
-use crate::ui::{ScrollView, Setup, ViewData, ViewTest, view_test};
+use crate::ui::{ScrollView, Setup, ViewData, ViewTest, view};
 
 /// A clip-to-bounds view placed fully past the screen edges must still render.
 /// Its clipped width and height go negative, and converting that Rect to
 /// Rect<u32> used to panic and abort the first frame on iOS.
-#[view_test]
+#[view]
 struct OffscreenClip {
     #[init]
     scroll: ScrollView,

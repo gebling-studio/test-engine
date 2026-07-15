@@ -1,9 +1,9 @@
+use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     inspect::views::AnchorView,
     refs::Weak,
-    ui::{Anchor, Setup, ViewFrame, ui_test, view},
-    ui_test::UITest,
+    ui::{Anchor, Setup, ViewFrame, ViewTest, view},
 };
 
 #[view]
@@ -19,35 +19,36 @@ impl Setup for AnchorViewTest {
     }
 }
 
-#[ui_test]
-pub(crate) fn test_anchor_view() {
-    let view = UITest::start::<AnchorViewTest>();
+impl ViewTest for AnchorViewTest {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        from_main(move || {
+            view.anchor_view.set_anchor(Anchor::Bot);
+        });
 
-    from_main(move || {
-        view.anchor_view.set_anchor(Anchor::Bot);
-    });
+        from_main(move || {
+            view.anchor_view.set_anchor(Anchor::Left);
+        });
 
-    from_main(move || {
-        view.anchor_view.set_anchor(Anchor::Left);
-    });
+        from_main(move || {
+            view.anchor_view.set_anchor(Anchor::Right);
+        });
 
-    from_main(move || {
-        view.anchor_view.set_anchor(Anchor::Right);
-    });
+        from_main(move || {
+            view.anchor_view.set_anchor(Anchor::Width);
+        });
 
-    from_main(move || {
-        view.anchor_view.set_anchor(Anchor::Width);
-    });
+        from_main(move || {
+            view.anchor_view.set_anchor(Anchor::Height);
+        });
 
-    from_main(move || {
-        view.anchor_view.set_anchor(Anchor::Height);
-    });
+        from_main(move || {
+            view.anchor_view.set_anchor(Anchor::MaxWidth);
+        });
 
-    from_main(move || {
-        view.anchor_view.set_anchor(Anchor::MaxWidth);
-    });
+        from_main(move || {
+            view.anchor_view.set_anchor(Anchor::MaxHeight);
+        });
 
-    from_main(move || {
-        view.anchor_view.set_anchor(Anchor::MaxHeight);
-    });
+        Ok(())
+    }
 }

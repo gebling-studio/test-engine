@@ -3,12 +3,12 @@ use test_engine::{
     refs::Weak,
     ui::{
         BLACK, BLUE, Container, CornerRadii, GREEN, LIGHTER_GRAY, RED, Setup, Shadow, ViewData, ViewTest,
-        WHITE, YELLOW, view_test,
+        WHITE, YELLOW, view,
     },
     ui_test::{check_colors, set_record_probe_count},
 };
 
-#[view_test]
+#[view]
 struct ShadowTest {
     #[init]
     under_ghost: Container,

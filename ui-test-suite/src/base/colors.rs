@@ -4,9 +4,9 @@ use test_engine::{
     refs::Weak,
     ui::{
         Anchor::{Height, Left, Top, Width, X},
-        Container, ImageView, Setup, ViewData, WHITE, ui_test, view,
+        Container, ImageView, Setup, ViewData, ViewTest, WHITE, view,
     },
-    ui_test::{UITest, check_colors},
+    ui_test::check_colors,
 };
 
 #[view]
@@ -45,12 +45,10 @@ impl Setup for Colors {
     }
 }
 
-#[ui_test]
-pub fn test_colors() -> Result<()> {
-    UITest::start::<Colors>();
-
-    check_colors(
-        r"
+impl ViewTest for Colors {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_colors(
+            r"
             592    4 - 255 255 255
             192   48 -  45  70 149
             396   52 -  45  70 149
@@ -84,7 +82,8 @@ pub fn test_colors() -> Result<()> {
             4  592 - 255 255 255
             592  592 - 255 255 255
         ",
-    )?;
+        )?;
 
-    Ok(())
+        Ok(())
+    }
 }

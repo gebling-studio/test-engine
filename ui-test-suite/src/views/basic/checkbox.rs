@@ -1,7 +1,8 @@
+use anyhow::Result;
 use test_engine::{
     refs::Weak,
-    ui::{CheckBox, Setup, ViewFrame, ui_test, view},
-    ui_test::{UITest, inject_touches},
+    ui::{CheckBox, Setup, ViewFrame, ViewTest, view},
+    ui_test::inject_touches,
 };
 
 #[view]
@@ -16,29 +17,30 @@ impl Setup for CheckBoxTestView {
     }
 }
 
-#[ui_test]
-pub fn test_checkbox() {
-    let view = UITest::start::<CheckBoxTestView>();
+impl ViewTest for CheckBoxTestView {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        assert!(!view.checkbox.on());
 
-    assert!(!view.checkbox.on());
-
-    inject_touches(
-        "
+        inject_touches(
+            "
          81   86   b
          81   86   e
 
      ",
-    );
+        );
 
-    assert!(view.checkbox.on());
+        assert!(view.checkbox.on());
 
-    inject_touches(
-        "
+        inject_touches(
+            "
          81   86   b
          81   86   e
 
      ",
-    );
+        );
 
-    assert!(!view.checkbox.on());
+        assert!(!view.checkbox.on());
+
+        Ok(())
+    }
 }

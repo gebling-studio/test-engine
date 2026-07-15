@@ -1,8 +1,8 @@
 use anyhow::Result;
 use test_engine::{
     refs::Weak,
-    ui::{Container, GREEN, ImageView, Setup, UIImages, ViewData, ViewSubviews, ui_test, view},
-    ui_test::{UITest, helpers::check_colors},
+    ui::{Container, GREEN, ImageView, Setup, UIImages, ViewData, ViewSubviews, ViewTest, view},
+    ui_test::helpers::check_colors,
 };
 
 #[view]
@@ -23,12 +23,10 @@ impl Setup for ImageOnView {
     }
 }
 
-#[ui_test]
-pub fn test_image_on_view() -> Result<()> {
-    UITest::start::<ImageOnView>();
-
-    check_colors(
-        r"
+impl ViewTest for ImageOnView {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_colors(
+            r"
             416    4 -  89 124 149
             592    4 -  89 124 149
             104  104 -   0 255   0
@@ -62,7 +60,8 @@ pub fn test_image_on_view() -> Result<()> {
             300  592 -  89 124 149
             592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    Ok(())
+        Ok(())
+    }
 }

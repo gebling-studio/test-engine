@@ -9,7 +9,7 @@ use crate::{
     },
     ui::{
         CellCallbacks, CellRegistry, Container, Label, Setup, Spinner, SpinnerLockOnView, TableData,
-        TableView, View, ViewData, ViewFrame, ViewTest, view, view_test,
+        TableView, View, ViewData, ViewFrame, ViewTest, view,
     },
     ui_test::{inject_scroll, inject_touches},
 };
@@ -53,7 +53,7 @@ impl CellCallbacks for LoadingCell {
     }
 }
 
-#[view_test]
+#[view]
 pub(crate) struct LoadingCellsTest {
     pub(super) test_string: String,
 

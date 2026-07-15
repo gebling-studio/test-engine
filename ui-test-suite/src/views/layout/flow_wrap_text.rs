@@ -2,13 +2,11 @@ use anyhow::Result;
 use test_engine::{
     dispatch::{from_main, wait_for_next_frame},
     refs::Weak,
-    ui::{
-        BLACK, Container, GREEN, Label, Rect, Setup, ViewData, ViewFrame, ViewSubviews, ViewTest, view_test,
-    },
+    ui::{BLACK, Container, GREEN, Label, Rect, Setup, ViewData, ViewFrame, ViewSubviews, ViewTest, view},
     ui_test::check_colors,
 };
 
-#[view_test]
+#[view]
 struct FlowWrapText {
     words: Vec<Weak<Label>>,
 

@@ -3,7 +3,7 @@ use test_engine::{
     refs::Weak,
     ui::{
         BLUE, BROWN, Container, CornerRadii, GRAY, GREEN, ImageView, ORANGE, PURPLE, RED, Setup, TURQUOISE,
-        ViewData, ViewTest, YELLOW, view_test,
+        ViewData, ViewTest, YELLOW, view,
     },
     ui_test::{check_colors, set_record_probe_count},
 };
@@ -11,7 +11,7 @@ use test_engine::{
 // Each rounded view sits on a backdrop of a unique color, so the cut
 // corners expose that color and the recorder pins probes there. The
 // backdrop fields come first, so they stay behind their views.
-#[view_test]
+#[view]
 struct CornerRadiiTest {
     #[init]
     under_top:    Container,

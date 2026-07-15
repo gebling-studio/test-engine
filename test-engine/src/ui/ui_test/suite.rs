@@ -1,9 +1,8 @@
 use std::collections::BTreeMap;
 
-use anyhow::Result;
 use hreads::from_main;
 
-use super::{TestFailure, clear_failures, run_test, take_failures};
+use super::{TestFailure, UITestEntry, clear_failures, run_test, take_failures};
 use crate::{
     gm::color::Color,
     ui::{Label, Style, UIManager, ViewData, style::GlobalStyles},
@@ -66,12 +65,12 @@ fn restore_app(state: AppState) {
 
 /// Run a whole map of registered tests through the failure collector. Must not
 /// run on the main thread, the tests drive the main thread through `from_main`.
-pub fn run_test_map(tests: &BTreeMap<String, fn() -> Result<()>>) -> TestRunReport {
+pub fn run_test_map(tests: &BTreeMap<String, UITestEntry>) -> TestRunReport {
     let state = prepare_harness();
     clear_failures();
 
     for (name, test) in tests {
-        run_test(name, *test);
+        run_test(name, test.run);
     }
 
     let report = TestRunReport {
@@ -84,7 +83,7 @@ pub fn run_test_map(tests: &BTreeMap<String, fn() -> Result<()>>) -> TestRunRepo
     report
 }
 
-/// Run every registered test. `#[view_test]` and `#[ui_test]` in any crate all
+/// Run every registered test. `#[view]` and `#[ui_test]` in any crate all
 /// register into the one engine owned map, so this reaches the whole suite with
 /// no help from the app.
 pub fn run_all_tests() -> TestRunReport {

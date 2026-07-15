@@ -4,7 +4,7 @@ use test_engine::{
     refs::Weak,
     ui::{
         BLACK, BLUE, Color, Container, DynamicColor, Label, RED, Setup, Theme, ThemeMode, UIEvents, ViewData,
-        ViewSubviews, ViewTest, WHITE, YELLOW, view_test,
+        ViewSubviews, ViewTest, WHITE, YELLOW, view,
     },
     ui_test::check_colors,
 };
@@ -13,7 +13,7 @@ const BACKGROUND: DynamicColor = DynamicColor::new(WHITE, Color::rgb(0.2, 0.2, 0
 const BORDER: DynamicColor = DynamicColor::new(BLUE, YELLOW);
 const TEXT: DynamicColor = DynamicColor::new(BLACK, WHITE);
 
-#[view_test]
+#[view]
 struct ThemeSwitch {
     switches: Vec<Theme>,
     added:    Weak<Container>,

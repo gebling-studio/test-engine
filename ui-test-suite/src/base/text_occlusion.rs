@@ -1,8 +1,8 @@
 use anyhow::Result;
 use test_engine::{
     refs::Weak,
-    ui::{LIGHT_GRAY, Label, Setup, ViewData, WHITE, ui_test, view},
-    ui_test::{UITest, helpers::check_colors},
+    ui::{LIGHT_GRAY, Label, Setup, ViewData, ViewTest, WHITE, view},
+    ui_test::helpers::check_colors,
 };
 
 #[view]
@@ -31,12 +31,10 @@ impl Setup for TextOccclusion {
     }
 }
 
-#[ui_test]
-pub fn test_text_occlusion() -> Result<()> {
-    let _view = UITest::start::<TextOccclusion>();
-
-    check_colors(
-        r"
+impl ViewTest for TextOccclusion {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_colors(
+            r"
             4    4 -  89 124 149
             236    4 -  89 124 149
             396    4 - 231 231 231
@@ -70,7 +68,8 @@ pub fn test_text_occlusion() -> Result<()> {
             428  592 - 231 231 231
             592  592 - 231 231 231
         ",
-    )?;
+        )?;
 
-    Ok(())
+        Ok(())
+    }
 }

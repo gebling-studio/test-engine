@@ -1,9 +1,10 @@
 use std::sync::atomic::{AtomicU16, Ordering};
 
+use anyhow::Result;
 use test_engine::{
     refs::Weak,
-    ui::{Button, Setup, ViewData, ui_test, view},
-    ui_test::{UITest, inject_touches},
+    ui::{Button, Setup, ViewData, ViewTest, view},
+    ui_test::inject_touches,
 };
 
 static COUNTER: AtomicU16 = AtomicU16::new(0);
@@ -22,33 +23,34 @@ impl Setup for InjectTouch {
     }
 }
 
-#[ui_test]
-pub fn test_inject_touch() {
-    COUNTER.store(0, Ordering::Relaxed);
+impl ViewTest for InjectTouch {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        COUNTER.store(0, Ordering::Relaxed);
 
-    UITest::start::<InjectTouch>();
+        let mut touches = String::new();
 
-    let mut touches = String::new();
-
-    for _ in 0..100 {
-        touches += r"
+        for _ in 0..100 {
+            touches += r"
             5  5  b
             5  5  e
     ";
-    }
+        }
 
-    inject_touches(touches);
+        inject_touches(touches);
 
-    assert_eq!(COUNTER.load(Ordering::Relaxed), 100);
+        assert_eq!(COUNTER.load(Ordering::Relaxed), 100);
 
-    for _ in 0..10 {
-        inject_touches(
-            r"
+        for _ in 0..10 {
+            inject_touches(
+                r"
             5  5  b
             5  5  e
     ",
-        );
-    }
+            );
+        }
 
-    assert_eq!(COUNTER.load(Ordering::Relaxed), 110);
+        assert_eq!(COUNTER.load(Ordering::Relaxed), 110);
+
+        Ok(())
+    }
 }

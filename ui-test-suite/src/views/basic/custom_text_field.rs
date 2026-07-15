@@ -1,8 +1,8 @@
 use anyhow::Result;
 use test_engine::{
     refs::Weak,
-    ui::{Setup, TURQUOISE, TextField, ViewData, ViewFrame, YELLOW, ui_test, view},
-    ui_test::{UITest, check_colors, inject_touches},
+    ui::{Setup, TURQUOISE, TextField, ViewData, ViewFrame, ViewTest, YELLOW, view},
+    ui_test::{check_colors, inject_touches},
 };
 
 #[view]
@@ -24,17 +24,16 @@ impl Setup for CustomTextField {
     }
 }
 
-#[ui_test]
-pub fn test_custom_text_field() -> Result<()> {
-    let _view = UITest::start::<CustomTextField>();
+impl ViewTest for CustomTextField {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        unfocused_field_colors()?;
+        tap_focuses_field()?;
+        tap_outside_unfocuses_field()?;
 
-    unfocused_field_colors()?;
-    tap_focuses_field()?;
-    tap_outside_unfocuses_field()?;
+        // test_engine::ui_test::record_ui_test();
 
-    // test_engine::ui_test::record_ui_test();
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn unfocused_field_colors() -> Result<()> {

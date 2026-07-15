@@ -1,8 +1,8 @@
 use anyhow::Result;
 use test_engine::{
     refs::Weak,
-    ui::{Anchor, BLACK, Setup, ViewData, ViewTouch, WHITE, ui_test, view},
-    ui_test::{UITest, helpers::check_colors, inject_touches},
+    ui::{Anchor, BLACK, Setup, ViewData, ViewTest, ViewTouch, WHITE, view},
+    ui_test::{helpers::check_colors, inject_touches},
 };
 
 #[view]
@@ -35,17 +35,16 @@ impl Setup for Selection {
     }
 }
 
-#[ui_test]
-pub fn test_selection() -> Result<()> {
-    UITest::start::<Selection>();
+impl ViewTest for Selection {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_none_selected()?;
+        check_left_selected()?;
+        check_center_selected()?;
+        check_right_selected()?;
+        check_deselected_outside()?;
 
-    check_none_selected()?;
-    check_left_selected()?;
-    check_center_selected()?;
-    check_right_selected()?;
-    check_deselected_outside()?;
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn check_none_selected() -> Result<()> {

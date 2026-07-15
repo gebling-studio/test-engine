@@ -3,10 +3,9 @@ use test_engine::{
     OnceEvent,
     refs::Weak,
     ui::{
-        Color, Container, Label, ModalView, Setup, Size, ViewData, ViewFrame, ViewSubviews, WHITE, WeakView,
-        ui_test, ui_test::helpers::check_colors, view,
+        Color, Container, Label, ModalView, Setup, Size, ViewData, ViewFrame, ViewSubviews, ViewTest, WHITE,
+        WeakView, ui_test::helpers::check_colors, view,
     },
-    ui_test::UITest,
 };
 
 #[view]
@@ -58,14 +57,12 @@ impl ModalView for Modal {
     }
 }
 
-#[ui_test]
-pub fn test_modal() -> Result<()> {
-    UITest::start::<ShowModally>();
+impl ViewTest for ShowModally {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        Modal::show_modally_with_input((), |()| {});
 
-    Modal::show_modally_with_input((), |()| {});
-
-    check_colors(
-        r"
+        check_colors(
+            r"
             592    4 -  89 124 149
             104  104 - 255 255 255
             432  104 - 255 255 255
@@ -99,7 +96,8 @@ pub fn test_modal() -> Result<()> {
             260  592 -  89 124 149
             592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    Ok(())
+        Ok(())
+    }
 }

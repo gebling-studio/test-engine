@@ -5,7 +5,7 @@ use test_engine::{
     refs::Weak,
     ui::{
         BLACK, Container, GREEN, ImageView, Label, ModalView, RED, Setup, Shadow, Size, UIColor, ViewData,
-        ViewTest, WHITE, view, view_test,
+        ViewTest, WHITE, view,
     },
     ui_test::{check_colors, set_record_probe_count},
 };
@@ -65,7 +65,7 @@ impl ModalView for BlurModal {
 
 // The same busy background as the scrim test: strips, a photo and
 // text, so the blur and tint have every pipeline behind them.
-#[view_test]
+#[view]
 struct ModalBlurTest {
     #[init]
     white: Container,

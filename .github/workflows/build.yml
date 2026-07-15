@@ -71,8 +71,6 @@ jobs:
   build:
     name: Build
     needs: [quality]
-    env:
-      SKIP_UI_TESTS: 1
     strategy:
       fail-fast: false
       matrix:
@@ -108,8 +106,6 @@ jobs:
   linux:
     name: Build Linux
     needs: [quality]
-    env:
-      SKIP_UI_TESTS: 1
     strategy:
       fail-fast: false
       matrix:

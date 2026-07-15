@@ -3,10 +3,10 @@ use test_engine::{
     dispatch::from_main,
     refs::Weak,
     ui::{
-        Anchor, BLUE, LIGHTER_GRAY, Label, NumberView, Setup, TextAlignment, ViewData, ViewSubviews, WHITE,
-        ui_test, view,
+        Anchor, BLUE, LIGHTER_GRAY, Label, NumberView, Setup, TextAlignment, ViewData, ViewSubviews,
+        ViewTest, WHITE, view,
     },
-    ui_test::{UITest, helpers::check_colors, inject_touches},
+    ui_test::{helpers::check_colors, inject_touches},
 };
 
 #[view]
@@ -34,16 +34,15 @@ impl Setup for LabelSettings {
     }
 }
 
-#[ui_test]
-pub fn test_label() -> Result<()> {
-    let view = UITest::start::<LabelSettings>();
+impl ViewTest for LabelSettings {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        initial_label_colors()?;
+        stepper_changes_text_size()?;
+        blue_text_color(view)?;
+        left_right_aligned_labels(view)?;
 
-    initial_label_colors()?;
-    stepper_changes_text_size()?;
-    blue_text_color(view)?;
-    left_right_aligned_labels(view)?;
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn initial_label_colors() -> Result<()> {

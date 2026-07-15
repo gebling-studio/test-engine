@@ -5,9 +5,9 @@ use test_engine::{
     ui::{
         Anchor::{Top, X},
         CellRegistry, Container, LIGHT_BLUE, Label, Setup, TableData, TableView, View, ViewData,
-        ViewSubviews, WHITE, ui_test, view,
+        ViewSubviews, ViewTest, WHITE, view,
     },
-    ui_test::{UITest, helpers::check_colors},
+    ui_test::helpers::check_colors,
 };
 
 #[view]
@@ -239,13 +239,12 @@ fn check_cells_resizing_image(mut view: Weak<LabelImage>) -> Result<()> {
     )
 }
 
-#[ui_test]
-pub fn test_label_image() -> Result<()> {
-    let view = UITest::start::<LabelImage>();
+impl ViewTest for LabelImage {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        check_initial_images()?;
+        check_label_resizing_image(view)?;
+        check_cells_resizing_image(view)?;
 
-    check_initial_images()?;
-    check_label_resizing_image(view)?;
-    check_cells_resizing_image(view)?;
-
-    Ok(())
+        Ok(())
+    }
 }

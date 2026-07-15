@@ -94,7 +94,9 @@ pub type AndroidApp = winit::platform::android::activity::AndroidApp;
 #[cfg(target_os = "android")]
 pub type EventLoop = winit::event_loop::EventLoop<crate::window::Events>;
 
-#[allow(clippy::type_complexity)]
+/// Every UI test, from the engine, the corpus and the app. One map, filled by
+/// a ctor per view before `main`, so the count is known without running
+/// anything and nothing has to merge lists.
 pub static UI_TESTS: __internal_macro_deps::Mutex<
-    std::collections::BTreeMap<String, fn() -> anyhow::Result<()>>,
+    std::collections::BTreeMap<String, crate::ui_test::UITestEntry>,
 > = __internal_macro_deps::Mutex::new(std::collections::BTreeMap::new());

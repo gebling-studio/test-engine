@@ -1,8 +1,8 @@
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{BLACK, BLUE, Button, Container, GREEN, RED, Setup, ViewData, ViewSubviews, ui_test, view},
-    ui_test::{UITest, check_colors},
+    ui::{BLACK, BLUE, Button, Container, GREEN, RED, Setup, ViewData, ViewSubviews, ViewTest, view},
+    ui_test::check_colors,
 };
 
 #[view]
@@ -21,15 +21,14 @@ impl Setup for TilingLayout {
     }
 }
 
-#[ui_test]
-pub fn test_tiling_layout() -> anyhow::Result<()> {
-    let view = UITest::start::<TilingLayout>();
+impl ViewTest for TilingLayout {
+    fn perform_test(view: Weak<Self>) -> anyhow::Result<()> {
+        check_initial_tiles()?;
+        check_empty_menu(view)?;
+        check_button_tiles(view)?;
 
-    check_initial_tiles()?;
-    check_empty_menu(view)?;
-    check_button_tiles(view)?;
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn check_initial_tiles() -> anyhow::Result<()> {

@@ -2,8 +2,8 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{CLEAR, GREEN, ImageMode, ImageView, NoImage, Setup, UIManager, ViewData, ui_test, view},
-    ui_test::{UITest, check_colors},
+    ui::{CLEAR, GREEN, ImageMode, ImageView, NoImage, Setup, UIManager, ViewData, ViewTest, view},
+    ui_test::check_colors,
 };
 
 /// The image checks run against this view, not the root. The root is as big as
@@ -22,17 +22,16 @@ impl Setup for RootViewTest {
     }
 }
 
-#[ui_test]
-pub fn test_root_view() -> Result<()> {
-    let view = UITest::start::<RootViewTest>();
+impl ViewTest for RootViewTest {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        check_default_root()?;
+        check_green_root()?;
+        check_clear_root()?;
+        check_image_root(view)?;
+        check_no_image_root(view)?;
 
-    check_default_root()?;
-    check_green_root()?;
-    check_clear_root()?;
-    check_image_root(view)?;
-    check_no_image_root(view)?;
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn check_default_root() -> Result<()> {

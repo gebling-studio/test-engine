@@ -4,9 +4,9 @@ use test_engine::{
     refs::{Weak, weak_from_ref},
     ui::{
         Button, CellRegistry, Label, Setup, TableData, TableView, UIManager, View, ViewData, ViewSubviews,
-        WHITE, ui_test, view,
+        ViewTest, WHITE, view,
     },
-    ui_test::{UITest, check_colors, inject_touches},
+    ui_test::{check_colors, inject_touches},
 };
 
 #[view]
@@ -61,19 +61,18 @@ impl TableData for ScaleView {
     }
 }
 
-#[ui_test]
-pub fn test_scale() -> Result<()> {
-    let view = UITest::start::<ScaleView>();
+impl ViewTest for ScaleView {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        check_default_scale(view)?;
+        check_downscaled(view)?;
+        check_upscaled(view)?;
 
-    check_default_scale(view)?;
-    check_downscaled(view)?;
-    check_upscaled(view)?;
+        from_main(move || {
+            UIManager::override_scale(1);
+        });
 
-    from_main(move || {
-        UIManager::override_scale(1);
-    });
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn check_default_scale(view: Weak<ScaleView>) -> Result<()> {

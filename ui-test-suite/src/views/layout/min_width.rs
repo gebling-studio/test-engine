@@ -1,8 +1,8 @@
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{BLUE, Container, GREEN, Setup, ViewData, ViewFrame, ViewSubviews, ui_test, view},
-    ui_test::{UITest, check_colors},
+    ui::{BLUE, Container, GREEN, Setup, ViewData, ViewFrame, ViewSubviews, ViewTest, view},
+    ui_test::check_colors,
 };
 
 #[view]
@@ -24,15 +24,14 @@ impl Setup for MinWidth {
     }
 }
 
-#[ui_test]
-pub fn test_min_width() -> anyhow::Result<()> {
-    let view = UITest::start::<MinWidth>();
+impl ViewTest for MinWidth {
+    fn perform_test(view: Weak<Self>) -> anyhow::Result<()> {
+        check_initial_layout()?;
+        check_min_width_center_x(view)?;
+        check_min_height_center_y(view)?;
 
-    check_initial_layout()?;
-    check_min_width_center_x(view)?;
-    check_min_height_center_y(view)?;
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn check_initial_layout() -> anyhow::Result<()> {

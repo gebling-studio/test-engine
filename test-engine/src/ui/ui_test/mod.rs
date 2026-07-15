@@ -4,7 +4,6 @@ pub mod helpers;
 mod human;
 mod record;
 mod report;
-mod runner;
 pub mod state;
 mod suite;
 mod ui_test;
@@ -27,7 +26,6 @@ pub use record::{enable_color_recording, recording_colors, set_record_probe_coun
 pub(crate) use record::{reset_record_probe_count, set_record_canvas};
 use refs::Own;
 pub use report::failure_report;
-pub use runner::run_test_app;
 use serde::de::DeserializeOwned;
 pub use state::*;
 pub use suite::{TestRunReport, run_all_tests, run_test_map};

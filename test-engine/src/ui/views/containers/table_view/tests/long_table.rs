@@ -9,7 +9,7 @@ use crate::{
     gm::color::GRAY,
     ui::{
         CellRegistry, Container, Label, Setup, TableData, TableView, View, ViewData, ViewSubviews, ViewTest,
-        view_test,
+        view,
     },
     ui_test::inject_touches,
 };
@@ -17,7 +17,7 @@ use crate::{
 static N_CELLS: AtomicUsize = AtomicUsize::new(2_000_000);
 static INDEX: AtomicUsize = AtomicUsize::new(0);
 
-#[view_test]
+#[view]
 struct LongTableTest {
     #[init]
     table: TableView,

@@ -2,8 +2,8 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{Button, ImageView, NoImage, Setup, ViewFrame, WHITE, ui_test, view},
-    ui_test::{UITest, check_colors},
+    ui::{Button, ImageView, NoImage, Setup, ViewFrame, ViewTest, WHITE, view},
+    ui_test::check_colors,
 };
 
 #[view]
@@ -233,14 +233,13 @@ fn check_button_resizing_image(mut view: Weak<NineSegment>) -> Result<()> {
     )
 }
 
-#[ui_test]
-pub fn test_nine_segment() -> Result<()> {
-    let view = UITest::start::<NineSegment>();
+impl ViewTest for NineSegment {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        check_initial_segment()?;
+        check_wide_segment(view)?;
+        check_tall_segment(view)?;
+        check_button_resizing_image(view)?;
 
-    check_initial_segment()?;
-    check_wide_segment(view)?;
-    check_tall_segment(view)?;
-    check_button_resizing_image(view)?;
-
-    Ok(())
+        Ok(())
+    }
 }

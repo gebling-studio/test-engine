@@ -4,11 +4,11 @@ use refs::Weak;
 
 use crate::{
     gm::color::{BLUE, GREEN, RED, YELLOW},
-    ui::{Anchor::Left, Container, ImageView, Setup, ViewData, ViewTest, view_test},
+    ui::{Anchor::Left, Container, ImageView, Setup, ViewData, ViewTest, view},
     ui_test::check_colors,
 };
 
-#[view_test]
+#[view]
 struct Outline {
     #[init]
     square: Container,

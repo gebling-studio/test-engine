@@ -1,8 +1,8 @@
 use anyhow::Result;
 use test_engine::{
     refs::Weak,
-    ui::{BLUE, GREEN, HighlightView, Setup, ui_test, view},
-    ui_test::{UITest, check_colors},
+    ui::{BLUE, GREEN, HighlightView, Setup, ViewTest, view},
+    ui_test::check_colors,
 };
 
 #[view]
@@ -17,12 +17,10 @@ impl Setup for HighLightTestView {
     }
 }
 
-#[ui_test]
-pub fn test_highlight() -> Result<()> {
-    UITest::start::<HighLightTestView>();
-
-    check_colors(
-        r"
+impl ViewTest for HighLightTestView {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_colors(
+            r"
             392    4 -  89 124 149
             592    4 -  89 124 149
             128  128 -   0 255   0
@@ -56,7 +54,8 @@ pub fn test_highlight() -> Result<()> {
             300  592 -  89 124 149
             592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    Ok(())
+        Ok(())
+    }
 }

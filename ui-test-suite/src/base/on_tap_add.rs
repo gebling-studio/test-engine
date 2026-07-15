@@ -3,11 +3,10 @@ use test_engine::{
     refs::Weak,
     ui::{
         Button, CellRegistry, Container, GREEN, ImageView, Label, Setup, TURQUOISE, TableData, TableView,
-        View, ViewData, ViewSubviews, WHITE, ui_test,
+        View, ViewData, ViewSubviews, ViewTest, WHITE,
         ui_test::{helpers::check_colors, inject_touches},
         view,
     },
-    ui_test::UITest,
 };
 
 #[view]
@@ -58,26 +57,24 @@ impl Setup for AddOnTap {
     }
 }
 
-#[ui_test]
-pub fn test_add_on_tap() -> Result<()> {
-    let view = UITest::start::<AddOnTap>();
+impl ViewTest for AddOnTap {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        assert_eq!(view.dump_subviews(), vec!["AddOnTap.button: Button".to_string()]);
 
-    assert_eq!(view.dump_subviews(), vec!["AddOnTap.button: Button".to_string()]);
-
-    inject_touches(
-        "
+        inject_touches(
+            "
             25   25   b
             25   25   e
         ",
-    );
+        );
 
-    assert_eq!(
-        view.dump_subviews(),
-        vec!["AddOnTap.button: Button".to_string(), "SomeView".to_string()]
-    );
+        assert_eq!(
+            view.dump_subviews(),
+            vec!["AddOnTap.button: Button".to_string(), "SomeView".to_string()]
+        );
 
-    check_colors(
-        r"
+        check_colors(
+            r"
             4    4 - 255 255 255
             292    4 -  89 124 149
             592    4 -  89 124 149
@@ -111,7 +108,8 @@ pub fn test_add_on_tap() -> Result<()> {
             548  580 -   0 255 255
             4  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    Ok(())
+        Ok(())
+    }
 }

@@ -3,7 +3,7 @@ use test_engine::{
     AppRunner,
     dispatch::from_main,
     refs::{Weak, manage::DataManager},
-    ui::{Font, Label, Screenshot, Setup, U8Color, ViewFrame, ViewTest, view_test},
+    ui::{Font, Label, Screenshot, Setup, U8Color, ViewFrame, ViewTest, view},
     ui_test::check_colors,
 };
 
@@ -12,7 +12,7 @@ const TEXT: &str = "Grumpy wizards 123";
 const DEFAULT_FRAME: (u32, u32, u32, u32) = (20, 20, 400, 80);
 const CUSTOM_FRAME: (u32, u32, u32, u32) = (20, 120, 400, 80);
 
-#[view_test]
+#[view]
 struct LabelFont {
     #[init]
     default_label: Label,

@@ -2,11 +2,11 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{BLUE, Container, GREEN, Hover, RED, Setup, ViewData, ViewTest, ViewTouch, YELLOW, view_test},
+    ui::{BLUE, Container, GREEN, Hover, RED, Setup, ViewData, ViewTest, ViewTouch, YELLOW, view},
     ui_test::{check_colors, inject_touches},
 };
 
-#[view_test]
+#[view]
 struct HoverTest {
     log: Vec<(&'static str, bool)>,
 

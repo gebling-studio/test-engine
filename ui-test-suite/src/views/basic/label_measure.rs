@@ -2,10 +2,10 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::{Weak, manage::DataManager},
-    ui::{Font, Label, Setup, ViewFrame, ViewTest, view_test},
+    ui::{Font, Label, Setup, ViewFrame, ViewTest, view},
 };
 
-#[view_test]
+#[view]
 struct LabelMeasure {
     #[init]
     label: Label,

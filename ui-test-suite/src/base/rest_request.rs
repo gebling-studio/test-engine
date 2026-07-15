@@ -7,14 +7,14 @@ use test_engine::{
     dispatch::{from_main, on_main},
     net::{Request, RestAPI},
     refs::Weak,
-    ui::{Button, Label, Setup, Spinner, ViewFrame, ViewTest, async_link_button, ui_test, view_test},
+    ui::{Button, Label, Setup, Spinner, ViewFrame, ViewTest, async_link_button, view},
     ui_test::inject_touches,
 };
 
 static REST_API: RestAPI = RestAPI::new("https://jsonplaceholder.typicode.com/");
 static NOT_REQUESTED: AtomicBool = AtomicBool::new(false);
 
-#[view_test]
+#[view]
 struct RestRequest {
     #[init]
     button: Button,
@@ -61,6 +61,12 @@ impl Setup for RestRequest {
 
 impl ViewTest for RestRequest {
     fn perform_test(view: Weak<Self>) -> Result<()> {
+        // Talks to a real REST endpoint over the network, so a headless run
+        // builds the view and stops before the tap that sends the request.
+        if Window::headless() {
+            return Ok(());
+        }
+
         inject_touches(
             "
                 111  63   b
@@ -79,15 +85,4 @@ impl ViewTest for RestRequest {
 
         Ok(())
     }
-}
-
-#[ui_test]
-pub fn test_rest_request() -> Result<()> {
-    // Talks to a real REST endpoint over the network. The aggregator that used
-    // to call this skipped it on a headless run, so keep that.
-    if Window::headless() {
-        return Ok(());
-    }
-
-    run_ui_test()
 }

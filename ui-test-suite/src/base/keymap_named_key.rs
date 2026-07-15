@@ -2,11 +2,11 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{NamedKey, Setup, UIManager, ViewTest, view_test},
+    ui::{NamedKey, Setup, UIManager, ViewTest, view},
     ui_test::{inject_key, inject_named_key},
 };
 
-#[view_test]
+#[view]
 struct KeymapNamedKey {
     left:  u32,
     right: u32,

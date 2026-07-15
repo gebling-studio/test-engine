@@ -216,11 +216,11 @@ mod test {
     use crate::{
         self as test_engine,
         gm::color::{BLACK, LIGHTER_GRAY, WHITE},
-        ui::{Container, Setup, Spinner, ViewData, ViewFrame, ViewSubviews, ViewTest, view_test},
+        ui::{Container, Setup, Spinner, ViewData, ViewFrame, ViewSubviews, ViewTest, view},
         ui_test::check_colors,
     };
 
-    #[view_test]
+    #[view]
     struct TestSpinner {
         #[init]
         content: Container,

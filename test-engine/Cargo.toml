@@ -13,6 +13,11 @@ bench = []
 # The inspect server listens on the network and can edit any view, so it must
 # never reach a shipped app by accident. Off unless an app asks for it.
 inspect = []
+# Registers every `impl ViewTest` into `UI_TESTS`. The switch lives on the proc
+# macro, so off means `view` emits no ctor in any crate and a shipped app
+# carries none. One switch for the whole graph, so no crate can forget it and
+# silently lose its tests.
+ui-tests = ["ui-proc/ui-tests"]
 webgl = ["wgpu/webgl"]
 
 [dependencies]

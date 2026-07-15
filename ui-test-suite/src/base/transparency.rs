@@ -4,8 +4,8 @@ use test_engine::{
     gm::Apply,
     level::LevelManager,
     refs::Weak,
-    ui::{ImageView, Setup, ViewData, ui_test, view},
-    ui_test::{UITest, check_colors},
+    ui::{ImageView, Setup, ViewData, ViewTest, view},
+    ui_test::check_colors,
 };
 
 use crate::level::SkyboxLevel;
@@ -36,20 +36,18 @@ impl Setup for Transparency {
     }
 }
 
-#[ui_test]
-pub fn test_transparency() -> Result<()> {
-    UITest::start::<Transparency>();
+impl ViewTest for Transparency {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        from_main(|| {
+            LevelManager::set_level(SkyboxLevel::default());
+        });
 
-    from_main(|| {
-        LevelManager::set_level(SkyboxLevel::default());
-    });
+        from_main(|| {
+            LevelManager::stop_level();
+        });
 
-    from_main(|| {
-        LevelManager::stop_level();
-    });
-
-    check_colors(
-        r"
+        check_colors(
+            r"
             100    4 -  96 209  74
             308    4 -  54 123 128
             592    4 -   3   5 239
@@ -83,7 +81,8 @@ pub fn test_transparency() -> Result<()> {
             508  592 - 245 217  73
             592  592 - 251 251  83
         ",
-    )?;
+        )?;
 
-    Ok(())
+        Ok(())
+    }
 }

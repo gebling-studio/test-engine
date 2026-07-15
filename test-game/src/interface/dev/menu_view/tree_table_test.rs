@@ -6,7 +6,7 @@ use test_engine::{
     dispatch::from_main,
     gm::Toggle,
     refs::Weak,
-    ui::{CellRegistry, Setup, TableData, TableView, View, ViewData, ViewFrame, ViewTest, WHITE, view_test},
+    ui::{CellRegistry, Setup, TableData, TableView, View, ViewData, ViewFrame, ViewTest, WHITE, view},
     ui_test::{inject_touches, inject_touches_delayed},
 };
 
@@ -14,7 +14,7 @@ use crate::interface::dev::{MenuEntry, Node, NodeCell};
 
 static DATA: Mutex<String> = Mutex::new(String::new());
 
-#[view_test]
+#[view]
 struct TreeTableTest {
     root: Node<MenuEntry>,
 

@@ -3,10 +3,10 @@ use test_engine::{
     refs::Weak,
     ui::{
         Anchor::{Left, Top, X},
-        BLACK, Button, Container, GREEN, PURPLE, RED, Setup, TURQUOISE, ViewData, ViewSubviews, WHITE,
-        ui_test, view,
+        BLACK, Button, Container, GREEN, PURPLE, RED, Setup, TURQUOISE, ViewData, ViewSubviews, ViewTest,
+        WHITE, view,
     },
-    ui_test::{UITest, check_colors},
+    ui_test::check_colors,
 };
 
 #[view]
@@ -44,12 +44,10 @@ impl Setup for Gradient {
     }
 }
 
-#[ui_test]
-pub fn test_gradient() -> Result<()> {
-    UITest::start::<Gradient>();
-
-    check_colors(
-        r"
+impl ViewTest for Gradient {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_colors(
+            r"
              592    4 -  89 124 149
               52   24 - 250  60   0
              288   24 - 250 250 250
@@ -83,7 +81,8 @@ pub fn test_gradient() -> Result<()> {
              144  352 - 255  77  77
              592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    Ok(())
+        Ok(())
+    }
 }

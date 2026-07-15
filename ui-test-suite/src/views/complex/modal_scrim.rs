@@ -5,7 +5,7 @@ use test_engine::{
     refs::Weak,
     ui::{
         BLACK, Container, GREEN, ImageView, Label, ModalView, RED, Setup, Shadow, Size, UIColor, View,
-        ViewData, ViewTest, WHITE, WeakView, view, view_test,
+        ViewData, ViewTest, WHITE, WeakView, view,
     },
     ui_test::{check_colors, set_record_probe_count},
 };
@@ -91,7 +91,7 @@ fn dialog_look(card: WeakView, title: Weak<Label>, yes: Weak<Label>, no: Weak<La
 // The background imitates a real screen: color strips, a photo and
 // text. The scrim has to dim all of it while the modal on top stays
 // untouched.
-#[view_test]
+#[view]
 struct ModalScrimTest {
     #[init]
     white: Container,

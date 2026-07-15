@@ -7,7 +7,7 @@ use refs::Weak;
 use crate::{
     self as test_engine,
     gm::color::{BLUE, Color, GREEN, PURPLE, RED, YELLOW},
-    ui::{CellRegistry, Container, Setup, TableData, TableView, View, ViewData, ViewTest, view_test},
+    ui::{CellRegistry, Container, Setup, TableData, TableView, View, ViewData, ViewTest, view},
     ui_test::{check_colors, inject_scroll, inject_touches, set_record_probe_count},
 };
 
@@ -17,7 +17,7 @@ const PALETTE: [Color; 4] = [GREEN, BLUE, YELLOW, RED];
 
 // The backdrop behind the table has a color no cell uses, so the
 // gaps between cells expose it and the recorder pins probes there.
-#[view_test]
+#[view]
 struct TableSpacingTest {
     #[init]
     under: Container,

@@ -2,8 +2,8 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{Anchor, Setup, ViewData, ui_test, view},
-    ui_test::{UITest, helpers::check_colors, inject_keys, inject_touches, set_record_probe_count},
+    ui::{Anchor, Setup, ViewData, ViewTest, view},
+    ui_test::{helpers::check_colors, inject_keys, inject_touches, set_record_probe_count},
 };
 
 const TYPED_TEXT_PROBES: &str = r"
@@ -336,16 +336,19 @@ fn check_large_unicode_text(view: Weak<TextField>) -> Result<()> {
     check_colors(LARGE_UNICODE_PROBES)
 }
 
-#[ui_test]
-pub fn test_text_field() -> Result<()> {
+impl ViewTest for TextField {
     // 640 is the width of the smallest supported screen, and the 600 wide field
     // needs almost all of it.
-    let view = UITest::start_sized::<TextField>(640, 800);
+    fn canvas() -> (u32, u32) {
+        (640, 800)
+    }
 
-    set_record_probe_count(128);
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        set_record_probe_count(128);
 
-    check_typed_text()?;
-    check_large_unicode_text(view)?;
+        check_typed_text()?;
+        check_large_unicode_text(view)?;
 
-    Ok(())
+        Ok(())
+    }
 }

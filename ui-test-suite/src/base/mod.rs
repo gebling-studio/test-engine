@@ -16,7 +16,6 @@ mod root_view;
 mod scale;
 mod selection;
 mod styles;
-mod template;
 mod text_occlusion;
 mod touch_order;
 mod touch_stack;

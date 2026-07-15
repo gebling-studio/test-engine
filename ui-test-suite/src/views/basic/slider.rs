@@ -2,8 +2,8 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{Anchor, Label, Setup, ViewData, ViewFrame, ViewSubviews, WHITE, ui_test, view},
-    ui_test::{UITest, helpers::check_colors, inject_touches},
+    ui::{Anchor, Label, Setup, ViewData, ViewFrame, ViewSubviews, ViewTest, WHITE, view},
+    ui_test::{helpers::check_colors, inject_touches},
 };
 
 #[view]
@@ -238,18 +238,17 @@ fn check_labels_at_indicator_positions(mut view: Weak<Slider>) -> Result<()> {
     )
 }
 
-#[ui_test]
-pub fn test_slider() -> Result<()> {
-    let view = UITest::start::<Slider>();
+impl ViewTest for Slider {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        tap_sets_value(view);
+        drag_outside_does_not_change_value(view);
+        drag_sets_value(view);
+        drag_below_bottom_clamps_to_zero(view);
+        drag_above_top_clamps_to_one(view);
+        set_range_updates_value(view);
+        drag_to_bottom_of_range(view);
+        check_labels_at_indicator_positions(view)?;
 
-    tap_sets_value(view);
-    drag_outside_does_not_change_value(view);
-    drag_sets_value(view);
-    drag_below_bottom_clamps_to_zero(view);
-    drag_above_top_clamps_to_one(view);
-    set_range_updates_value(view);
-    drag_to_bottom_of_range(view);
-    check_labels_at_indicator_positions(view)?;
-
-    Ok(())
+        Ok(())
+    }
 }

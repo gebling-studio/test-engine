@@ -2,8 +2,8 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{Label, Setup, ViewData, WHITE, ui_test, view},
-    ui_test::{UITest, check_colors},
+    ui::{Label, Setup, ViewData, ViewTest, WHITE, view},
+    ui_test::check_colors,
 };
 
 #[view]
@@ -21,12 +21,10 @@ impl Setup for MultilineLabel {
     }
 }
 
-#[ui_test]
-pub fn test_multiline() -> Result<()> {
-    let view = UITest::start::<MultilineLabel>();
-
-    check_colors(
-        r"
+impl ViewTest for MultilineLabel {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        check_colors(
+            r"
             592    4 -  89 124 149
             24   24 - 255 255 255
             188   24 - 255 255 255
@@ -60,14 +58,14 @@ pub fn test_multiline() -> Result<()> {
             264  592 -  89 124 149
             592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    from_main(move || {
-        view.label.set_multiline(true);
-    });
+        from_main(move || {
+            view.label.set_multiline(true);
+        });
 
-    check_colors(
-        r"
+        check_colors(
+            r"
             532    4 -  89 124 149
             24   24 - 255 255 255
             108   24 - 255 255 255
@@ -101,7 +99,8 @@ pub fn test_multiline() -> Result<()> {
             4  592 -  89 124 149
             592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    Ok(())
+        Ok(())
+    }
 }

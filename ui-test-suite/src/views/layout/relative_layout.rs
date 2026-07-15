@@ -2,8 +2,8 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{BLUE, Container, GREEN, Setup, ViewData, ViewFrame, ViewSubviews, ui_test, view},
-    ui_test::{UITest, check_colors},
+    ui::{BLUE, Container, GREEN, Setup, ViewData, ViewFrame, ViewSubviews, ViewTest, view},
+    ui_test::check_colors,
 };
 
 #[view]
@@ -30,12 +30,10 @@ impl Setup for RelativeLayout {
     }
 }
 
-#[ui_test]
-pub fn test_relative_layout() -> Result<()> {
-    let view = UITest::start::<RelativeLayout>();
-
-    check_colors(
-        r"
+impl ViewTest for RelativeLayout {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        check_colors(
+            r"
             392    4 -  89 124 149
             592    4 -  89 124 149
             52   52 -   0   0 231
@@ -69,14 +67,14 @@ pub fn test_relative_layout() -> Result<()> {
             300  592 -  89 124 149
             592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    from_main(move || {
-        view.parent.set_size(280, 400);
-    });
+        from_main(move || {
+            view.parent.set_size(280, 400);
+        });
 
-    check_colors(
-        r"
+        check_colors(
+            r"
             432    4 -  89 124 149
             592    4 -  89 124 149
             52   52 -   0   0 231
@@ -110,7 +108,8 @@ pub fn test_relative_layout() -> Result<()> {
             368  592 -  89 124 149
             592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    Ok(())
+        Ok(())
+    }
 }

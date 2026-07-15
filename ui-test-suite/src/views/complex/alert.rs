@@ -1,8 +1,9 @@
 use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
-    ui::{Alert, RED, TextAlignment, ui_test, view},
-    ui_test::{UITest, check_colors, inject_touches},
+    refs::Weak,
+    ui::{Alert, RED, TextAlignment, ViewTest, view},
+    ui_test::{check_colors, inject_touches},
 };
 
 #[view]
@@ -193,14 +194,13 @@ fn check_alert_shown_again() -> Result<()> {
     )
 }
 
-#[ui_test]
-pub fn test_alert() -> Result<()> {
-    UITest::start::<AlertTestView>();
+impl ViewTest for AlertTestView {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_alert_shown()?;
+        check_alert_dismissed()?;
+        check_styled_alert()?;
+        check_alert_shown_again()?;
 
-    check_alert_shown()?;
-    check_alert_dismissed()?;
-    check_styled_alert()?;
-    check_alert_shown_again()?;
-
-    Ok(())
+        Ok(())
+    }
 }

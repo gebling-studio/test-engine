@@ -1,8 +1,8 @@
+use anyhow::Result;
 use log::debug;
 use test_engine::{
     refs::Weak,
-    ui::{KeyboardView, Setup, ViewData, ui_test, view},
-    ui_test::UITest,
+    ui::{KeyboardView, Setup, ViewData, ViewTest, view},
 };
 
 #[view]
@@ -17,11 +17,12 @@ impl Setup for KeyboardViewTest {
     }
 }
 
-#[ui_test]
-pub fn test_keyboard_view() {
-    let _view = UITest::start::<KeyboardViewTest>();
+impl ViewTest for KeyboardViewTest {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        //  record_ui_test().await;
 
-    //  record_ui_test().await;
+        debug!("Keyboard view: OK");
 
-    debug!("Keyboard view: OK");
+        Ok(())
+    }
 }

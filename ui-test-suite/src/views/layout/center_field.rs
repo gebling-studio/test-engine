@@ -1,8 +1,8 @@
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{BLUE, Container, GREEN, Setup, ViewData, ViewSubviews, ui_test, view},
-    ui_test::{UITest, check_colors},
+    ui::{BLUE, Container, GREEN, Setup, ViewData, ViewSubviews, ViewTest, view},
+    ui_test::check_colors,
 };
 
 #[view]
@@ -25,18 +25,17 @@ impl Setup for CenterField {
     }
 }
 
-#[ui_test]
-pub fn test_center_field() -> anyhow::Result<()> {
-    let view = UITest::start::<CenterField>();
+impl ViewTest for CenterField {
+    fn perform_test(view: Weak<Self>) -> anyhow::Result<()> {
+        check_initial_layout()?;
+        check_all_sides_200(view)?;
+        check_max_width(view)?;
+        check_all_sides_100(view)?;
+        check_center_x(view)?;
+        check_center_y_offset(view)?;
 
-    check_initial_layout()?;
-    check_all_sides_200(view)?;
-    check_max_width(view)?;
-    check_all_sides_100(view)?;
-    check_center_x(view)?;
-    check_center_y_offset(view)?;
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn check_initial_layout() -> anyhow::Result<()> {

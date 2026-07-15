@@ -4,13 +4,13 @@ use test_engine::{
     RenderPass,
     game::{Game, GameDrawer, Object, Shape},
     refs::{Own, Weak, manage::DataManager},
-    ui::{Image, Point, Setup, ViewCallbacks, ViewData, ViewTest, view_test},
+    ui::{Image, Point, Setup, ViewCallbacks, ViewData, ViewTest, view},
     ui_test::check_colors,
 };
 
 use crate::interface::HAS_BACK_BUTTON;
 
-#[view_test]
+#[view]
 pub struct GameView {
     game: Own<Game>,
 }

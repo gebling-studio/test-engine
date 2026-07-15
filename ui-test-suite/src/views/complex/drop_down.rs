@@ -1,8 +1,9 @@
+use anyhow::Result;
 use test_engine::{
     gm::Apply,
     refs::Weak,
-    ui::{DropDown, Setup, ViewData, ui_test, view},
-    ui_test::{UITest, inject_touches, inject_touches_delayed, state::append_state},
+    ui::{DropDown, Setup, ViewData, ViewTest, view},
+    ui_test::{inject_touches, inject_touches_delayed, state::append_state},
 };
 
 #[view]
@@ -29,15 +30,13 @@ impl Setup for DropDownTestView {
     }
 }
 
-#[ui_test]
-pub fn test_drop_down() {
-    let view = UITest::start::<DropDownTestView>();
+impl ViewTest for DropDownTestView {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        assert_eq!(view.top.value(), &"Dog");
+        assert_eq!(view.bot.value(), &"Car");
 
-    assert_eq!(view.top.value(), &"Dog");
-    assert_eq!(view.bot.value(), &"Car");
-
-    inject_touches_delayed(
-        r"
+        inject_touches_delayed(
+            r"
             334  35   b
             334  35   e
             322  68   b
@@ -47,15 +46,18 @@ pub fn test_drop_down() {
             326  536  b
             326  536  e
         ",
-    );
+        );
 
-    assert_eq!(view.top.value(), &"Cat");
+        assert_eq!(view.top.value(), &"Cat");
 
-    inject_touches(
-        "
+        inject_touches(
+            "
             228  32   b
             228  32   e
 
         ",
-    );
+        );
+
+        Ok(())
+    }
 }

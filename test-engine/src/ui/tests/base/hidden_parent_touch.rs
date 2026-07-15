@@ -4,11 +4,11 @@ use refs::Weak;
 
 use crate::{
     gm::color::{BLUE, RED},
-    ui::{Container, Setup, ViewData, ViewSubviews, ViewTest, ViewTouch, view_test},
+    ui::{Container, Setup, ViewData, ViewSubviews, ViewTest, ViewTouch, view},
     ui_test::inject_touches,
 };
 
-#[view_test]
+#[view]
 struct HiddenParentTouch {
     taps:  u32,
     child: Weak<Container>,

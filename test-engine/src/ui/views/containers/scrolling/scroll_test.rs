@@ -8,11 +8,11 @@ use crate::{
         Apply,
         color::{Color, TURQUOISE},
     },
-    ui::{Container, ScrollView, Setup, ViewData, ViewSubviews, ViewTest, view_test},
+    ui::{Container, ScrollView, Setup, ViewData, ViewSubviews, ViewTest, view},
     ui_test::{check_colors, inject_scroll, inject_touches},
 };
 
-#[view_test]
+#[view]
 struct ScrollViewTest {
     #[init]
     scroll: ScrollView,

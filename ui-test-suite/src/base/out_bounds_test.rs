@@ -3,11 +3,10 @@ use test_engine::{
     refs::Weak,
     ui::{
         Anchor::{self, Height, Width, Y},
-        ImageView, Label, NumberView, Setup, ViewData, ViewFrame, ViewSubviews, WHITE, ui_test,
+        ImageView, Label, NumberView, Setup, ViewData, ViewFrame, ViewSubviews, ViewTest, WHITE,
         ui_test::{helpers::check_colors, inject_touches},
         view,
     },
-    ui_test::UITest,
 };
 
 #[view]
@@ -51,18 +50,17 @@ impl Setup for OutBounds {
     }
 }
 
-#[ui_test]
-pub fn test_out_bounds() -> Result<()> {
-    UITest::start::<OutBounds>();
+impl ViewTest for OutBounds {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_out_bottom()?;
+        check_out_bottom_right()?;
+        check_out_top_right()?;
+        check_out_top_left()?;
+        check_out_left()?;
+        check_out_bottom_left()?;
 
-    check_out_bottom()?;
-    check_out_bottom_right()?;
-    check_out_top_right()?;
-    check_out_top_left()?;
-    check_out_left()?;
-    check_out_bottom_left()?;
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn check_out_bottom() -> Result<()> {

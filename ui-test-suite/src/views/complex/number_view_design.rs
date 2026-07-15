@@ -2,8 +2,8 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{BLUE, LIGHT_GRAY, NumberView, Setup, Style, ViewData, ViewSubviews, ui_test, view},
-    ui_test::{UITest, check_colors},
+    ui::{BLUE, LIGHT_GRAY, NumberView, Setup, Style, ViewData, ViewSubviews, ViewTest, view},
+    ui_test::check_colors,
 };
 
 const STYLE: Style = Style::new(|view| {
@@ -28,16 +28,16 @@ impl Setup for NumberViewDesign {
     }
 }
 
-#[ui_test]
-pub fn test_number_view_design() -> Result<()> {
-    from_main(|| {
-        STYLE.apply_globally::<NumberView>();
-    });
+impl ViewTest for NumberViewDesign {
+    fn before_start() {
+        from_main(|| {
+            STYLE.apply_globally::<NumberView>();
+        });
+    }
 
-    let _view = UITest::start::<NumberViewDesign>();
-
-    check_colors(
-        r"
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_colors(
+            r"
             4    4 -  89 124 149
             592    4 -  89 124 149
             240  204 -   0  20 230
@@ -71,11 +71,12 @@ pub fn test_number_view_design() -> Result<()> {
             4  592 -  89 124 149
             592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    from_main(|| {
-        STYLE.reset_global::<NumberView>();
-    });
+        from_main(|| {
+            STYLE.reset_global::<NumberView>();
+        });
 
-    Ok(())
+        Ok(())
+    }
 }

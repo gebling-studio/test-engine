@@ -4,14 +4,14 @@ use refs::Weak;
 
 use crate::{
     self as test_engine,
-    ui::{Setup, Switch, ViewData, ViewTest, view_test},
+    ui::{Setup, Switch, ViewData, ViewTest, view},
     ui_test::{check_colors, inject_touches},
 };
 
 /// Pins the iOS style switch look: rounded gray track with a white round
 /// knob on the left when off, green track with the knob on the right
 /// when on. Also covers the public `set_on`.
-#[view_test]
+#[view]
 struct SwitchLook {
     #[init]
     off: Switch,

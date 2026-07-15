@@ -1,8 +1,9 @@
+use anyhow::Result;
 use log::debug;
 use test_engine::{
     refs::{Own, Weak},
-    ui::{Label, Point, PointView, Setup, ViewData, ui_test, view},
-    ui_test::{UITest, inject_touches},
+    ui::{Label, Point, PointView, Setup, ViewData, ViewTest, view},
+    ui_test::inject_touches,
 };
 
 #[view]
@@ -27,12 +28,10 @@ impl Setup for PointTestView {
     }
 }
 
-#[ui_test]
-pub fn test_point_view() {
-    let view = UITest::start::<PointTestView>();
-
-    inject_touches(
-        r"
+impl ViewTest for PointTestView {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        inject_touches(
+            r"
             261  272  b
             261  272  e
             262  269  b
@@ -80,10 +79,13 @@ pub fn test_point_view() {
             141  187  b
             141  187  e
         ",
-    );
+        );
 
-    assert_eq!(view.point_view.point(), Point::new(16.0, -7.0));
-    assert_eq!(view.point, Point::new(143.0, -133.0));
+        assert_eq!(view.point_view.point(), Point::new(16.0, -7.0));
+        assert_eq!(view.point, Point::new(143.0, -133.0));
 
-    debug!("Point view: OK");
+        debug!("Point view: OK");
+
+        Ok(())
+    }
 }

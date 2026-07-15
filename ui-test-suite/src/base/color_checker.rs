@@ -3,8 +3,8 @@ use std::env::temp_dir;
 use anyhow::Result;
 use test_engine::{
     refs::Weak,
-    ui::{Container, GREEN, Setup, ViewData, ViewFrame, ui_test, view},
-    ui_test::{UITest, check_colors, recording_colors},
+    ui::{Container, GREEN, Setup, ViewData, ViewFrame, ViewTest, view},
+    ui_test::{check_colors, recording_colors},
 };
 
 #[view]
@@ -19,12 +19,10 @@ impl Setup for TestColorChecker {
     }
 }
 
-#[ui_test]
-pub fn test_color_checker() -> Result<()> {
-    let _view = UITest::start::<TestColorChecker>();
-
-    check_colors(
-        r"
+impl ViewTest for TestColorChecker {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_colors(
+            r"
             4    4 -  89 124 149
             304    4 -  89 124 149
             592    4 -  89 124 149
@@ -58,40 +56,40 @@ pub fn test_color_checker() -> Result<()> {
             200  592 -  89 124 149
             592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    // These assertions inspect the error text of a deliberately failing
-    // check. Record mode never fails checks, so they must not run there
-    // or the whole record pass dies on this test.
-    if !recording_colors() {
-        let error = check_colors(
-            r"
+        // These assertions inspect the error text of a deliberately failing
+        // check. Record mode never fails checks, so they must not run there
+        // or the whole record pass dies on this test.
+        if !recording_colors() {
+            let error = check_colors(
+                r"
                   76  215 -  89 124 149
                   90  214 -   0   0 255
                  112  213 -  89 124 149
             ",
-        )
-        .err()
-        .unwrap()
-        .to_string();
+            )
+            .err()
+            .unwrap()
+            .to_string();
 
-        assert!(error.starts_with(
-            r"
+            assert!(error.starts_with(
+                r"
         Test: Test color checker has failed.
         Color diff is too big: 510. Max: 45. Position: Point { x: 90.0, y: 214.0 }.
         Expected: r: 0, g: 0, b: 255, a: 255, got: r: 0, g: 255, b: 0, a: 255.
           90  214 -   0   0 255 ->   0 255   0"
-        ));
+            ));
 
-        let screenshot_path = temp_dir().join("ui_test_Test_color_checker.png");
+            let screenshot_path = temp_dir().join("ui_test_Test_color_checker.png");
 
-        assert!(error.contains(&format!("Failure screenshot: {}", screenshot_path.display())));
-        assert!(error.contains("View tree"));
-        assert!(screenshot_path.exists());
-    }
+            assert!(error.contains(&format!("Failure screenshot: {}", screenshot_path.display())));
+            assert!(error.contains("View tree"));
+            assert!(screenshot_path.exists());
+        }
 
-    check_colors(
-        r"
+        check_colors(
+            r"
             4    4 -  89 124 149
             304    4 -  89 124 149
             592    4 -  89 124 149
@@ -125,7 +123,8 @@ pub fn test_color_checker() -> Result<()> {
             200  592 -  89 124 149
             592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    Ok(())
+        Ok(())
+    }
 }

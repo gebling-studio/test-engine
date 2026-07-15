@@ -4,7 +4,7 @@ use test_engine::{
     refs::Weak,
     ui::{
         Anchor::{Top, X},
-        BLUE, Button, Setup, Style, ViewData, ViewSubviews, ui_test, view,
+        BLUE, Button, Setup, Style, ViewData, ViewSubviews, ViewTest, view,
     },
     ui_test::{UITest, check_colors},
 };
@@ -47,16 +47,16 @@ impl Setup for GlobalStyles {
     }
 }
 
-#[ui_test]
-pub fn test_global_styles() -> Result<()> {
-    from_main(|| {
-        GLOBAL_STYLE.apply_globally::<Button>();
-    });
+impl ViewTest for GlobalStyles {
+    fn before_start() {
+        from_main(|| {
+            GLOBAL_STYLE.apply_globally::<Button>();
+        });
+    }
 
-    UITest::start::<GlobalStyles>();
-
-    check_colors(
-        r"
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_colors(
+            r"
             452    4 -  89 124 149
             164   52 - 175 129 115
             212   52 - 175 129 115
@@ -90,16 +90,16 @@ pub fn test_global_styles() -> Result<()> {
             4  592 -  89 124 149
             592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    from_main(|| {
-        GLOBAL_STYLE.reset_global::<Button>();
-    });
+        from_main(|| {
+            GLOBAL_STYLE.reset_global::<Button>();
+        });
 
-    UITest::reload::<GlobalStyles>();
+        UITest::reload::<GlobalStyles>();
 
-    check_colors(
-        r"
+        check_colors(
+            r"
             592    4 -  89 124 149
             52   52 - 255 255 255
             196   52 - 255 255 255
@@ -133,7 +133,8 @@ pub fn test_global_styles() -> Result<()> {
             164  592 -  89 124 149
             592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    Ok(())
+        Ok(())
+    }
 }

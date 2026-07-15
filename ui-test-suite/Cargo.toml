@@ -13,7 +13,7 @@ pretty_assertions = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
-test-engine = { workspace = true, features = ["inspect"] }
+test-engine = { workspace = true, features = ["inspect", "ui-tests"] }
 
 [build-dependencies]
 plat = { workspace = true }

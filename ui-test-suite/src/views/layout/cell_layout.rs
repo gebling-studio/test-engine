@@ -3,10 +3,10 @@ use test_engine::{
     refs::Weak,
     ui::{
         Anchor::{Right, Top},
-        Button, Container, GREEN, Label, Setup, TURQUOISE, UIImages, ViewData, ViewSubviews, WHITE, YELLOW,
-        ui_test, view,
+        Button, Container, GREEN, Label, Setup, TURQUOISE, UIImages, ViewData, ViewSubviews, ViewTest, WHITE,
+        YELLOW, view,
     },
-    ui_test::{UITest, check_colors},
+    ui_test::check_colors,
 };
 
 #[view]
@@ -48,14 +48,13 @@ impl Setup for CellLayout {
     }
 }
 
-#[ui_test]
-pub fn test_cell_layout() -> anyhow::Result<()> {
-    let view = UITest::start::<CellLayout>();
+impl ViewTest for CellLayout {
+    fn perform_test(view: Weak<Self>) -> anyhow::Result<()> {
+        check_initial_layout()?;
+        check_reapplied_placement(view)?;
 
-    check_initial_layout()?;
-    check_reapplied_placement(view)?;
-
-    Ok(())
+        Ok(())
+    }
 }
 
 fn check_initial_layout() -> anyhow::Result<()> {

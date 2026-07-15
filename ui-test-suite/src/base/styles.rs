@@ -2,8 +2,8 @@ use anyhow::Result;
 use test_engine::{
     gm::Apply,
     refs::Weak,
-    ui::{Anchor::Top, Button, ORANGE, Setup, Style, ViewData, ViewSubviews, ui_test, view},
-    ui_test::{UITest, check_colors},
+    ui::{Anchor::Top, Button, ORANGE, Setup, Style, ViewData, ViewSubviews, ViewTest, view},
+    ui_test::check_colors,
 };
 
 const MENU_BUTTON: Style = Style::new(|view| {
@@ -41,12 +41,10 @@ impl Setup for Styles {
     }
 }
 
-#[ui_test]
-pub fn test_styles() -> Result<()> {
-    UITest::start::<Styles>();
-
-    check_colors(
-        r"
+impl ViewTest for Styles {
+    fn perform_test(_view: Weak<Self>) -> Result<()> {
+        check_colors(
+            r"
             592    4 -  89 124 149
             92   80 -  75 129 244
             248   92 - 255 203   0
@@ -80,7 +78,8 @@ pub fn test_styles() -> Result<()> {
             352  592 -  89 124 149
             592  592 -  89 124 149
         ",
-    )?;
+        )?;
 
-    Ok(())
+        Ok(())
+    }
 }

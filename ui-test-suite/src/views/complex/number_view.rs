@@ -1,11 +1,12 @@
+use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
     ui::{
         Anchor::{Bot, Height, Left, Right, Width, X, Y},
-        Label, NumberView, Setup, ViewData, ui_test, view,
+        Label, NumberView, Setup, ViewData, ViewTest, view,
     },
-    ui_test::{UITest, inject_touches},
+    ui_test::inject_touches,
 };
 
 #[view]
@@ -454,11 +455,12 @@ fn tap_down_clamps_to_min(view: Weak<NumberTestView>) {
     assert!((view.int.value() + 10.0).abs() < f32::EPSILON);
 }
 
-#[ui_test]
-pub fn test_number_view() {
-    let view = UITest::start::<NumberTestView>();
+impl ViewTest for NumberTestView {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        tap_buttons_then_clamp_to_min(view);
+        tap_up_to_five(view);
+        tap_down_clamps_to_min(view);
 
-    tap_buttons_then_clamp_to_min(view);
-    tap_up_to_five(view);
-    tap_down_clamps_to_min(view);
+        Ok(())
+    }
 }

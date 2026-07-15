@@ -6,7 +6,7 @@ use crate::{
     self as test_engine,
     gm::color::BLACK,
     ui::{
-        CellRegistry, Setup, Spinner, TableData, TableView, View, ViewData, ViewTest, view_test,
+        CellRegistry, Setup, Spinner, TableData, TableView, View, ViewData, ViewTest, view,
         views::containers::table_view::tests::infinite_scroll::{
             basic_scroll::test_basic_scroll, infinite_cell::InfiniteCell,
         },
@@ -14,7 +14,7 @@ use crate::{
     ui_test::{inject_scroll, inject_touches},
 };
 
-#[view_test]
+#[view]
 pub struct InfiniteScrollTest {
     pub page_size: usize,
 

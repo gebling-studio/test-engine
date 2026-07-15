@@ -187,13 +187,13 @@ mod test {
     use crate::{
         self as test_engine,
         gm::color::Color,
-        ui::{CellRegistry, Label, Setup, TableData, TableView, View, ViewData, ViewTest, view_test},
+        ui::{CellRegistry, Label, Setup, TableData, TableView, View, ViewData, ViewTest, view},
         ui_test::{inject_scroll, inject_touches},
     };
 
     static TEST_DATA: Mutex<String> = Mutex::new(String::new());
 
-    #[view_test]
+    #[view]
     struct TableView2Test {
         #[init]
         table: TableView,

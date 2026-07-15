@@ -2,8 +2,8 @@ use anyhow::Result;
 use test_engine::{
     dispatch::from_main,
     refs::Weak,
-    ui::{GREEN, Label, Setup, TableData, TableView, View, ViewData, ViewFrame, ui_test, view},
-    ui_test::{UITest, check_colors, inject_scroll},
+    ui::{GREEN, Label, Setup, TableData, TableView, View, ViewData, ViewFrame, ViewTest, view},
+    ui_test::{check_colors, inject_scroll},
 };
 
 #[view]
@@ -161,17 +161,16 @@ fn check_resized_table(view: Weak<TableViewResize>) -> Result<()> {
     )
 }
 
-#[ui_test]
-pub fn test_table_view_resize() -> Result<()> {
-    let view = UITest::start::<TableViewResize>();
+impl ViewTest for TableViewResize {
+    fn perform_test(view: Weak<Self>) -> Result<()> {
+        check_initial_cell()?;
+        check_cell_after_scroll()?;
+        check_resized_table(view)?;
 
-    check_initial_cell()?;
-    check_cell_after_scroll()?;
-    check_resized_table(view)?;
+        for i in 0..5 {
+            inject_scroll(-i);
+        }
 
-    for i in 0..5 {
-        inject_scroll(-i);
+        Ok(())
     }
-
-    Ok(())
 }

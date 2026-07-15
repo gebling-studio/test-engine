@@ -10,8 +10,9 @@ use parking_lot::Mutex;
 use refs::{Own, Weak};
 
 use crate::{
+    UI_TESTS,
     gm::{LossyConvert, color::GRAY_BLUE},
-    ui::{Setup, UIManager, View, ViewData, ViewTest},
+    ui::{MaybeUITest, Setup, UIManager, View, ViewData},
     ui_test::{clear_state, hold_for_human, human_mode, reset_record_probe_count, set_record_canvas},
     window::Window,
 };
@@ -88,22 +89,22 @@ fn print_fps_report() {
 pub struct UITest;
 
 impl UITest {
-    pub fn start<T: View + ViewTest + Default + 'static>() -> Weak<T> {
+    pub fn start<T: View + Default + 'static>() -> Weak<T> {
         Self::set(T::new(), 600, 600, true, get_test_name::<T>())
     }
 
     /// A canvas other than the default 600 by 600. It must still fit the
     /// smallest supported screen, which is 640 by 1136 pixels.
-    pub fn start_sized<T: View + ViewTest + Default + 'static>(width: u32, height: u32) -> Weak<T> {
+    pub fn start_sized<T: View + Default + 'static>(width: u32, height: u32) -> Weak<T> {
         Self::set(T::new(), width, height, true, get_test_name::<T>())
     }
 
-    pub fn reload<T: View + ViewTest + Default + 'static>() -> Weak<T> {
+    pub fn reload<T: View + Default + 'static>() -> Weak<T> {
         Self::set(T::new(), 600, 600, false, get_test_name::<T>())
     }
 
     /// Rebuild the view on a different canvas without starting a new test.
-    pub fn reload_sized<T: View + ViewTest + Default + 'static>(width: u32, height: u32) -> Weak<T> {
+    pub fn reload_sized<T: View + Default + 'static>(width: u32, height: u32) -> Weak<T> {
         Self::set(T::new(), width, height, false, get_test_name::<T>())
     }
 
@@ -114,6 +115,18 @@ impl UITest {
         test_start: bool,
         new_test_name: String,
     ) -> Weak<T> {
+        let weak = view.weak();
+        Self::install_root(view, width, height, test_start, new_test_name);
+        weak
+    }
+
+    /// Start a test whose root is not the test view itself, see
+    /// [`ViewTest::make_root`](crate::ui::ViewTest::make_root).
+    pub fn set_root(view: Own<dyn View>, width: u32, height: u32, new_test_name: String) {
+        Self::install_root(view, width, height, true, new_test_name);
+    }
+
+    fn install_root(view: Own<dyn View>, width: u32, height: u32, test_start: bool, new_test_name: String) {
         if test_start {
             let test_name = TEST_NAME.lock().clone();
 
@@ -142,7 +155,6 @@ impl UITest {
         wait_for_next_frame();
 
         from_main(move || {
-            let weak = view.weak();
             let mut root = UIManager::root_view();
             root.clear_root();
             root.reset_background();
@@ -151,8 +163,7 @@ impl UITest {
             root.add_subview_to_root(view).place().back();
 
             trace!("{width} - {height}");
-            weak
-        })
+        });
     }
 
     pub fn finish() {
@@ -170,17 +181,41 @@ impl UITest {
     }
 }
 
-/// The name a view test answers to.
+/// One registered UI test.
+#[derive(Clone, Copy)]
+pub struct UITestEntry {
+    pub run:  fn() -> anyhow::Result<()>,
+    /// Source file of the `impl ViewTest` that declared it.
+    pub file: &'static str,
+}
+
+/// Registers `T` if, and only if, it implements [`ViewTest`].
 ///
-/// `#[view_test]` registers under this and `UITest::start` reports under it, so
-/// the name printed by a failing test is always a name `--test-name` accepts.
-/// Anything that derives one of the two on its own drifts from the other.
-pub fn get_test_name<T>() -> String {
-    let input = type_name::<T>();
+/// Called from a ctor that `#[view]` puts on every view, so `impl ViewTest for
+/// X` is the whole declaration of a test. There is no attribute to forget and
+/// no second list to update, which is what stops a test from quietly ceasing to
+/// exist.
+pub fn register_if_test<T: View + Default + 'static>(file: &'static str) {
+    let Some(run) = <T as MaybeUITest>::__ui_test() else {
+        return;
+    };
 
-    let last_part = input.split("::").last().unwrap();
+    let name = get_test_name::<T>();
 
-    last_part
+    assert!(
+        UI_TESTS.lock().insert(name.clone(), UITestEntry { run, file }).is_none(),
+        "Duplicate ui test: {name}. The registry keys on the type name alone, so \
+         two test views sharing one name collide even from different crates.",
+    );
+}
+
+/// The one rule turning a view's ident into the name its test answers to.
+///
+/// `ScrollViewTest` becomes `Scroll view test`. Already spaced input is
+/// returned unchanged, so `--test-name` takes either spelling and callers never
+/// have to know which one they hold.
+pub fn spaced_test_name(ident: &str) -> String {
+    ident
         .chars()
         .enumerate()
         .map(|(i, c)| {
@@ -190,5 +225,18 @@ pub fn get_test_name<T>() -> String {
                 c.to_string()
             }
         })
-        .collect::<String>()
+        .collect()
+}
+
+/// The name a view test answers to.
+///
+/// `#[view]` registers under this and `UITest::start` reports under it, so
+/// the name printed by a failing test is always a name `--test-name` accepts.
+/// Anything that derives one of the two on its own drifts from the other.
+pub fn get_test_name<T>() -> String {
+    let input = type_name::<T>();
+
+    let last_part = input.split("::").last().unwrap();
+
+    spaced_test_name(last_part)
 }

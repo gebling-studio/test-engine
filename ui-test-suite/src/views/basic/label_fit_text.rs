@@ -2,11 +2,11 @@ use anyhow::Result;
 use test_engine::{
     dispatch::{from_main, wait_for_next_frame},
     refs::Weak,
-    ui::{GREEN, Label, Setup, TextAlignment, ViewData, ViewFrame, ViewTest, YELLOW, view_test},
+    ui::{GREEN, Label, Setup, TextAlignment, ViewData, ViewFrame, ViewTest, YELLOW, view},
     ui_test::check_colors,
 };
 
-#[view_test]
+#[view]
 struct LabelFitText {
     #[init]
     tag:      Label,
