@@ -59,3 +59,39 @@ Do not swap either back to crates.io without checking on an old device first.
 The A7 reports missing downlevel flags: indirect execution, base vertex and cube array
 texturing. Rendering works, but a UI test that leans on those paths will fail there and
 pass everywhere else.
+
+## An A7 draws nothing from a fat shader
+
+**An A7 GPU draws nothing at all from a shader carrying more than eight float components
+from the vertex stage to the fragment stage.** It builds, wgpu validates it, Metal accepts
+the pipeline, and no pixels come out. No error, no warning, nothing in the log. Twelve
+components in total counting `@builtin(position)`.
+
+Measured, not guessed. Eight components draw, nine do not. Locations are irrelevant, eight
+components spread over eight locations draw fine while nine over nine do not.
+`@interpolate(flat)` does not help.
+
+Nothing models this limit. wgpu counts locations against `max_inter_stage_shader_variables`,
+15 on this device, and Apple's tables allow 60 components, so both call these shaders legal.
+The hardware is not the problem either, OpenGL ES 2.0 guaranteed 32 components in 2007 and
+an A7 is a full ES 3.0 part. naga's MSL output is correct, a nine component shader differs
+from an eight component one by exactly one valid `[[user(locN), center_perspective]]` line.
+It is an Apple driver bug on a deprecated chip and there is nothing to fix in the fork.
+
+The UI shaders stay under the limit by keeping per-instance constants out of the
+interpolator. Almost nothing a rect shader carries actually varies across the shape, only
+`uv` does, so the rest is read from a storage buffer indexed by a flat `@builtin(instance_index)`.
+`ui_rect` went from 17 components to 3 that way, `ui_image` 15 to 5, `ui_gradient` 17 to 4,
+`ui_shadow` 13 to 3 and `ui_backdrop` 17 to 3, with no visual change at all and every
+`check_colors` block still passing untouched.
+
+**If a shader renders on a Mac and draws nothing on the phone, count its varyings first.**
+That is the single most likely cause and it costs nothing to check.
+
+An instance struct that a fragment stage reads through a storage buffer follows `std430`: a
+`vec4` must start at a multiple of 16 and the struct size rounds up to a multiple of 16.
+Rust packs a `repr(C)` struct at 4 byte alignment, so the fields are ordered vec4s first
+with explicit tail padding. Reordering one silently feeds every shader that shares it
+whatever landed at the offset it expected — `ui_backdrop.wgsl` shares `UIRectInstance` with
+`ui_rect.wgsl` and broke exactly that way. The layout tests next to each instance struct
+exist to catch it.

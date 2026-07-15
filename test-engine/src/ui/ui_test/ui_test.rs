@@ -170,7 +170,12 @@ impl UITest {
     }
 }
 
-fn get_test_name<T>() -> String {
+/// The name a view test answers to.
+///
+/// `#[view_test]` registers under this and `UITest::start` reports under it, so
+/// the name printed by a failing test is always a name `--test-name` accepts.
+/// Anything that derives one of the two on its own drifts from the other.
+pub fn get_test_name<T>() -> String {
     let input = type_name::<T>();
 
     let last_part = input.split("::").last().unwrap();

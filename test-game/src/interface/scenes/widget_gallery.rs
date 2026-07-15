@@ -66,15 +66,16 @@ impl WidgetGallery {
     }
 
     fn add_widgets(self: Weak<Self>) {
-        let btn = self.tile("Button").add_view::<Button>();
-        btn.set_text("Tap me")
+        let button = self.tile("Button").add_view::<Button>();
+        button
+            .set_text("Tap me")
             .set_color(ACCENT)
             .set_text_color(WHITE)
             .set_corner_radius(8);
-        btn.on_tap(|| {
+        button.on_tap(|| {
             Alert::show("Hello from the widget gallery");
         });
-        btn.place().t(48).center_x().size(120, 40);
+        button.place().t(48).center_x().size(120, 40);
 
         self.tile("CheckBox")
             .add_view::<CheckBox>()
@@ -104,13 +105,14 @@ impl WidgetGallery {
         let target = panel.add_view::<Container>();
         target.set_color(BG).set_corner_radius(8);
         target.place().t(34).center_x().size(80, 56);
-        let btn = panel.add_view::<Button>();
-        btn.set_text("Toggle")
+        let button = panel.add_view::<Button>();
+        button
+            .set_text("Toggle")
             .set_color(ACCENT)
             .set_text_color(WHITE)
             .set_corner_radius(8);
-        btn.place().b(10).center_x().size(120, 30);
-        btn.on_tap(move || self.toggle_spin(target.weak_view()));
+        button.place().b(10).center_x().size(120, 30);
+        button.on_tap(move || self.toggle_spin(target.weak_view()));
 
         let mut drop = self.tile("DropDown").add_view::<DropDown<&'static str>>();
         drop.set_values(vec!["One", "Two", "Three"]);

@@ -1,9 +1,15 @@
 use std::ops::Range;
 
 use bytemuck::{Pod, cast_slice};
-use wgpu::{Buffer, BufferDescriptor, BufferSlice, BufferUsages, COPY_BUFFER_ALIGNMENT};
+use wgpu::{Buffer, BufferDescriptor, BufferSlice, BufferUsages};
 
 use crate::window::Window;
+
+/// Instances are bound as a storage buffer as well as a vertex buffer, and a
+/// storage binding may only start at a multiple of this.
+fn storage_alignment() -> u64 {
+    Window::device().limits().min_storage_buffer_offset_alignment.into()
+}
 
 /// CPU-side instance list backed by a persistent GPU buffer.
 ///
@@ -38,6 +44,16 @@ impl<T> VecBuffer<T> {
     pub(crate) fn slice(&self) -> BufferSlice<'_> {
         self.buffer.slice(self.range.clone())
     }
+
+    pub(crate) fn buffer(&self) -> &Buffer {
+        &self.buffer
+    }
+
+    /// Bytes the last `load()` landed at. A storage binding needs this to point
+    /// the shader at the same instances the vertex stage draws.
+    pub(crate) fn range(&self) -> &Range<u64> {
+        &self.range
+    }
 }
 
 impl<T: Pod> VecBuffer<T> {
@@ -58,7 +74,7 @@ impl<T: Pod> VecBuffer<T> {
             self.buffer = Window::device().create_buffer(&BufferDescriptor {
                 label:              Some("VecBuffer"),
                 size:               size.max(self.buffer.size() * 2).max(4096),
-                usage:              BufferUsages::VERTEX | BufferUsages::COPY_DST,
+                usage:              BufferUsages::VERTEX | BufferUsages::STORAGE | BufferUsages::COPY_DST,
                 mapped_at_creation: false,
             });
             self.offset = 0;
@@ -67,7 +83,7 @@ impl<T: Pod> VecBuffer<T> {
         Window::queue().write_buffer(&self.buffer, self.offset, bytes);
 
         self.range = self.offset..self.offset + size;
-        self.offset = self.range.end.next_multiple_of(COPY_BUFFER_ALIGNMENT);
+        self.offset = self.range.end.next_multiple_of(storage_alignment());
         self.len = self.data.len().try_into().unwrap();
         self.data.clear();
     }
@@ -81,7 +97,7 @@ impl<T> Default for VecBuffer<T> {
             buffer: Window::device().create_buffer(&BufferDescriptor {
                 label:              Some("VecBuffer"),
                 size:               0,
-                usage:              BufferUsages::VERTEX | BufferUsages::COPY_DST,
+                usage:              BufferUsages::VERTEX | BufferUsages::STORAGE | BufferUsages::COPY_DST,
                 mapped_at_creation: false,
             }),
             range:  0..0,

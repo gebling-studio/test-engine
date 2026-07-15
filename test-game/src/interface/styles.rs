@@ -2,9 +2,9 @@ use test_engine::ui::{Button, Container, Style, ViewData, ViewSubviews};
 
 use crate::interface::home_view::HomeView;
 
-pub static BUTTON: Style = Style::new(|btn| {
-    btn.set_color((18, 208, 255));
-    btn.set_corner_radius(5);
+pub static BUTTON: Style = Style::new(|button| {
+    button.set_color((18, 208, 255));
+    button.set_corner_radius(5);
 });
 
 // A "Back" button that returns to the home dashboard. Geometry and text

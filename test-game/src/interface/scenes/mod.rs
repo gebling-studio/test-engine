@@ -29,15 +29,16 @@ pub const HEADER_HEIGHT: f32 = 56.0;
 /// A themed "Back" button pinned top-left that returns to the home
 /// dashboard. For scenes that float controls over a game level.
 pub fn add_back_button<T: View>(view: Weak<T>) {
-    let btn = view.add_view::<Button>();
-    btn.set_color(ACCENT)
+    let button = view.add_view::<Button>();
+    button
+        .set_color(ACCENT)
         .set_text_color(WHITE)
         .set_corner_radius(10)
         .set_text("Back");
-    btn.on_tap(|| {
+    button.on_tap(|| {
         UIManager::set_view(HomeView::new());
     });
-    btn.place().tl(20).size(90, 40);
+    button.place().tl(20).size(90, 40);
 }
 
 /// A shared scene top bar: a back button on the left and a left aligned

@@ -17,6 +17,9 @@ pub enum AppCommand {
         total:    usize,
         failures: Vec<TestFailureRepr>,
     },
+    /// Unix seconds of when the app's Rust code was compiled, see
+    /// `test-engine/build.rs`.
+    BuildTime(u64),
     UI(UIResponse),
 }
 

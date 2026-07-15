@@ -37,9 +37,7 @@ static CURSOR_POSITION: MainLock<Point> = MainLock::new();
 const SCROLL_SPEED: f32 = 0.25;
 
 pub struct AppRunner {
-    pub(crate) app:        Box<dyn App>,
-    pub(crate) first_view: Option<Own<dyn View>>,
-    pub cursor_position:   Point,
+    pub cursor_position: Point,
 }
 
 impl AppRunner {
@@ -128,17 +126,15 @@ impl AppRunner {
         #[cfg(mobile)]
         crate::assets::Assets::init(std::path::PathBuf::default());
 
-        let first_view = Some(app.make_root_view());
+        crate::app::set_app(app);
 
         Self {
-            app,
             cursor_position: Point::default(),
-            first_view,
         }
     }
 
     #[cfg(target_os = "android")]
-    pub async fn start(first_view: Own<dyn View>, app: crate::AndroidApp) -> Result<()> {
+    pub async fn start(app: Box<dyn App>, android_app: crate::AndroidApp) -> Result<()> {
         std::panic::set_hook(Box::new(|pan| {
             let backtrace = std::backtrace::Backtrace::force_capture();
             eprintln!("{pan}");
@@ -154,10 +150,12 @@ impl AppRunner {
 
         android_logger::init_once(android_logger::Config::default().with_max_level(log::LevelFilter::Warn));
 
-        let event_loop: crate::EventLoop =
-            crate::EventLoop::with_user_event().with_android_app(app).build().unwrap();
+        let event_loop: crate::EventLoop = crate::EventLoop::with_user_event()
+            .with_android_app(android_app)
+            .build()
+            .unwrap();
 
-        Window::start(Self::new(first_view), event_loop).await
+        Window::start(Self::new(app), event_loop).await
     }
 
     #[cfg(not_wasm)]
@@ -256,7 +254,7 @@ impl crate::window::WindowEvents for AppRunner {
             Pipelines::initialize();
 
             let mut root = UIManager::root_view();
-            let view = root.add_subview_to_root(self.first_view.take().unwrap());
+            let view = root.add_subview_to_root(crate::app::app().make_root_view());
             view.place().back();
 
             UIManager::on_scale_changed(root, move |scale| {
@@ -285,7 +283,7 @@ impl crate::window::WindowEvents for AppRunner {
             {
                 #[cfg(desktop)]
                 {
-                    Window::current().set_size(self.app.initial_size().lossy_convert());
+                    Window::current().set_size(crate::app::app().initial_size().lossy_convert());
                 }
                 #[cfg(feature = "inspect")]
                 crate::inspect::InspectService::start_listening();
@@ -302,7 +300,7 @@ impl crate::window::WindowEvents for AppRunner {
                 call_inspect(UIManager::root_view());
             });
 
-            self.app.after_launch();
+            crate::app::app().after_launch();
 
             #[cfg(not_wasm)]
             hreads::spawn(async {

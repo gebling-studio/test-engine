@@ -74,6 +74,13 @@ impl RootView {
         self.rescale_root(crate::ui::UIManager::scale());
     }
 
+    /// Unpin the root and let it fill the screen again. A run that leaves the
+    /// canvas pinned leaves the app boxed into the test's rectangle.
+    pub(crate) fn clear_test_canvas(mut self: Weak<Self>) {
+        self.test_canvas = None;
+        self.rescale_root(crate::ui::UIManager::scale());
+    }
+
     pub(crate) fn resize_root(
         mut self: Weak<Self>,
         inner_pos: Point,

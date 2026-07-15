@@ -5949,6 +5949,7 @@ dependencies = [
  "sysinfo 0.39.5",
  "test-engine",
  "tokio",
+ "ui-test-suite",
 ]
 
 [[package]]
@@ -6395,14 +6396,25 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "log",
+ "test-engine",
+ "test-game",
+ "ui-test-suite",
+]
+
+[[package]]
+name = "ui-test-suite"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
  "instant",
  "log",
  "parking_lot",
+ "plat 0.9.0",
  "pretty_assertions",
  "serde",
  "serde_json",
  "test-engine",
- "test-game",
 ]
 
 [[package]]

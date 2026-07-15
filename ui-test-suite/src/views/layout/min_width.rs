@@ -1,0 +1,167 @@
+use test_engine::{
+    dispatch::from_main,
+    refs::Weak,
+    ui::{BLUE, Container, GREEN, Setup, ViewData, ViewFrame, ViewSubviews, ui_test, view},
+    ui_test::{UITest, check_colors},
+};
+
+#[view]
+struct MinWidth {
+    view: Weak<Container>,
+
+    #[init]
+    container: Container,
+}
+
+impl Setup for MinWidth {
+    fn setup(mut self: Weak<Self>) {
+        self.container.set_color(GREEN);
+        self.container.set_size(400, 400).set_position((20, 20));
+
+        self.view = self.container.add_view();
+        self.view.set_color(BLUE);
+        self.view.place().all_sides(150);
+    }
+}
+
+#[ui_test]
+pub fn test_min_width() -> anyhow::Result<()> {
+    let view = UITest::start::<MinWidth>();
+
+    check_initial_layout()?;
+    check_min_width_center_x(view)?;
+    check_min_height_center_y(view)?;
+
+    Ok(())
+}
+
+fn check_initial_layout() -> anyhow::Result<()> {
+    check_colors(
+        r"
+            500    4 -  89 124 149
+            24   24 -   0 255   0
+            176   24 -   0 255   0
+            356   24 -   0 255   0
+            264   72 -   0 255   0
+            104  108 -   0 255   0
+            592  112 -  89 124 149
+            416  156 -   0 255   0
+            196  172 -   0   0 231
+            268  172 -   0   0 231
+            232  180 -   0   0 231
+            24  184 -   0 255   0
+            172  192 -   0   0 231
+            196  212 -   0   0 231
+            232  220 -   0   0 231
+            268  228 -   0   0 231
+            172  240 -   0   0 231
+            560  252 -  89 124 149
+            212  268 -   0   0 231
+            264  268 -   0   0 231
+            72  284 -   0 255   0
+            424  300 -  89 124 149
+            24  384 -   0 255   0
+            592  396 -  89 124 149
+            328  404 -   0 255   0
+            188  416 -   0 255   0
+            444  480 -  89 124 149
+            148  560 -  89 124 149
+            296  564 -  89 124 149
+            4  592 -  89 124 149
+            412  592 -  89 124 149
+            592  592 -  89 124 149
+        ",
+    )?;
+
+    Ok(())
+}
+
+fn check_min_width_center_x(view: Weak<MinWidth>) -> anyhow::Result<()> {
+    from_main(move || {
+        view.view.place().min_width(250).center_x();
+    });
+
+    check_colors(
+        r"
+            480    4 -  89 124 149
+            24   24 -   0 255   0
+            172   24 -   0 255   0
+            320   24 -   0 255   0
+            592   76 -  89 124 149
+            100   80 -   0 255   0
+            248   88 -   0 255   0
+            416  120 -   0 255   0
+            96  172 -   0   0 231
+            200  172 -   0   0 231
+            300  188 -   0   0 231
+            148  204 -   0   0 231
+            248  204 -   0   0 231
+            200  232 -   0   0 231
+            96  236 -   0   0 231
+            572  236 -  89 124 149
+            152  268 -   0   0 231
+            248  268 -   0   0 231
+            340  268 -   0   0 231
+            24  276 -   0 255   0
+            424  300 -  89 124 149
+            368  384 -   0 255   0
+            148  396 -   0 255   0
+            592  396 -  89 124 149
+            24  404 -   0 255   0
+            272  416 -   0 255   0
+            448  452 -  89 124 149
+            96  508 -  89 124 149
+            196  588 -  89 124 149
+            4  592 -  89 124 149
+            384  592 -  89 124 149
+            592  592 -  89 124 149
+        ",
+    )?;
+
+    Ok(())
+}
+
+fn check_min_height_center_y(view: Weak<MinWidth>) -> anyhow::Result<()> {
+    from_main(move || {
+        view.view.place().min_height(250).center_y();
+    });
+
+    check_colors(
+        r"
+            592    4 -  89 124 149
+            24   24 -   0 255   0
+            128   24 -   0 255   0
+            228   24 -   0 255   0
+            416   24 -   0 255   0
+            308   40 -   0 255   0
+            200  100 -   0   0 231
+            528  108 -  89 124 149
+            24  116 -   0 255   0
+            316  140 -   0   0 231
+            416  148 -   0 255   0
+            96  168 -   0   0 231
+            176  176 -   0   0 231
+            592  208 -  89 124 149
+            248  220 -   0   0 231
+            340  228 -   0   0 231
+            148  252 -   0   0 231
+            24  256 -   0 255   0
+            424  300 -  89 124 149
+            312  312 -   0   0 231
+            208  332 -   0   0 231
+            100  340 -   0   0 231
+            592  396 -  89 124 149
+            24  416 -   0 255   0
+            276  416 -   0 255   0
+            396  416 -   0 255   0
+            148  464 -  89 124 149
+            500  496 -  89 124 149
+            196  588 -  89 124 149
+            4  592 -  89 124 149
+            384  592 -  89 124 149
+            592  592 -  89 124 149
+        ",
+    )?;
+
+    Ok(())
+}

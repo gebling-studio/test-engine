@@ -2,36 +2,76 @@ use std::collections::BTreeMap;
 
 use anyhow::Result;
 use hreads::from_main;
-use parking_lot::Mutex;
 
-use super::{TestFailure, clear_failures, run_test_sync, take_failures};
-use crate::ui::{Label, Style, UIManager};
+use super::{TestFailure, clear_failures, run_test, take_failures};
+use crate::{
+    gm::color::Color,
+    ui::{Label, Style, UIManager, ViewData, style::GlobalStyles},
+    window::Window,
+};
 
 pub struct TestRunReport {
     pub total:    usize,
     pub failures: Vec<TestFailure>,
 }
 
+/// Everything a run takes from the app, kept so it can be handed back.
+///
+/// A run is not read only. It pins scale 1, forces its own text size, paints
+/// its own background and tears the app's root view down. Leave any of it
+/// behind and the app carries on wrong: at scale 1 on a phone that is really 2,
+/// boxed into the test canvas, or with no root view at all.
+struct AppState {
+    styles:         GlobalStyles,
+    text_size:      f32,
+    scale_override: f32,
+    clear_color:    Color,
+}
+
 /// Tests expect scale 1 and 32 point text. Any host that runs them must match,
 /// or every layout and color check drifts.
-fn prepare_harness() {
+fn prepare_harness() -> AppState {
+    let state = from_main(|| AppState {
+        styles:         Style::take_globals(),
+        text_size:      Label::default_text_size(),
+        scale_override: UIManager::scale_override(),
+        clear_color:    Window::clear_color(),
+    });
+
     Label::set_default_text_size(32);
 
     from_main(|| {
         UIManager::override_scale(1.0);
+    });
+
+    state
+}
+
+/// Give the app back everything the run took, and a root view to live in.
+fn restore_app(state: AppState) {
+    Label::set_default_text_size(state.text_size);
+
+    from_main(move || {
+        Style::restore_globals(state.styles);
+        UIManager::restore_scale_override(state.scale_override);
+        Window::set_clear_color(state.clear_color);
+
+        let mut root = UIManager::root_view();
+        root.clear_root();
+        root.reset_background();
+        root.clear_test_canvas();
+        root.add_subview_to_root(crate::app::app().make_root_view()).place().back();
     });
 }
 
 /// Run a whole map of registered tests through the failure collector. Must not
 /// run on the main thread, the tests drive the main thread through `from_main`.
 pub fn run_test_map(tests: &BTreeMap<String, fn() -> Result<()>>) -> TestRunReport {
-    let app_styles = from_main(Style::take_globals);
-
-    prepare_harness();
+    let state = prepare_harness();
     clear_failures();
 
     for (name, test) in tests {
-        run_test_sync(name, *test);
+        run_test(name, *test);
     }
 
     let report = TestRunReport {
@@ -39,22 +79,15 @@ pub fn run_test_map(tests: &BTreeMap<String, fn() -> Result<()>>) -> TestRunRepo
         failures: take_failures(),
     };
 
-    from_main(move || Style::restore_globals(app_styles));
+    restore_app(state);
 
     report
 }
 
-type TestRunner = fn() -> TestRunReport;
-
-static TEST_RUNNER: Mutex<Option<TestRunner>> = Mutex::new(None);
-
-/// An app registers how to run its own suite. The engine cannot reach an app's
-/// `UI_TESTS` map on its own, the map is a static of the app crate.
-pub fn register_test_runner(runner: TestRunner) {
-    *TEST_RUNNER.lock() = Some(runner);
-}
-
-#[cfg(feature = "inspect")]
-pub(crate) fn test_runner() -> Option<TestRunner> {
-    *TEST_RUNNER.lock()
+/// Run every registered test. `#[view_test]` and `#[ui_test]` in any crate all
+/// register into the one engine owned map, so this reaches the whole suite with
+/// no help from the app.
+pub fn run_all_tests() -> TestRunReport {
+    let tests = crate::UI_TESTS.lock().clone();
+    run_test_map(&tests)
 }

@@ -153,6 +153,12 @@ impl Window {
         Self::current().state.clear_color = color.into();
     }
 
+    /// The test harness paints its own background and has to put this back, or
+    /// the app keeps the harness colour after a run.
+    pub(crate) fn clear_color() -> Color {
+        Self::current().state.clear_color
+    }
+
     pub(crate) fn close() {
         on_main(AppHandler::close);
     }

@@ -75,8 +75,8 @@ fn v_main(
     return out;
 }
 
-@group(1) @binding(0) var t_diffuse: texture_2d<f32>;
-@group(1) @binding(1) var s_diffuse: sampler;
+@group(2) @binding(0) var t_diffuse: texture_2d<f32>;
+@group(2) @binding(1) var s_diffuse: sampler;
 
 @fragment
 fn f_main(in: VertexOutput) -> @location(0) vec4<f32> {

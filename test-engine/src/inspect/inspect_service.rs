@@ -66,6 +66,11 @@ impl InspectService {
             },
             InspectorCommand::ListEdits => AppCommand::Edits(edit_log::all()),
             InspectorCommand::RunTests => Self::run_tests(),
+            // Compiled in, so it reports when this running code was built, not
+            // when the bundle around it was linked. See `test-engine/build.rs`.
+            InspectorCommand::GetBuildTime => {
+                AppCommand::BuildTime(env!("TE_BUILD_TIME").parse().expect("TE_BUILD_TIME is not a number"))
+            }
             InspectorCommand::UI(ui) => Self::process_ui_command(ui),
         }
     }
@@ -73,11 +78,7 @@ impl InspectService {
     // Runs on a tokio task, never the main thread, which is what the tests need
     // since they drive the main thread through `from_main`.
     fn run_tests() -> AppCommand {
-        let Some(runner) = crate::ui_test::test_runner() else {
-            return AppCommand::Error("App registered no test runner".to_string());
-        };
-
-        let report = runner();
+        let report = crate::ui_test::run_all_tests();
 
         AppCommand::TestResults {
             total:    report.total,

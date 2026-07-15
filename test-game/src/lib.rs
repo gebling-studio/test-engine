@@ -16,4 +16,3 @@ pub use test_engine;
 
 #[cfg(ios)]
 test_engine::register_app!(TestGameApp);
-test_engine::export_ui_tests!();

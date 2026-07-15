@@ -4,33 +4,47 @@ struct RectView {
     _padding: vec2<u32>,
 }
 
-struct UIGradientInstance {
+// Only what the vertex stage needs. The rest is read from `instances`.
+struct UIGradientVertex {
     @location(2) position:      vec2<f32>,
     @location(3) size:          vec2<f32>,
-    @location(4) start_color:   vec4<f32>,
-    @location(5) end_color:     vec4<f32>,
-    @location(6) corner_radii:  vec4<f32>,
     @location(7) z_position:    f32,
     @location(8) scale:         f32,
+}
+
+// Field order and offsets are `std430` and must match `UIGradientInstance`,
+// which has a test pinning them.
+struct UIGradientInstance {
+    position: vec2<f32>,
+    size: vec2<f32>,
+    start_color: vec4<f32>,
+    end_color: vec4<f32>,
+    corner_radii: vec4<f32>,
+    z_position: f32,
+    scale: f32,
 }
 
 @group(0) @binding(0)
 var<uniform> view: RectView;
 
+@group(1) @binding(0)
+var<storage, read> instances: array<UIGradientInstance>;
+
+// An A7 GPU draws nothing at all from a shader carrying more than eight float
+// components between the stages, see docs/ios.md. Only `uv` and the gradient
+// ramp really vary across the shape, so the colors are read from `instances`.
 struct VertexOutput {
     @builtin(position) pos:   vec4<f32>,
           @location(0) uv:   vec2<f32>,
-          @location(1) size: vec2<f32>,
-          @location(2) corner_radii: vec4<f32>,
-          @location(3) gradient_pos:  f32,
-          @location(4) start_color: vec4<f32>,
-          @location(5) end_color:   vec4<f32>,
+          @location(1) gradient_pos:  f32,
+          @location(2) @interpolate(flat) index: u32,
 }
 
 @vertex
 fn v_main(
     @location(0) model: vec2<f32>,
-    instance: UIGradientInstance,
+    instance: UIGradientVertex,
+    @builtin(instance_index) index: u32,
 ) -> VertexOutput {
     var out_pos: vec4<f32> = vec4<f32>(model, instance.z_position, 1.0);
 
@@ -62,10 +76,7 @@ fn v_main(
 
     out.uv = model * 0.5;
     out.gradient_pos = (model.y + 1.0) / 2.0;
-    out.size = instance.size;
-    out.corner_radii = instance.corner_radii;
-    out.start_color = instance.start_color;
-    out.end_color = instance.end_color;
+    out.index = index;
 
     return out;
 }
@@ -98,11 +109,13 @@ fn edge_coverage(dist: f32) -> f32 {
 
 @fragment
 fn f_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    let color = mix(in.start_color, in.end_color, in.gradient_pos);
+    let instance: UIGradientInstance = instances[in.index];
 
-    let local_pos: vec2<f32> = in.uv * in.size;
-    let radius: f32 = pick_radius(local_pos, in.corner_radii);
-    let dist: f32 = rounded_box_sdf(local_pos, in.size * 0.5, radius);
+    let color = mix(instance.start_color, instance.end_color, in.gradient_pos);
+
+    let local_pos: vec2<f32> = in.uv * instance.size;
+    let radius: f32 = pick_radius(local_pos, instance.corner_radii);
+    let dist: f32 = rounded_box_sdf(local_pos, instance.size * 0.5, radius);
 
     let alpha: f32 = color.a * edge_coverage(dist);
 

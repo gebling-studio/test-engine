@@ -244,6 +244,7 @@ impl MainScreen {
             AppCommand::Ok
             | AppCommand::Screenshot { .. }
             | AppCommand::Edits(_)
+            | AppCommand::BuildTime(_)
             | AppCommand::TestResults { .. } => {}
         }
     }

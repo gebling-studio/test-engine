@@ -11,7 +11,6 @@ mod levels;
 mod no_physics;
 
 test_engine::register_app!(TestGameApp);
-test_engine::export_ui_tests!();
 
 fn main() {
     test_engine::test_engine_start_app();

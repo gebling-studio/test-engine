@@ -78,9 +78,23 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
         quote! {
             #[#root::__internal_macro_deps::ctor::ctor(unsafe, crate_path = #root::__internal_macro_deps::ctor)]
             fn store_test() {
-                crate::UI_TESTS
-                    .lock()
-                    .insert(#name_str.to_string(), run_ui_test);
+                // One registry, owned by the engine, holding every test from
+                // every crate. Keyed by name, so a duplicate would drop one
+                // without a word, and a test that stops running looks exactly
+                // like a test that passes.
+                // The same name `UITest::start` reports under, so a test that
+                // prints as "Image scissor" answers to "Image scissor". Spelling
+                // it out here instead would drift from that the moment either
+                // side changed.
+                let name = #root::ui_test::get_test_name::<#name>();
+
+                assert!(
+                    #root::UI_TESTS
+                        .lock()
+                        .insert(name.clone(), run_ui_test as fn() -> anyhow::Result<()>)
+                        .is_none(),
+                    "Duplicate ui test: {name}",
+                );
             }
 
             #[test]

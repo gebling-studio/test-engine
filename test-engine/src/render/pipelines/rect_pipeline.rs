@@ -1,8 +1,11 @@
+use std::num::NonZeroU64;
+
 use bytemuck::Pod;
 use indexmap::IndexMap;
 use refs::Weak;
 use wgpu::{
-    Buffer, PipelineLayoutDescriptor, PrimitiveTopology, RenderPass, RenderPipeline, ShaderModuleDescriptor,
+    BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindingResource, Buffer, BufferBinding,
+    PipelineLayoutDescriptor, PrimitiveTopology, RenderPass, RenderPipeline, ShaderModuleDescriptor,
     ShaderSource, ShaderStages,
 };
 
@@ -11,7 +14,7 @@ use crate::{
     render::{
         device_helper::DeviceHelper,
         pipelines::pipeline_type::PipelineType,
-        uniform::{UniformBind, make_uniform_layout},
+        uniform::{UniformBind, make_storage_layout, make_uniform_layout},
         vec_buffer::VecBuffer,
         vertex_layout::VertexLayout,
     },
@@ -30,6 +33,11 @@ pub struct RectPipeline<
     vertex_buffer: Buffer,
 
     view: UniformBind<View>,
+
+    /// Binds the instance buffer for the fragment stage. The bind group itself
+    /// cannot be cached here because it names the byte range of one flush, and
+    /// the buffer bump allocates a new range for every flush of the frame.
+    instances_layout: BindGroupLayout,
 
     // Entries are never removed. Managed images live for the whole process,
     // see docs/refs.md, so a key cannot die.
@@ -55,7 +63,10 @@ impl<
         let sprite_view_layout =
             make_uniform_layout(&format!("{NAME}_uniform_layout"), ShaderStages::VERTEX_FRAGMENT);
 
-        let mut bind_group_layouts = vec![Some(&sprite_view_layout)];
+        let instances_layout =
+            make_storage_layout(&format!("{NAME}_instances_layout"), ShaderStages::FRAGMENT);
+
+        let mut bind_group_layouts = vec![Some(&sprite_view_layout), Some(&instances_layout)];
 
         if TYPE.image() {
             bind_group_layouts.push(Some(Image::uniform_layout()));
@@ -91,6 +102,7 @@ impl<
             pipeline,
             vertex_buffer: TYPE.vertex_buffer(device),
             view: sprite_view_layout.into(),
+            instances_layout,
             instances: IndexMap::default(),
         }
     }
@@ -130,10 +142,26 @@ impl<
 
             instances.load();
 
+            let range = instances.range();
+
+            let instances_bind = Window::device().create_bind_group(&BindGroupDescriptor {
+                label:   Some(&format!("{NAME}_instances_bind")),
+                layout:  &self.instances_layout,
+                entries: &[BindGroupEntry {
+                    binding:  0,
+                    resource: BindingResource::Buffer(BufferBinding {
+                        buffer: instances.buffer(),
+                        offset: range.start,
+                        size:   NonZeroU64::new(range.end - range.start),
+                    }),
+                }],
+            });
+
             render_pass.set_bind_group(0, self.view.bind(), &[]);
+            render_pass.set_bind_group(1, &instances_bind, &[]);
 
             if TYPE.image() {
-                render_pass.set_bind_group(1, image.bind(), &[]);
+                render_pass.set_bind_group(2, image.bind(), &[]);
             }
 
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));

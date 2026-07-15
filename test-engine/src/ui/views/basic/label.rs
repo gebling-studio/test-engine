@@ -194,6 +194,12 @@ impl Label {
     pub fn set_default_text_size(size: impl ToF32) {
         DEFAULT_TEXT_SIZE.store(size.to_f32(), Ordering::Relaxed);
     }
+
+    /// The test harness forces its own size and has to put this back, or every
+    /// label in the app keeps the harness size after a run.
+    pub(crate) fn default_text_size() -> f32 {
+        DEFAULT_TEXT_SIZE.load(Ordering::Relaxed)
+    }
 }
 
 impl Setup for Label {

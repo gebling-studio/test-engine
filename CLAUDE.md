@@ -9,6 +9,10 @@ Apps and test binaries are separate crates on top. Internals are `pub(crate)`, t
 app-facing API is `pub` — keep new items `pub(crate)` unless apps need them, so the
 `dead_code` lint stays meaningful.
 
+The UI test corpus is its own crate, `ui-test-suite`, so `test-game` can link it and carry
+every test onto a device. It must never depend on `test-game`, that is a cycle, since the
+`ui-test` runner links both.
+
 No proof, no merge. A performance claim needs an A/B per [docs/benchmark.md](docs/benchmark.md)
 acceptance criteria, a correctness claim needs a reproduced failure. Unproved ideas go to
 [docs/guesses.md](docs/guesses.md), not into the code.
@@ -49,10 +53,11 @@ Docs should be concise.
 ## Commands
 
 ```bash
+cargo run -p ui-test -- --list                                               # every registered test and the total
 cargo run -p ui-test -- --headless                                           # full UI test suite
-cargo run -p ui-test -- --headless --test-name <ViewName>                    # single test
-cargo run -p ui-test -- --test-name <ViewName> --human                       # watchable run, space to advance
-cargo run -p ui-test -- --headless --test-name <ViewName> --record-colors    # print check_colors blocks
+cargo run -p ui-test -- --headless --test-name <name>                        # single test, the name it prints
+cargo run -p ui-test -- --test-name <name> --human                           # watchable run, space to advance
+cargo run -p ui-test -- --headless --test-name <name> --record-colors        # print check_colors blocks
 cargo run -p render-test                                                     # render tests
 make ci                                                                      # typos, formatting, lints, unused dependencies
 make lint                                                                    # clippy, pedantic, zero warnings

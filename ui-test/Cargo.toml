@@ -11,15 +11,11 @@ path = "src/main.rs"
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true }
-instant = { workspace = true }
 log = { workspace = true }
-parking_lot = { workspace = true }
-pretty_assertions = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
 
 test-engine = { workspace = true, features = ["inspect"] }
 test-game = { workspace = true }
+ui-test-suite = { workspace = true }
 
 [lints]
 workspace = true

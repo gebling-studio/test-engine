@@ -14,6 +14,7 @@ members = [
   "test-game",
   "test-game-android",
   "ui-test",
+  "ui-test-suite",
 ]
 
 resolver = "3"
@@ -123,4 +124,5 @@ vents = "0.15"
 level-proc = { path = "deps/level-proc" }
 test-engine = { path = "test-engine" }
 test-game = { path = "test-game" }
+ui-test-suite = { path = "ui-test-suite" }
 ui-proc = { path = "deps/ui-proc" }

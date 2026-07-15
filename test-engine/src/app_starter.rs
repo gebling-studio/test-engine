@@ -1,3 +1,5 @@
+use std::hint::black_box;
+
 use winit::event_loop::{ControlFlow, EventLoop};
 
 use crate::{
@@ -5,6 +7,21 @@ use crate::{
     app::test_engine_create_app,
     window::{AppHandler, Window},
 };
+
+/// Names a symbol in the `ctor` crate so a linker keeps that crate's object.
+///
+/// `#[view_test]` registers a test through a `ctor`, which only writes an entry
+/// into a linker section. A single initializer inside the `ctor` crate walks
+/// that section and calls the entries, and it returns without a word when its
+/// guard is missing. iOS links an app against `libtest_game.a`, and a linker
+/// loads an archive member only to resolve an undefined symbol. Nothing named
+/// the guard, which is reachable only through section boundary symbols, so the
+/// member stayed out of the link. The initializer never made it into the app
+/// and every test registration was dropped in silence. This reference is that
+/// undefined symbol.
+fn keep_ctor_linked() {
+    black_box(&crate::__internal_macro_deps::ctor::collect::GUARD_ATOMIC);
+}
 
 #[cfg(target_arch = "wasm32")]
 fn run_app(event_loop: EventLoop<Window>, app: &'static mut AppHandler) {
@@ -39,6 +56,7 @@ pub(crate) fn test_engine_start_with_app_headless(app: Box<dyn App>) -> std::ffi
 
 fn start_with_app(app: Box<dyn App>, headless: bool) -> std::ffi::c_int {
     fn start(app: Box<dyn App>, headless: bool) {
+        keep_ctor_linked();
         hreads::set_current_thread_as_main();
         app.before_launch();
 

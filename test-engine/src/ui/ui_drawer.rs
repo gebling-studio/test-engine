@@ -246,6 +246,7 @@ impl UIDrawer {
                 blur:         shadow.radius,
                 z_position:   view.z_position(),
                 scale:        ctx.scale,
+                padding:      0.0,
             });
         }
 
@@ -274,6 +275,7 @@ impl UIDrawer {
                 corner_radii: view.corner_radii(),
                 z_position:   view.z_position(),
                 scale:        ctx.scale,
+                padding:      [0.0; 2],
             });
         } else if view.color().a > 0.0 || view.border_color().a > 0.0 {
             Pipelines::rect().add(UIRectInstance::new(

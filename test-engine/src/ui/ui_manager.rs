@@ -113,6 +113,24 @@ impl UIManager {
         Self::set_scale(scale);
     }
 
+    /// The override in effect, 0.0 meaning none. The test harness pins scale 1
+    /// and has to put this back, or the app stays at scale 1 on a screen that
+    /// is not, which on a phone means half sized UI.
+    pub(crate) fn scale_override() -> f32 {
+        f32::from_bits(Self::get().manual_scale.load(Ordering::Relaxed))
+    }
+
+    /// Drop the override and go back to the screen's own scale.
+    pub(crate) fn restore_scale_override(scale: f32) {
+        assert_main_thread();
+        let sf = Self::get();
+
+        sf.manual_scale.store(scale.to_bits(), Ordering::Relaxed);
+
+        let real = Window::screen_scale();
+        Self::set_scale(if scale == 0.0 { real } else { scale });
+    }
+
     pub(crate) fn on_scale_changed<U: ?Sized>(subscriber: Weak<U>, mut cb: impl FnMut(f32) + Send + 'static) {
         Self::get().scale_changed.val(subscriber, move |scale| {
             cb(scale);

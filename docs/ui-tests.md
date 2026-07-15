@@ -1,28 +1,55 @@
 # UI tests
 
 Real-window tests. They open the app, inject touches and scrolls, then check labels, colors and
-state. Live in `ui-test/`, plus some in `test-engine` and `test-game`.
+state. The corpus lives in `ui-test-suite/`, plus some in `test-engine` and `test-game`.
+`ui-test/` is only the runner.
 
 ## Run
 
 ```bash
+cargo run -p ui-test -- --list                # every registered test and the total, runs nothing
 cargo run -p ui-test                          # full suite, all tests, 2 cycles
 UI_TEST_CYCLES=5 cargo run -p ui-test         # more cycles
-cargo run -p ui-test -- --test-name RestRequest   # one test
+cargo run -p ui-test -- --test-name "Rest request"  # one test
 cargo run -p ui-test -- --headless            # offscreen, much faster, for CI and agents
 make uui                                      # full suite, headless, release mode
-cargo run -p ui-test -- --test-name FontZoo --human            # watch one test, space to advance
-cargo run -p ui-test -- --record-colors --headless --test-name FontZoo  # print check_colors blocks
+cargo run -p ui-test -- --test-name "Font zoo" --human            # watch one test, space to advance
+cargo run -p ui-test -- --record-colors --headless --test-name "Font zoo"  # print check_colors blocks
 ```
 
-`--test-name` reaches every test. A registered one answers to its view name, `FontZoo` or
-`Text field`. An aggregated one answers to its fn name, `test_text_field`. A name that
-matches nothing exits 1, so a typo never looks like a pass.
+**A test answers to the name it prints.** `#[view_test]` registers under
+`ui_test::get_test_name`, the same call `UITest::start` reports under, so a test that fails as
+`Font zoo` is reached by `--test-name "Font zoo"`, not `FontZoo`. A `#[ui_test]` fn answers to
+its fn name, `test_modal_blur`. The two used to be derived separately and drifted, so the name
+in the log was a name the runner rejected. Deriving one from the other is what keeps them
+equal. A name that matches nothing exits 1, so a typo never looks like a pass.
 
-An app can also run its own suite from inside itself, which is how tests run on a device.
-`test-game` registers a runner with `ui_test::register_test_runner`, and `te-inspect
-run-tests` triggers it over the network and prints every failure. See
-[inspect.md](inspect.md).
+Counting is not done by reading the log. Every test is registered by a `ctor` before `main`,
+so `--list` knows the whole suite without running anything.
+
+An app runs the same suite from inside itself, which is how tests run on a device.
+`ui_test::run_all_tests` reaches every registered test with no help from the app, and
+`te-inspect run-tests` triggers it over the network. `test-game` also has a "Run UI tests"
+button in its dev menu. See [inspect.md](inspect.md).
+
+## One registry
+
+Every test, whatever crate it lives in and whichever shape it is written in, registers into a
+single map, `test_engine::UI_TESTS`. The count is its length.
+
+That map is a static of the engine, so a `#[view_test]` in `test-engine`, a `#[ui_test]` in
+`ui-test-suite` and one in `test-game` all land in the same place. Nothing merges maps, nothing
+registers a runner, and the engine can run the whole suite on its own.
+
+Registration is by name, and a duplicate name aborts at startup rather than silently replacing
+the other test. A test that quietly stops running looks exactly like a test that passes, which
+is the failure this registry exists to prevent.
+
+**A test registers through a `ctor`, and nothing calls it by name.** A linker drops any object
+nothing references, so a crate whose only content is tests is dropped whole and its tests
+disappear without a word. Every consumer of a test-carrying crate has to name it:
+`ui_test_suite::keep_linked()` in `test-game` and in the runner. This is not theoretical, it is
+how the device ran 24 tests while the desktop ran 100.
 
 A failing test does not stop the run. Every test executes, each failure is collected, and
 the whole report prints at the end, then the process exits 1 if anything failed. One run
@@ -71,7 +98,8 @@ The test app disables vsync and raises max frame latency at startup (`Window::se
 no display. Frames render to an offscreen texture in a plain loop, so the full suite runs
 in a few seconds and works on machines without a display server (CI), given a GPU or a
 software Vulkan driver. Screenshots and `check_colors` still work. Run headed when you
-want to watch the UI. The network test (`RestRequest`) is skipped in headless mode.
+want to watch the UI. The network test (`test_rest_request`) returns early in headless mode.
+It checks `Window::headless()` itself, since a registry has no place to hang that condition.
 
 For profiling, pass `--fps-report` to print a report at the end of the run: frames, duration
 and average fps per test. Per-test fps varies a lot between runs — macOS sometimes paces frames
@@ -101,7 +129,7 @@ impl ViewTest for LongTableTest {
     ...
 }
 
-let view = UITest::start_sized::<TextField>(640, 800);   // aggregated test
+let view = UITest::start_sized::<TextField>(640, 800);   // a `#[ui_test]` fn
 ```
 
 `AppRunner::set_window_size` stays an app API. No test may call it, a window smaller than
@@ -116,15 +144,47 @@ Global state is reset per test: the root background, the clear color and the str
 A test that fails part way never reaches its own cleanup, and without the reset every
 later test would probe the leftovers.
 
-## Two kinds of tests
+## Two shapes, one kind
 
-1. **Registered** — a view marked `#[view_test]` instead of `#[view]`, with
-   `impl ViewTest { fn perform_test(view: Weak<Self>) }`. The macro registers it under the struct
-   name, so it works with `--test-name` and also generates a normal `#[test]` that runs it as a
-   subprocess.
-2. **Aggregated** — plain async functions called from hardcoded sequences (`test_base_ui()` in
-   `ui-test/src/base/mod.rs` and similar) through `run_test_unit!`. Runnable by fn name, the
-   aggregator runs with every other unit filtered out. Prefer `#[view_test]` for new tests.
+A test is written either as a view or as a function. Both are UI tests, both are synchronous,
+both register into the same map, and both are counted and run the same way.
+
+1. **A view** — marked `#[view_test]` instead of `#[view]`, with
+   `impl ViewTest { fn perform_test(view: Weak<Self>) }`. The macro also generates a normal
+   `#[test]` that runs it as a subprocess.
+2. **A function** — a plain `fn` marked `#[ui_test]`. Return `Result<()>` if it can fail, or
+   nothing if it only asserts. The macro wraps the second shape, so a test that cannot fail does
+   not carry a `Result` it never uses.
+
+Prefer `#[view_test]` for new tests.
+
+Nothing here is async. A UI test drives the main thread through `from_main` and never awaits,
+so `#[ui_test]` rejects an `async fn`. The corpus was async for years and not one test awaited
+anything, which cost a second registry, a boxed future type and a hand written call list.
+
+## Platform gating
+
+A test for a feature the platform does not have is gated where the feature is gated, not
+skipped at runtime. `Hover::update` is `#[cfg(desktop)]`, so `hover.rs` is too. Typing goes
+through the screen keyboard on a phone rather than injected key events, so the text field tests
+are desktop only as well.
+
+Desktop runs 100 tests and an iPhone runs 97. The difference is the platform, not the suite.
+Gate the module in its `mod.rs`, with a comment saying which feature is missing:
+
+```rust
+/// Hover needs a pointer, and there is no such thing on a touch screen.
+#[cfg(desktop)]
+mod hover;
+```
+
+A crate that gates on `#[cfg(desktop)]` needs `plat::platforms()` in its `build.rs`, which is
+what defines those cfgs.
+
+**A test that asserts inside `from_main` and fails takes the whole run down**, because the
+panic lands on the main thread, unwinds through the dispatch and aborts. On a device that means
+the run dies with no report at all. The desktop runner installs a hook for this, the in-app
+runner does not yet.
 
 ## Writing a test
 
@@ -148,8 +208,29 @@ impl ViewTest for MyTest {
 }
 ```
 
+Or as a function, when there is no view to hang it on:
+
+```rust
+#[ui_test]
+fn test_something() {
+    let view = UITest::start::<SomeView>();
+    inject_touches("100 100 b\n100 100 e");
+    assert_eq!(view.button.text(), "tapped");
+}
+```
+
 Test helpers: `inject_touches`, `inject_scroll`, `check_colors` (asserts pixel colors at
 coordinates). To read UI state from test code use `from_main` (see [dispatch.md](dispatch.md)).
+
+## What a run takes from the app
+
+A run is not read only. It pins scale 1, forces 32 point text, paints its own clear color, pins
+the root to the test canvas and tears the app's root view down. `run_test_map` snapshots all of
+it and hands it back at the end, then asks the app for a new root view, so an app that runs its
+own suite lands back on its main screen at its real scale.
+
+Leave any of it behind and the app carries on wrong. On a phone that means half sized UI, since
+the harness scale of 1 is not the screen's 2.
 
 One `#[view_test]` per file. Deliberate decision to keep files small — do not "fix" the macro
 to allow more.

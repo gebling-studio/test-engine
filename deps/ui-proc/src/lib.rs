@@ -2,6 +2,7 @@ mod all_views;
 mod async_link_button;
 mod cast_cell;
 mod launch_app;
+mod ui_test;
 mod view;
 
 use proc_macro::TokenStream;
@@ -11,6 +12,7 @@ use crate::{
     async_link_button::async_link_button_impl,
     cast_cell::cast_cell_impl,
     launch_app::launch_app_impl,
+    ui_test::ui_test_impl,
     view::view_impl,
 };
 
@@ -22,6 +24,13 @@ pub fn view(attr: TokenStream, stream: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn view_test(attr: TokenStream, stream: TokenStream) -> TokenStream {
     view_impl(attr, stream, true)
+}
+
+/// Register an async test unit so the suite can count it, name it and run it
+/// without a hand written call list.
+#[proc_macro_attribute]
+pub fn ui_test(attr: TokenStream, stream: TokenStream) -> TokenStream {
+    ui_test_impl(attr, stream)
 }
 
 #[proc_macro]

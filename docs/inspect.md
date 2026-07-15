@@ -16,7 +16,7 @@ Two clients exist:
   `unknown field 'fit_text'` from any command means the installed CLI is older than the
   app's protocol, reinstall and retry. Commands: `apps`,
   `tree`, `view`, `ui`, `screenshot`, `edit-rule`, `set-text`, `set-color`, `set-scale`,
-  `edits`, `play-sound`, `run-tests`. The last discovery is cached in the temp dir, so repeat calls
+  `edits`, `play-sound`, `run-tests`, `build-time`. The last discovery is cached in the temp dir, so repeat calls
   connect instantly and fall back to a fresh mDNS browse when the cached address is dead.
   The agent workflow is documented in
   [.claude/skills/test-engine/SKILL.md](../.claude/skills/test-engine/SKILL.md).
@@ -35,14 +35,28 @@ Lives in `test-engine/src/inspect/protocol/`. Length-prefixed JSON frames over T
 - `SetColor { view_id, color }` — sets the background color of a live view.
 - `Screenshot` — returns the current frame as base64 PNG. Works headless too.
 - `ListEdits` — returns every edit applied in this session.
+- `GetBuildTime` — unix seconds of when `test-engine` was compiled, stamped by
+  `test-engine/build.rs`. `te-inspect build-time` compares it to the newest source here and
+  exits non zero when the app is older. The stamp has to live in the Rust code: an iOS
+  build relinks the `.app` every time while reusing a stale `libtest_game.a`, so the
+  bundle's own timestamp, md5 and install all report fresh while old code runs.
+
+  It stamps **`test-engine`**, not the app, so it answers "when was the engine compiled",
+  not "is this app current". Change only `ui-test-suite` or `test-game` and cargo rightly
+  leaves `test-engine` alone, so a correctly rebuilt app reports stale. That is a false
+  positive, and it has already happened. Treat a stale verdict as a reason to check, not as
+  proof: something that only the new code produces, a test count or an `nm` symbol, settles
+  it. A fresh verdict is still worth having, it catches the case that matters, a `.a` that
+  never rebuilt.
 - `PlaySound` — plays a sound in the app, for finding which instance is which.
 - `RunTests` — runs the app's whole UI test suite in the app and returns the total and
-  every failure. Only apps that called `ui_test::register_test_runner` answer it, the
-  engine cannot reach an app's `UI_TESTS` map on its own. The run happens on a tokio task,
-  never the main thread, because the tests drive the main thread through `from_main`. The
-  runner forces the harness preconditions the tests expect, scale 1 and 32 point text, and
-  takes the app's global styles away for the duration, or an app style such as a themed
-  `Button` colour would fail every color check.
+  every failure. Needs nothing from the app: every test registers into the engine's own
+  `UI_TESTS`, so `ui_test::run_all_tests` reaches whatever the app links. The run happens
+  on a tokio task, never the main thread, because the tests drive the main thread through
+  `from_main`. The runner forces the harness preconditions the tests expect, scale 1 and 32
+  point text, and takes the app's global styles away for the duration, or an app style such
+  as a themed `Button` colour would fail every color check. It puts all of that back
+  afterwards and rebuilds the app's root view, see [ui-tests.md](ui-tests.md).
 
 Edits reply with a fresh tree snapshotted one frame later, after layout ran, so the client
 never sees stale frames. Failures (unknown view id, bad rule index, view without text)
