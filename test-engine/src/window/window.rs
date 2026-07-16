@@ -40,12 +40,6 @@ static HEADLESS: AtomicBool = AtomicBool::new(false);
 /// Doesn't work on some Androids and on Web
 pub(crate) const SUPPORT_SCREENSHOT: bool = !Platform::ANDROID && !Platform::WASM;
 
-#[cfg(target_os = "android")]
-pub(crate) type Events = winit::platform::android::activity::AndroidApp;
-
-#[cfg(not(target_os = "android"))]
-pub type Events = ();
-
 pub struct Window {
     pub state: State,
 
@@ -151,6 +145,12 @@ impl Window {
 
     pub fn set_clear_color(color: impl Into<Color>) {
         Self::current().state.clear_color = color.into();
+    }
+
+    /// The test harness paints its own background and has to put this back, or
+    /// the app keeps the harness colour after a run.
+    pub(crate) fn clear_color() -> Color {
+        Self::current().state.clear_color
     }
 
     pub(crate) fn close() {

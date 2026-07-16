@@ -9,36 +9,53 @@ struct Vertex {
     @location(1) uv: vec2<f32>,
 }
 
+// Only what the vertex stage needs. The rest is read from `instances`.
+struct UIImageVertex {
+    @location(4) position:      vec2<f32>,
+    @location(5) size:          vec2<f32>,
+    @location(6) uv_position:   vec2<f32>,
+    @location(7) uv_size:       vec2<f32>,
+    @location(9) z_position:    f32,
+    @location(10) flags:        u32,
+    @location(11) scale:        f32,
+}
+
+// Field order and offsets are `std430` and must match `UIImageInstance`, which
+// has a test pinning them.
 struct UIImageInstance {
-    @location(2) position:      vec2<f32>,
-    @location(3) size:          vec2<f32>,
-    @location(4) border_color:  vec4<f32>,
-    @location(5) border_width:  f32,
-    @location(6) corner_radii:  vec4<f32>,
-    @location(7) z_position:    f32,
-    @location(8) flags:         u32,
-    @location(9) scale:         f32,
-    @location(10) uv_position:  vec2<f32>,
-    @location(11) uv_size:      vec2<f32>,
+    border_color: vec4<f32>,
+    corner_radii: vec4<f32>,
+    position: vec2<f32>,
+    size: vec2<f32>,
+    uv_position: vec2<f32>,
+    uv_size: vec2<f32>,
+    border_width: f32,
+    z_position: f32,
+    flags: u32,
+    scale: f32,
 }
 
 @group(0) @binding(0)
 var<uniform> view: RectView;
 
+@group(1) @binding(0)
+var<storage, read> instances: array<UIImageInstance>;
+
+// An A7 GPU draws nothing at all from a shader carrying more than eight float
+// components between the stages, see docs/ios.md. Only `uv` and `corner_uv`
+// really vary across the shape, so everything else is read from `instances`.
 struct VertexOutput {
     @builtin(position) pos: vec4<f32>,
     @location(0) uv: vec2<f32>,
     @location(1) corner_uv: vec2<f32>,
-    @location(2) size: vec2<f32>,
-    @location(3) border_color: vec4<f32>,
-    @location(4) corner_radii: vec4<f32>,
-    @location(5) border_width: f32,
+    @location(2) @interpolate(flat) index: u32,
 }
 
 @vertex
 fn v_main(
     model: Vertex,
-    instance: UIImageInstance,
+    instance: UIImageVertex,
+    @builtin(instance_index) index: u32,
 ) -> VertexOutput {
     let flip_x: bool = ((instance.flags >> 0u) & 1u) != 0u;
     let flip_y: bool = ((instance.flags >> 1u) & 1u) != 0u;
@@ -87,15 +104,12 @@ fn v_main(
     // flipped pos, y is negated to undo the extra negation above,
     // so negative y is the top like in the other UI shaders.
     out.corner_uv = vec2<f32>(pos.x, -pos.y) * 0.5;
-    out.size = instance.size;
-    out.corner_radii = instance.corner_radii;
-    out.border_color = instance.border_color;
-    out.border_width = instance.border_width;
+    out.index = index;
     return out;
 }
 
-@group(1) @binding(0) var t_diffuse: texture_2d<f32>;
-@group(1) @binding(1) var s_diffuse: sampler;
+@group(2) @binding(0) var t_diffuse: texture_2d<f32>;
+@group(2) @binding(1) var s_diffuse: sampler;
 
 // Radii order: top left, top right, bottom left, bottom right.
 // Local coordinates have negative y at the top.
@@ -127,20 +141,22 @@ fn edge_coverage(dist: f32) -> f32 {
 
 @fragment
 fn f_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    let instance: UIImageInstance = instances[in.index];
+
     let tex = textureSample(t_diffuse, s_diffuse, in.uv);
-    let local_pos: vec2<f32> = in.corner_uv * in.size;
-    let radius: f32 = pick_radius(local_pos, in.corner_radii);
-    let dist: f32 = rounded_box_sdf(local_pos, in.size * 0.5, radius);
+    let local_pos: vec2<f32> = in.corner_uv * instance.size;
+    let radius: f32 = pick_radius(local_pos, instance.corner_radii);
+    let dist: f32 = rounded_box_sdf(local_pos, instance.size * 0.5, radius);
 
     let coverage: f32 = edge_coverage(dist);
 
     var rgb: vec3<f32> = tex.rgb;
     var alpha: f32 = tex.a;
 
-    if in.border_width > 0.0 {
-        let fill: f32 = clamp(0.5 - (dist + in.border_width) / fwidth(dist), 0.0, 1.0);
-        rgb = mix(in.border_color.rgb, tex.rgb, fill);
-        alpha = mix(in.border_color.a, tex.a, fill);
+    if instance.border_width > 0.0 {
+        let fill: f32 = clamp(0.5 - (dist + instance.border_width) / fwidth(dist), 0.0, 1.0);
+        rgb = mix(instance.border_color.rgb, tex.rgb, fill);
+        alpha = mix(instance.border_color.a, tex.a, fill);
     }
 
     alpha *= coverage;

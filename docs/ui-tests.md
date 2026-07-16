@@ -1,28 +1,78 @@
 # UI tests
 
 Real-window tests. They open the app, inject touches and scrolls, then check labels, colors and
-state. Live in `ui-test/`, plus some in `test-engine` and `test-game`.
+state. The corpus lives in `ui-test-suite/`, plus some in `test-engine` and `test-game`.
+`ui-test/` is only the runner.
 
 ## Run
 
 ```bash
+cargo run -p ui-test -- --list                # every registered test and the total, runs nothing
 cargo run -p ui-test                          # full suite, all tests, 2 cycles
 UI_TEST_CYCLES=5 cargo run -p ui-test         # more cycles
-cargo run -p ui-test -- --test-name RestRequest   # one test by view struct name
+cargo run -p ui-test -- --test-name "Rest request"  # one test
 cargo run -p ui-test -- --headless            # offscreen, much faster, for CI and agents
 make uui                                      # full suite, headless, release mode
-cargo run -p ui-test -- --test-name FontZoo --human            # watch one test, space to advance
-cargo run -p ui-test -- --record-colors --headless --test-name FontZoo  # print check_colors blocks
+cargo run -p ui-test -- --test-name "Font zoo" --human            # watch one test, space to advance
+cargo run -p ui-test -- --record-colors --headless --test-name "Font zoo"  # print check_colors blocks
 ```
 
-By default a failed test leaves the app running so the window can be inspected.
-`--stop-on-failure` makes the process print the failure and exit with code 1 instead.
-Always pass it when running from a script or agent, together with `--headless`, and always
-tee the output to a temp file — with a plain pipe (`| tail`) you lose everything printed
-before a hang:
+**A test answers to the name of its view.** `FontZoo` registers as `Font zoo`, through
+`ui_test::spaced_test_name`, the one rule `get_test_name` and `--test-name` both call. So
+`--test-name` takes either spelling, `"Font zoo"` or `FontZoo`, and a tool reading
+`impl ViewTest for FontZoo` off the source can pass what it sees without deriving anything.
+Deriving that name twice is what once made the generated `#[test]` hand the runner a name it
+rejected. A name that matches nothing exits 1 and points at `--list`, so a typo never looks
+like a pass.
+
+Counting is not done by reading the log. Every test is registered by a `ctor` before `main`,
+so `--list` knows the whole suite without running anything. An empty registry is a hard
+error, never `0 tests passed`, because a suite that runs nothing otherwise reports success.
+
+An app runs the same suite from inside itself, which is how tests run on a device.
+`ui_test::run_all_tests` reaches every registered test with no help from the app, and
+`te-inspect run-tests` triggers it over the network. `test-game` also has a "Run UI tests"
+button in its dev menu. See [inspect.md](inspect.md).
+
+Set `TE_RUN_TESTS` and the app runs the whole suite once it is ready, prints
+`TE_TEST_RESULT <n> tests, <m> failed` and exits with a matching code. It waits on
+`UIManager::on_app_ready`, since a mid load teardown frees views the load task still
+touches, so an app with a loading screen marks itself not ready until assets land. No
+inspector and no mDNS, so it runs while the desktop lane runs. `make ui` uses it: on macOS
+it runs the desktop suite and the iOS simulator suite in parallel, then prints one report.
+The simulator lane is `build/ios/sim-test.ts`, an iPhone 8 on iOS 16.4, the oldest device
+this toolchain can boot. See [ios.md](ios.md).
+
+## One registry
+
+Every test, whatever crate it lives in, registers into a single map, `test_engine::UI_TESTS`,
+holding the name, the fn to run and the source file. The count is its length.
+
+That map is a static of the engine, so a test in `test-engine`, one in `ui-test-suite` and one
+in `test-game` all land in the same place. Nothing merges maps, nothing registers a runner, and
+the engine can run the whole suite on its own.
+
+Registration is by name, and a duplicate name aborts at startup rather than silently replacing
+the other test. A test that quietly stops running looks exactly like a test that passes, which
+is the failure this registry exists to prevent. The key is the type's own name with no path, so
+two test views called the same thing collide even from different crates. That is loud, not
+silent, so it needs no other rule.
+
+**A test registers through a `ctor`, and nothing calls it by name.** A linker drops any object
+nothing references, so a crate whose only content is tests is dropped whole and its tests
+disappear without a word. Every consumer of a test-carrying crate has to name it:
+`ui_test_suite::keep_linked()` in `test-game` and in the runner. This is not theoretical, it is
+how the device ran 24 tests while the desktop ran 100.
+
+A failing test does not stop the run. Every test executes, each failure is collected, and
+the whole report prints at the end, then the process exits 1 if anything failed. One run
+therefore shows every broken test rather than only the first.
+
+Always pass `--headless` when running from a script or agent, and always tee the output to
+a temp file — with a plain pipe (`| tail`) you lose everything printed before a hang:
 
 ```bash
-cargo run -p ui-test -- --stop-on-failure --headless 2>&1 | tee /tmp/ui-test.log | tail -12
+cargo run -p ui-test -- --headless 2>&1 | tee /tmp/ui-test.log | tail -12
 ```
 
 Don't run the suite after every change. Run it only when the change can affect UI or
@@ -48,8 +98,10 @@ Temporary edits that are never committed are allowed — for example breaking on
 expectation on purpose to verify the failure machinery. Say what you are doing first,
 revert right after the run, and check that `git diff` is clean before committing.
 
-In environments without a display (CI, linux without display) the `#[view_test]`-generated
-`cargo test` tests run headless instead of opening a window.
+`cargo test` does not run UI tests. `ui-test` is the only runner. The macro used to generate a
+`#[test]` per test that shelled out to `ui-test` in a second target dir, which bought a second
+entry point onto the same runner, cost a duplicate build, and was broken and skipped in CI for
+long enough that nobody noticed.
 
 Every test prints `Name: Started` and `Name: OK`. On a hang or failure the broken test is the
 one with `Started` and no `OK` — usually the last line of the log.
@@ -61,26 +113,142 @@ The test app disables vsync and raises max frame latency at startup (`Window::se
 no display. Frames render to an offscreen texture in a plain loop, so the full suite runs
 in a few seconds and works on machines without a display server (CI), given a GPU or a
 software Vulkan driver. Screenshots and `check_colors` still work. Run headed when you
-want to watch the UI. The network test (`RestRequest`) is skipped in headless mode.
+want to watch the UI. The network test (`Rest request`) checks `Window::headless()` at the top
+of its `perform_test` and returns before the tap that sends the request, since a registry has
+no place to hang that condition.
 
 For profiling, pass `--fps-report` to print a report at the end of the run: frames, duration
 and average fps per test. Per-test fps varies a lot between runs — macOS sometimes paces frames
 at display rate anyway — so don't compare single runs.
 
-## Two kinds of tests
+## The canvas
 
-1. **Registered** — a view marked `#[view_test]` instead of `#[view]`, with
-   `impl ViewTest { fn perform_test(view: Weak<Self>) }`. The macro registers it under the struct
-   name, so it works with `--test-name` and also generates a normal `#[test]` that runs it as a
-   subprocess.
-2. **Manual** — plain async functions called from hardcoded sequences (`test_base_ui()` in
-   `ui-test/src/base/mod.rs` and similar). Not individually runnable. Prefer `#[view_test]`
-   for new tests.
+Probes index screen pixels, so a test needs a fixed rectangle to draw in. Tests never
+resize the window. Instead the harness pins the root view to a canvas at the frame origin,
+600 by 600 by default, and the rest of the screen shows the clear color. A phone screen
+cannot be resized, so this is what lets the same test and the same probes run on desktop
+and on a device.
+
+The canvas is counted in screen pixels, not points, and the harness divides the scale back
+out. A scale change resizes the root, so the canvas keeps the same pixels either way.
+
+Because the root itself is the canvas, anything laid out against the root lands inside it,
+including modals, alerts and drop downs. Touch dispatch starts at the root, so injected
+touches outside the canvas go nowhere.
+
+Declare a different canvas when the default is too small. Two ceilings apply and the
+lower one wins, so a canvas has to clear both.
+
+Width and height must fit the smallest supported screen, 640 by 1136 on an iPhone 5S,
+or the test cannot run on device. Height must also fit the desktop render surface,
+which is `App::initial_size`, 1200 by 1000 by default and not overridden by `ui-test`.
+So the real ceiling is 640 by 1000, and 1136 is unreachable on desktop.
+
+Going over is silent, not loud. Nothing below 1000 renders, and the probe recorder
+clips to the screenshot with `height.min(shot.size.height)`, so the rows past the
+surface record no probes and read as tested. A canvas of 640 by 1136 leaves its bottom
+three rows of labels dead with a green run.
+
+```rust
+impl ViewTest for LongTableTest {
+    fn canvas() -> (u32, u32) { (640, 1000) }
+    ...
+}
+```
+
+`AppRunner::set_window_size` stays an app API. No test may call it, a window smaller than
+the canvas clips it and every later test probes the clipped frame.
+
+A game or a level fills the root rather than the window, see `UIManager::render_area`.
+Anything else that renders from the whole frame, such as a blur, samples the clear color
+around the canvas, so probes within a blur radius of a canvas edge pick that up. That is
+consistent on every screen, since the canvas is always smaller than the frame.
+
+Global state is reset per test: the root background, the clear color and the string state.
+A test that fails part way never reaches its own cleanup, and without the reset every
+later test would probe the leftovers.
+
+## One shape
+
+**`impl ViewTest for X` is the whole declaration of a test.** There is no attribute. A test is a
+`#[view]` like any other, plus that impl.
+
+The impl is what registers it. `#[view]` puts a ctor on every view which asks the type whether
+it implements `ViewTest`, through a specialization probe, and registers it if so. So the text
+you read and the thing that runs are the same text, and there is nothing to keep in step. Two
+attributes used to answer that question instead, `#[view_test]` and `#[ui_test]`, and both could
+be forgotten: `LoadingView` carried an `impl ViewTest` that no attribute ever registered, so it
+never ran, and `RestRequest` carried both and registered twice, which defeated the headless
+guard on one of the copies and sent every CI run at a live endpoint.
+
+Only `perform_test` is required. The rest have defaults and exist because a real test needed
+them, not in advance:
+
+```rust
+impl ViewTest for MyTest {
+    fn perform_test(view: Weak<Self>) -> Result<()> { ... }   // required
+
+    fn before_start() {}                                       // runs before the view is built
+    fn canvas() -> (u32, u32) { (600, 600) }                   // screen pixels to draw in
+    fn make_root(view: Own<Self>) -> Own<dyn View> { view }    // the root to install
+}
+```
+
+- `before_start` is for anything a view reads *while being built*. A global `Style` is read in
+  `setup`, so applying it from `perform_test` is too late and the test renders unstyled against
+  styled expectations. `Global styles` and `Number view design` need this.
+- `make_root` is for a view that only works inside a host. `Present test view` has to sit in a
+  `NavigationView` before it can present, so it returns the stack. `perform_test` still gets the
+  test view, not the host.
+
+Nothing here is async. A UI test drives the main thread through `from_main` and never awaits. The
+corpus was async for years and not one test awaited anything, which cost a second registry, a
+boxed future type and a hand written call list.
+
+### A generic view cannot be a test
+
+A ctor names one concrete type, and a generic view has none until something instantiates it
+somewhere the macro cannot see. So `#[view]` emits no ctor for a generic view, and nothing would
+ever register the test. That is a compile error rather than a silent no-run: `#[view]` also emits
+`impl Registrable for X` for non-generic views only, and `ViewTest: View + Registrable`. Wrap the
+generic view in a plain one and put the impl on the wrapper.
+
+### The feature
+
+Registration lives behind `test-engine/ui-tests`, off by default, so a shipped app carries no
+ctors at all. The switch is on the proc macro crate, `ui-proc/ui-tests`, not on each consumer,
+so there is exactly one of it and no crate can forget its own and silently lose its tests.
+`ui-test`, `ui-test-suite` and `test-game` turn it on.
+
+## Platform gating
+
+A test for a feature the platform does not have is gated where the feature is gated, not
+skipped at runtime. `Hover::update` is `#[cfg(desktop)]`, so `hover.rs` is too. Typing goes
+through the screen keyboard on a phone rather than injected key events, so the text field tests
+are desktop only as well.
+
+Desktop runs 100 tests and an iPhone runs 97. The difference is the platform, not the suite:
+`custom_text_field`, `hover` and `text_field` are the three gated modules.
+Gate the module in its `mod.rs`, with a comment saying which feature is missing:
+
+```rust
+/// Hover needs a pointer, and there is no such thing on a touch screen.
+#[cfg(desktop)]
+mod hover;
+```
+
+A crate that gates on `#[cfg(desktop)]` needs `plat::platforms()` in its `build.rs`, which is
+what defines those cfgs.
+
+**A test that asserts inside `from_main` and fails takes the whole run down**, because the
+panic lands on the main thread, unwinds through the dispatch and aborts. On a device that means
+the run dies with no report at all. The desktop runner installs a hook for this, the in-app
+runner does not yet.
 
 ## Writing a test
 
 ```rust
-#[view_test]
+#[view]
 struct MyTest {
     #[init]
     button: Button,
@@ -99,11 +267,27 @@ impl ViewTest for MyTest {
 }
 ```
 
+That is the whole thing. The harness builds the view and hands it to `perform_test`, so a test
+never calls `UITest::start` for its own view. It registers as `My test`.
+
+To test an existing widget, give it a fixture view to live in and put the impl on the fixture.
+The corpus does this throughout, and a fixture is usually what you want anyway, since its
+`setup` arranges the scene the widget is tested in.
+
 Test helpers: `inject_touches`, `inject_scroll`, `check_colors` (asserts pixel colors at
 coordinates). To read UI state from test code use `from_main` (see [dispatch.md](dispatch.md)).
 
-One `#[view_test]` per file. Deliberate decision to keep files small — do not "fix" the macro
-to allow more.
+## What a run takes from the app
+
+A run is not read only. It pins scale 1, forces 32 point text, paints its own clear color, pins
+the root to the test canvas and tears the app's root view down. `run_test_map` snapshots all of
+it and hands it back at the end, then asks the app for a new root view, so an app that runs its
+own suite lands back on its main screen at its real scale.
+
+Leave any of it behind and the app carries on wrong. On a phone that means half sized UI, since
+the harness scale of 1 is not the screen's 2.
+
+One test per file. Deliberate decision to keep files small.
 
 A new UI test is not finished when it passes. Always show it to the user for approval:
 run it with `--human`, let them watch it, and wait for their verdict before treating
@@ -114,7 +298,9 @@ the work as done.
 `--human` makes a run watchable: vsync stays on, injected touches are drawn on screen, every
 injected event pauses (`UI_TEST_HUMAN_DELAY` ms, default 400, moved touches an eighth of it),
 and every screenshot pauses first so the verified state is visible. Every `check_colors`
-marks its checked pixels with squares on screen, the window title names the check, and the
+outlines its checked pixels on screen, each with a swatch of the color that probe pins just
+outside the outline's top right corner, so a probe sitting on the background next to a glyph
+is telling apart from one sitting on the glyph. The window title names the check, and the
 run holds until space before asserting. After each test the title shows the result and the
 run holds again. Works for one test or the whole suite. Rejected together with `--headless`.
 
@@ -126,18 +312,35 @@ screenshot, picks probe pixels automatically, and prints them labeled with the t
 check index. Write the test with empty `check_colors("")?` placeholders, run once with the
 flag, paste each block over its placeholder, rerun normally to verify.
 
-The picker is deterministic, the same screen always produces the same block. It samples a
-4px grid, keeps only pixels whose 3x3 neighborhood is near uniform — skipping antialiased
-edges, which differ between renderers — clusters candidates by color so text ink is probed
-alongside backgrounds, gives small enclosed features like letter holes their own probes
-first, and spreads the rest spatially.
+The picker is deterministic, the same screen always produces the same block. It is bounded
+to the canvas, the frame around it is not part of the test and does not exist on a device.
+It samples a 4px grid, keeps only pixels whose neighborhood is near uniform along at least
+one axis — skipping antialiased corners, the pixels a sub pixel layout shift moves most —
+clusters candidates by color so text ink is probed alongside backgrounds, gives small
+enclosed features like letter holes their own probes first, and spreads the rest spatially.
 
-Default is 32 probes per check. A test declares its own density by calling
-`set_record_probe_count(n)` at the start of `perform_test`. It is inert outside record runs
-and resets when the next test starts.
+One axis, not all of them. Uniform in every direction needs a stem 3 pixels wide, which
+only a blocky font has at a normal text size, so every hairline or striped font used to
+yield no candidates at all. Its labels recorded nothing but the background around the
+glyphs and read as tested: `Label stress` pinned 26 of its 40 labels, and blanking the
+other 14 kept the suite green. Uniform along a stem holds however thin the stem is.
+
+Changing the picker does not invalidate existing blocks. `stable_color` is only reached
+under `--record-colors`, a normal run just compares the pinned pixels, so old blocks keep
+passing and a test only gains the better probes when someone re-records it.
+
+Default is 32 probes per check. A test declares its own density with
+`set_record_probe_count(n)` as the first statement of `perform_test`, since starting the test
+resets it to the default. It is inert outside record runs. Keeping it in the test source means
+it survives the next re-record.
 
 `--record-colors --human` combined shows the freshly picked probes the same way normal
 human runs show existing ones, to review what gets pinned before pasting.
 
 Re-recording an existing block to make a failing test pass is editing expectations — same
-rule as above, only with explicit approval.
+rule as above, only with explicit approval. Approval to record is not approval of the
+result: paste the block, show the render with `--test-name <name> --human --record-colors`,
+and wait. A passing rerun proves nothing, the expectation came from that same render.
+
+A recorded block is large. Keep it in a `const` next to the test rather than inline, so
+the function stays readable and within the line limit.

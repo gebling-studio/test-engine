@@ -5,7 +5,7 @@ use refs::Weak;
 use crate::{
     self as test_engine,
     gm::color::{BROWN, Color, GRAY_BLUE, GREEN, LIGHT_BLUE, ORANGE, PURPLE, RED, TURQUOISE, WHITE, YELLOW},
-    ui::{ImageView, Label, ScrollView, Setup, ViewData, ViewFrame, ViewSubviews, ViewTest, view_test},
+    ui::{ImageView, Label, ScrollView, Setup, ViewData, ViewFrame, ViewSubviews, ViewTest, view},
     ui_test::{check_colors, inject_scroll, inject_touches, set_record_probe_count},
 };
 
@@ -16,7 +16,7 @@ const ITEM_COLORS: [Color; 8] = [GREEN, YELLOW, ORANGE, PURPLE, TURQUOISE, LIGHT
 // text items and a photo, three times taller than the scroll. While
 // scrolling, items get cut mid element at both edges. Nothing may ever
 // draw over the header, the footer or the gaps.
-#[view_test]
+#[view]
 struct ScrollClipTest {
     #[init]
     header: Label,

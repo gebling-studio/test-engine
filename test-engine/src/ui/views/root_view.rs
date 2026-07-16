@@ -3,12 +3,15 @@ use refs::{Own, Weak};
 use ui_proc::view;
 
 use crate::{
-    gm::flat::{Point, Size},
+    gm::{
+        color::CLEAR,
+        flat::{Point, Size},
+    },
     ui::{
         Container, ImageMode, ImageView, UIColor, View, ViewData, ViewFrame, ViewSubviews, WeakView,
         view::Setup,
     },
-    window::image::ToImage,
+    window::image::{NoImage, ToImage},
 };
 
 #[view]
@@ -18,6 +21,8 @@ pub struct RootView {
 
     inner_size: Size,
     outer_size: Size,
+
+    test_canvas: Option<Size>,
 
     background: Weak<ImageView>,
     screen:     Weak<Container>,
@@ -41,6 +46,13 @@ impl RootView {
         self.screen.remove_all_subviews();
     }
 
+    /// A test that fails part way through never reaches the line that puts the
+    /// root background back. Every later test would then probe those leftovers.
+    pub(crate) fn reset_background(&mut self) {
+        self.background.set_color(CLEAR);
+        self.background.set_image(NoImage);
+    }
+
     pub fn set_color(self: Weak<Self>, color: impl Into<UIColor>) -> Weak<Self> {
         self.background.set_color(color.into());
         self
@@ -50,6 +62,23 @@ impl RootView {
         self.background.mode = ImageMode::AspectFill;
         self.background.set_image(image);
         self
+    }
+
+    /// UI tests probe fixed screen pixels, so they need a fixed rectangle to
+    /// draw in. A device screen cannot be resized to match, so pin the root to
+    /// the canvas instead. The rest of the screen just shows the clear color.
+    /// Everything that lays out against the root, such as a modal, then lands
+    /// where the probes expect it on any screen.
+    pub(crate) fn set_test_canvas(mut self: Weak<Self>, canvas: Size) {
+        self.test_canvas = canvas.into();
+        self.rescale_root(crate::ui::UIManager::scale());
+    }
+
+    /// Unpin the root and let it fill the screen again. A run that leaves the
+    /// canvas pinned leaves the app boxed into the test's rectangle.
+    pub(crate) fn clear_test_canvas(mut self: Weak<Self>) {
+        self.test_canvas = None;
+        self.rescale_root(crate::ui::UIManager::scale());
     }
 
     pub(crate) fn resize_root(
@@ -64,6 +93,19 @@ impl RootView {
         self.outer_pos = outer_pos;
         self.inner_size = inner_size;
         self.outer_size = outer_size;
+
+        // The canvas is a count of screen pixels, while views lay out in
+        // points, so the scale has to be divided back out.
+        if let Some(canvas) = self.test_canvas {
+            let width = canvas.width * (1.0 / scale);
+            let height = canvas.height * (1.0 / scale);
+
+            self.set_size(width, height);
+            self.screen.set_size(width, height);
+            self.screen.set_position((0, 0));
+
+            return;
+        }
 
         let render_size = if Platform::DESKTOP {
             self.inner_size

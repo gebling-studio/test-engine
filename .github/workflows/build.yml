@@ -18,7 +18,7 @@ jobs:
     name: Code Quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
@@ -38,10 +38,9 @@ jobs:
 
   wasm:
     name: Wasm
-    needs: [quality]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
@@ -51,10 +50,9 @@ jobs:
 
   ui-tests:
     name: UI Tests
-    needs: [quality]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
@@ -66,13 +64,25 @@ jobs:
             mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev mesa-vulkan-drivers
 
       - name: Run UI tests
-        run: cargo run -p ui-test --profile=ci -- --stop-on-failure --headless
+        run: cargo run -p ui-test --profile=ci -- --headless
+
+  ios-ui-tests:
+    name: iOS UI Tests
+    runs-on: mac
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          submodules: recursive
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Run UI tests on the iOS simulator
+        run: bun ./build/ios/sim-test.ts
 
   build:
     name: Build
-    needs: [quality]
-    env:
-      SKIP_UI_TESTS: 1
     strategy:
       fail-fast: false
       matrix:
@@ -81,11 +91,11 @@ jobs:
             { os: windows, runner: windows-latest },
 
             { os: ios, runner: mac },
-            #          { os: android, runner: ubuntu-latest },
+            { os: android, runner: ubuntu-latest },
           ]
     runs-on: ${{ matrix.target.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
@@ -107,9 +117,6 @@ jobs:
 
   linux:
     name: Build Linux
-    needs: [quality]
-    env:
-      SKIP_UI_TESTS: 1
     strategy:
       fail-fast: false
       matrix:
@@ -124,7 +131,7 @@ jobs:
           ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive

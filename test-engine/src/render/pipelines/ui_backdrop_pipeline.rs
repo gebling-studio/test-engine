@@ -1,6 +1,9 @@
+use std::num::NonZeroU64;
+
 use wgpu::{
-    BindGroup, Buffer, PipelineLayoutDescriptor, PrimitiveTopology, RenderPass, RenderPipeline,
-    ShaderModuleDescriptor, ShaderSource, ShaderStages,
+    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindingResource, Buffer, BufferBinding,
+    PipelineLayoutDescriptor, PrimitiveTopology, RenderPass, RenderPipeline, ShaderModuleDescriptor,
+    ShaderSource, ShaderStages,
 };
 
 use crate::{
@@ -9,7 +12,7 @@ use crate::{
         data::{RectView, UIRectInstance},
         device_helper::DeviceHelper,
         pipelines::pipeline_type::PipelineType,
-        uniform::{UniformBind, make_uniform_layout},
+        uniform::{UniformBind, make_storage_layout, make_uniform_layout},
         vec_buffer::VecBuffer,
         vertex_layout::VertexLayout,
     },
@@ -30,6 +33,11 @@ pub struct UIBackdropPipeline {
 
     view: UniformBind<RectView>,
 
+    /// Binds the instance buffer for the fragment stage. The bind group names
+    /// the byte range of one flush, and the buffer bump allocates a new range
+    /// for every flush, so it cannot be cached here.
+    instances_layout: BindGroupLayout,
+
     instances: VecBuffer<UIRectInstance>,
 }
 
@@ -44,9 +52,15 @@ impl Default for UIBackdropPipeline {
 
         let view_layout = make_uniform_layout("ui_backdrop_uniform_layout", ShaderStages::VERTEX_FRAGMENT);
 
+        let instances_layout = make_storage_layout("ui_backdrop_instances_layout", ShaderStages::FRAGMENT);
+
         let layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
             label:              Some("ui_backdrop_pipeline_layout"),
-            bind_group_layouts: &[Some(&view_layout), Some(Image::uniform_layout())],
+            bind_group_layouts: &[
+                Some(&view_layout),
+                Some(Image::uniform_layout()),
+                Some(&instances_layout),
+            ],
             immediate_size:     0,
         });
 
@@ -63,6 +77,7 @@ impl Default for UIBackdropPipeline {
             pipeline,
             vertex_buffer: PipelineType::Color.vertex_buffer(device),
             view: view_layout.into(),
+            instances_layout,
             instances: VecBuffer::default(),
         }
     }
@@ -80,9 +95,25 @@ impl UIBackdropPipeline {
         self.instances.push(instance);
         self.instances.load();
 
+        let range = self.instances.range();
+
+        let instances_bind = Window::device().create_bind_group(&BindGroupDescriptor {
+            label:   Some("ui_backdrop_instances_bind"),
+            layout:  &self.instances_layout,
+            entries: &[BindGroupEntry {
+                binding:  0,
+                resource: BindingResource::Buffer(BufferBinding {
+                    buffer: self.instances.buffer(),
+                    offset: range.start,
+                    size:   NonZeroU64::new(range.end - range.start),
+                }),
+            }],
+        });
+
         render_pass.set_pipeline(&self.pipeline);
         render_pass.set_bind_group(0, self.view.bind(), &[]);
         render_pass.set_bind_group(1, blurred, &[]);
+        render_pass.set_bind_group(2, &instances_bind, &[]);
         render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
         render_pass.set_vertex_buffer(1, self.instances.slice());
 

@@ -1,3 +1,5 @@
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use anyhow::{Ok, Result};
 use log::error;
 use test_engine::{
@@ -13,6 +15,10 @@ use test_engine::{
 
 use crate::interface::HomeView;
 
+/// The load task touches the view on every asset, so a test that returns before
+/// it finishes leaves it dereferencing a freed pointer.
+static LOADED: AtomicBool = AtomicBool::new(false);
+
 #[view]
 pub struct LoadingView {
     #[init]
@@ -23,6 +29,9 @@ pub struct LoadingView {
 
 impl Setup for LoadingView {
     fn setup(self: Weak<Self>) {
+        LOADED.store(false, Ordering::Relaxed);
+        UIManager::set_app_ready(false);
+
         self.spinner.place().center().size(200, 200);
 
         self.label
@@ -77,6 +86,9 @@ impl LoadingView {
 
         UIManager::set_view(HomeView::new());
 
+        LOADED.store(true, Ordering::Relaxed);
+        UIManager::set_app_ready(true);
+
         Ok(())
     }
 
@@ -95,7 +107,12 @@ impl LoadingView {
 
 impl ViewTest for LoadingView {
     fn perform_test(_view: Weak<Self>) -> Result<()> {
-        // record_ui_test();
+        // Every asset touches the view from the load task. Returning before it
+        // is done frees the view under it and the next test dies on the
+        // dangling deref, so hold until the last asset has landed.
+        while !LOADED.load(Ordering::Relaxed) {
+            std::hint::spin_loop();
+        }
 
         Ok(())
     }

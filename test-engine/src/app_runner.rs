@@ -37,9 +37,7 @@ static CURSOR_POSITION: MainLock<Point> = MainLock::new();
 const SCROLL_SPEED: f32 = 0.25;
 
 pub struct AppRunner {
-    pub(crate) app:        Box<dyn App>,
-    pub(crate) first_view: Option<Own<dyn View>>,
-    pub cursor_position:   Point,
+    pub cursor_position: Point,
 }
 
 impl AppRunner {
@@ -55,6 +53,11 @@ impl AppRunner {
     pub(crate) fn setup_log() {
         use fern::Dispatch;
         use log::{Level, LevelFilter};
+
+        #[cfg(target_os = "ios")]
+        let output = fern::Output::call(|record| crate::ios_log::log(&record.args().to_string()));
+        #[cfg(not(target_os = "ios"))]
+        let output = std::io::stdout();
 
         Dispatch::new()
             .level(LevelFilter::Warn)
@@ -90,7 +93,7 @@ impl AppRunner {
 
                 out.finish(format_args!("{log}"));
             })
-            .chain(std::io::stdout())
+            .chain(output)
             .apply()
             .expect("Failed to initialize logging");
 
@@ -123,36 +126,11 @@ impl AppRunner {
         #[cfg(mobile)]
         crate::assets::Assets::init(std::path::PathBuf::default());
 
-        let first_view = Some(app.make_root_view());
+        crate::app::set_app(app);
 
         Self {
-            app,
             cursor_position: Point::default(),
-            first_view,
         }
-    }
-
-    #[cfg(target_os = "android")]
-    pub async fn start(first_view: Own<dyn View>, app: crate::AndroidApp) -> Result<()> {
-        std::panic::set_hook(Box::new(|pan| {
-            let backtrace = std::backtrace::Backtrace::force_capture();
-            eprintln!("{pan}");
-            eprintln!("Backtrace: {backtrace}");
-        }));
-
-        use winit::platform::android::EventLoopBuilderExtAndroid;
-
-        // android_logger::try_init(android_logger::Config::default().
-        // with_max_level(LevelFilter::Trace));
-
-        // try_init();
-
-        android_logger::init_once(android_logger::Config::default().with_max_level(log::LevelFilter::Warn));
-
-        let event_loop: crate::EventLoop =
-            crate::EventLoop::with_user_event().with_android_app(app).build().unwrap();
-
-        Window::start(Self::new(first_view), event_loop).await
     }
 
     #[cfg(not_wasm)]
@@ -241,6 +219,42 @@ impl AppRunner {
     pub fn fps() -> f32 {
         Window::current().fps()
     }
+
+    /// Runs the whole UI suite and exits, when `TE_RUN_TESTS` is set.
+    ///
+    /// The tests drive the main thread through `from_main`, so the run has to
+    /// live on a worker task while the main loop keeps pumping. That is the
+    /// same reason `InspectService` runs `run_all_tests` off the main
+    /// thread. This exists so a simulator or device run is a single launch
+    /// with an exit code, no inspector connection and no mDNS to
+    /// disambiguate.
+    #[cfg(all(not_wasm, feature = "ui-tests"))]
+    fn spawn_test_autorun() {
+        use std::process::exit;
+
+        if std::env::var("TE_RUN_TESTS").is_err() {
+            return;
+        }
+
+        // Wait for the app to finish any async startup before running. An app
+        // can swap a loading screen for its real UI once assets land, and
+        // tearing that root down mid load frees views the load task still
+        // touches. An app with no loading phase is ready at once.
+        UIManager::on_app_ready(|| {
+            hreads::spawn(async {
+                let report = crate::ui_test::run_all_tests();
+
+                for failure in &report.failures {
+                    println!("TEST FAILED: {}\n{}", failure.name, failure.detail);
+                }
+
+                let failed = report.failures.len();
+                println!("TE_TEST_RESULT {} tests, {failed} failed", report.total);
+
+                exit(i32::from(failed != 0));
+            });
+        });
+    }
 }
 
 impl crate::window::WindowEvents for AppRunner {
@@ -251,7 +265,7 @@ impl crate::window::WindowEvents for AppRunner {
             Pipelines::initialize();
 
             let mut root = UIManager::root_view();
-            let view = root.add_subview_to_root(self.first_view.take().unwrap());
+            let view = root.add_subview_to_root(crate::app::app().make_root_view());
             view.place().back();
 
             UIManager::on_scale_changed(root, move |scale| {
@@ -280,10 +294,13 @@ impl crate::window::WindowEvents for AppRunner {
             {
                 #[cfg(desktop)]
                 {
-                    Window::current().set_size(self.app.initial_size().lossy_convert());
+                    Window::current().set_size(crate::app::app().initial_size().lossy_convert());
                 }
-                #[cfg(debug_assertions)]
+                #[cfg(feature = "inspect")]
                 crate::inspect::InspectService::start_listening();
+
+                #[cfg(feature = "ui-tests")]
+                Self::spawn_test_autorun();
             }
 
             UIManager::keymap().add(UIManager::root_view(), 'i', || {
@@ -297,7 +314,7 @@ impl crate::window::WindowEvents for AppRunner {
                 call_inspect(UIManager::root_view());
             });
 
-            self.app.after_launch();
+            crate::app::app().after_launch();
 
             #[cfg(not_wasm)]
             hreads::spawn(async {

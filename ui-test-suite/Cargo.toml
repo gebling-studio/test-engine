@@ -1,0 +1,22 @@
+[package]
+edition.workspace = true
+version.workspace = true
+
+name = "ui-test-suite"
+
+[dependencies]
+anyhow = { workspace = true }
+instant = { workspace = true }
+log = { workspace = true }
+parking_lot = { workspace = true }
+pretty_assertions = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+test-engine = { workspace = true, features = ["inspect", "ui-tests"] }
+
+[build-dependencies]
+plat = { workspace = true }
+
+[lints]
+workspace = true

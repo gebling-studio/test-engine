@@ -1,6 +1,6 @@
 use parking_lot::Mutex;
-use proc_macro::{Span, TokenStream};
-use quote::quote;
+use proc_macro::TokenStream;
+use quote::{format_ident, quote};
 use syn::{
     __private::TokenStream2,
     Attribute, Data, DeriveInput, Field, Fields, FieldsNamed, Ident, LitStr, Meta, Path, Token, Type,
@@ -10,7 +10,6 @@ use syn::{
 };
 
 pub(crate) static VIEWS: Mutex<Vec<String>> = Mutex::new(Vec::new());
-pub(crate) static VIEW_TESTS: Mutex<Vec<String>> = Mutex::new(Vec::new());
 
 /// `#[view(crate = some::path)]` - the path providing `ui`, `refs` and
 /// `educe`. Defaults to `test_engine`.
@@ -34,7 +33,7 @@ impl Parse for ViewArgs {
 }
 
 #[allow(clippy::too_many_lines)]
-pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStream {
+pub fn view_impl(attr: TokenStream, stream: TokenStream) -> TokenStream {
     let root = parse_macro_input!(attr as ViewArgs).root;
     let mut stream = parse_macro_input!(stream as DeriveInput);
 
@@ -50,9 +49,10 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
 
     VIEWS.lock().push(name.to_string());
 
-    if test {
-        VIEW_TESTS.lock().push(format!("{} {:#?}", name, Span::call_site().file()));
-    }
+    // A ctor names one concrete type, and a generic view has none until it is
+    // instantiated somewhere the macro cannot see. So a test on a generic view
+    // needs a plain wrapper view around it.
+    let is_generic = !stream.generics.params.is_empty();
 
     let (impl_generics, ty_generics, where_clause) = stream.generics.split_for_impl();
 
@@ -74,27 +74,31 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
             .expect("parse2(quote! { __view_base: std::cell::UnsafeCell<ViewBase> })"),
     );
 
-    let ui_test_related_stuff = if test {
-        quote! {
-            #[#root::__internal_macro_deps::ctor::ctor(unsafe, crate_path = #root::__internal_macro_deps::ctor)]
-            fn store_test() {
-                crate::UI_TESTS
-                    .lock()
-                    .insert(#name_str.to_string(), run_ui_test);
-            }
-
-            #[test]
-            fn ui_test() -> anyhow::Result<()> {
-                #root::ui_test::run_test_app(env!("CARGO_MANIFEST_DIR"), #name_str)
-            }
-
-            pub fn run_ui_test() -> anyhow::Result<()> {
-                use #root::ui::ViewTest;
-                #name::perform_test(#root::ui_test::UITest::start::<#name>())
-            }
-        }
-    } else {
+    // A generic view gets neither, so `impl ViewTest` on one fails to compile
+    // instead of registering nothing. The marker is not behind the feature: it
+    // is a `ViewTest` supertrait, so a test must still compile with tests off.
+    let ui_test_registration = if is_generic {
         quote!()
+    } else {
+        let ctor = if cfg!(feature = "ui-tests") {
+            let register_fn = format_ident!("__register_ui_test_{name}");
+            quote! {
+                #[#root::__internal_macro_deps::ctor::ctor(unsafe, crate_path = #root::__internal_macro_deps::ctor)]
+                fn #register_fn() {
+                    // Asks the type whether it is a test rather than being told
+                    // by an attribute. `impl ViewTest for X` is the only
+                    // declaration, so what runs and what you read cannot drift.
+                    #root::ui_test::register_if_test::<#name>(file!());
+                }
+            }
+        } else {
+            quote!()
+        };
+
+        quote! {
+            impl #root::ui::Registrable for #name {}
+            #ctor
+        }
     };
 
     quote! {
@@ -187,7 +191,7 @@ pub fn view_impl(attr: TokenStream, stream: TokenStream, test: bool) -> TokenStr
             }
         }
 
-        #ui_test_related_stuff
+        #ui_test_registration
 
     }
     .into()

@@ -15,9 +15,10 @@ use test_engine::{
     refs::{Weak, manage::DataManager},
     ui::{
         ALL_VIEWS, AfterSetup, Alert, Anchor, Button, Container, Font, InfiniteScrollTest, Label, Point,
-        ScrollView, Setup, Shadow, Spinner, TextAlignment, UIManager, ViewData, ViewSubviews, all_view_tests,
-        all_views, view,
+        ScrollView, Setup, Shadow, Spinner, TextAlignment, UIManager, ViewData, ViewSubviews, all_views,
+        view,
     },
+    ui_test::run_all_tests,
 };
 
 #[cfg(feature = "bench")]
@@ -87,24 +88,24 @@ impl Setup for MenuView {
 impl MenuView {
     fn scenes(self: Weak<Self>) -> Weak<Container> {
         let scenes = self.section(None, "SCENES");
-        Self::btn(scenes, "Main level", || UIManager::set_view(GameScene::new()));
-        Self::btn(scenes, "Polygon", || UIManager::set_view(PolygonView::new()));
-        Self::btn(scenes, "Noise", || {
+        Self::button(scenes, "Main level", || UIManager::set_view(GameScene::new()));
+        Self::button(scenes, "Polygon", || UIManager::set_view(PolygonView::new()));
+        Self::button(scenes, "Noise", || {
             LevelManager::stop_level();
             UIManager::set_view(NoiseView::new().on_back(|| {
                 UIManager::set_view(Self::new());
             }));
         });
-        Self::btn(scenes, "Render", || {
+        Self::button(scenes, "Render", || {
             LevelManager::stop_level();
             UIManager::set_view(RenderView::new());
         });
-        Self::btn(scenes, "No physics", || UIManager::set_view(NoPhysicsView::new()));
-        Self::btn(scenes, "Root layout", || {
+        Self::button(scenes, "No physics", || UIManager::set_view(NoPhysicsView::new()));
+        Self::button(scenes, "Root layout", || {
             LevelManager::stop_level();
             UIManager::set_view(RootLayoutView::new());
         });
-        Self::btn(scenes, "Empty game", || {
+        Self::button(scenes, "Empty game", || {
             LevelManager::stop_level();
             UIManager::set_view(GameView::new());
         });
@@ -114,26 +115,48 @@ impl MenuView {
     fn ui(self: Weak<Self>, anchor: Weak<Container>) -> Weak<Container> {
         let ui = self.section(Some(anchor), "UI");
         #[cfg(feature = "bench")]
-        Self::btn(ui, "UI bench", || {
+        Self::button(ui, "UI bench", || {
             LevelManager::stop_level();
             UIManager::set_view(UIBenchmarkView::new());
         });
-        Self::btn(ui, "Alert", || {
+        Self::button(ui, "Run UI tests", || {
+            // Never on the main thread. The tests drive the main thread through
+            // `from_main`, so running them on it deadlocks on the first one.
+            // `run_all_tests` puts the app's root view back when it is done.
+            spawn(async {
+                let report = run_all_tests();
+
+                let text = if report.failures.is_empty() {
+                    format!("{} tests, all passed", report.total)
+                } else {
+                    let names: Vec<&str> = report.failures.iter().map(|f| f.name.as_str()).collect();
+                    format!(
+                        "{} tests, {} failed:\n{}",
+                        report.total,
+                        report.failures.len(),
+                        names.join("\n")
+                    )
+                };
+
+                Alert::show(text);
+            });
+        });
+        Self::button(ui, "Alert", || {
             Alert::show("Hello!");
         });
-        Self::btn(ui, "Sound", || Sound::get("retro.wav").play());
-        Self::btn(ui, "Spinner", || {
+        Self::button(ui, "Sound", || Sound::get("retro.wav").play());
+        Self::button(ui, "Spinner", || {
             let spin = Spinner::lock();
             after(2.0, move || {
                 spin.animated_stop();
             });
         });
-        Self::btn(ui, "Pick folder", || {
+        Self::button(ui, "Pick folder", || {
             spawn(async {
                 Alert::show(format!("{:?}", Paths::pick_folder().await));
             });
         });
-        Self::btn(ui, "Scroll test", || {
+        Self::button(ui, "Scroll test", || {
             let view = InfiniteScrollTest::new().after_setup(|mut v| {
                 v.add_view::<Button>()
                     .set_text("Back")
@@ -146,44 +169,46 @@ impl MenuView {
             LevelManager::stop_level();
             UIManager::set_view(view);
         });
-        Self::btn(ui, "UI 1x", || UIManager::set_scale(1.0));
-        Self::btn(ui, "UI 2x", || UIManager::set_scale(2.0));
+        Self::button(ui, "UI 1x", || UIManager::set_scale(1.0));
+        Self::button(ui, "UI 2x", || UIManager::set_scale(2.0));
         ui
     }
 
     fn level(self: Weak<Self>, anchor: Weak<Container>) -> Weak<Container> {
         let level = self.section(Some(anchor), "LEVEL");
-        Self::btn(level, "Benchmark", || {
+        Self::button(level, "Benchmark", || {
             *LevelManager::camera_pos() = Point::default();
             LevelManager::set_level(BenchmarkLevel::default());
         });
-        Self::btn(level, "Level 1x", || LevelManager::set_scale(1.0));
-        Self::btn(level, "Level 2x", || LevelManager::set_scale(2.0));
+        Self::button(level, "Level 1x", || LevelManager::set_scale(1.0));
+        Self::button(level, "Level 2x", || LevelManager::set_scale(2.0));
         level
     }
 
     fn system(self: Weak<Self>, anchor: Weak<Container>) {
         let system = self.section(Some(anchor), "SYSTEM");
-        Self::btn(system, "System info", || {
+        Self::button(system, "System info", || {
             Alert::with_label(|l| {
                 l.set_text_size(15);
             })
             .show(System::get_info().dump());
         });
         if Platform::IOS {
-            Self::btn(system, "Cloud", write_cloud_data);
+            Self::button(system, "Cloud", write_cloud_data);
         }
-        Self::btn(system, "REST request", move || {
+        Self::button(system, "REST request", move || {
             spawn(async move {
                 self.rest_pressed().await.unwrap();
             });
         });
-        Self::btn(system, "All views", || {
+        Self::button(system, "All views", || {
             dbg!(all_views!());
             dbg!(ALL_VIEWS);
-            dbg!(all_view_tests!());
+            for (name, test) in test_engine::UI_TESTS.lock().iter() {
+                println!("{name}: {}", test.file);
+            }
         });
-        Self::btn(system, "Panic", || panic!("test panic"));
+        Self::button(system, "Panic", || panic!("test panic"));
     }
 
     /// Adds a section header into the scroll and returns the wrapped
@@ -211,7 +236,7 @@ impl MenuView {
         grid
     }
 
-    fn btn<Ret>(grid: Weak<Container>, title: &str, mut action: impl FnMut() -> Ret + Send + 'static) {
+    fn button<Ret>(grid: Weak<Container>, title: &str, mut action: impl FnMut() -> Ret + Send + 'static) {
         let button = grid.add_view::<Button>();
         button
             .set_text(title)

@@ -6,12 +6,12 @@ use crate::{
     gm::color::{BLUE, GREEN, RED},
     ui::{
         Anchor::{Bot, Top},
-        Container, Setup, ViewData, ViewTest, view_test,
+        Container, Setup, ViewData, ViewTest, view,
     },
     ui_test::check_colors,
 };
 
-#[view_test]
+#[view]
 pub(crate) struct AnchorLayoutTest {
     #[init]
     top:    Container,

@@ -2,7 +2,8 @@ use test_engine::{
     refs::Weak,
     ui::{
         Alert, Button, CheckBox, Container, DropDown, Label, NumberView, ProgressView, ScrollView, Setup,
-        Spinner, Switch, TextAlignment, TextField, ViewData, ViewSubviews, WHITE, view,
+        Spinner, SpinnerLockOnView, Switch, TextAlignment, TextField, View, ViewData, ViewSubviews, WHITE,
+        WeakView, view,
     },
 };
 
@@ -16,7 +17,8 @@ use crate::interface::{
 /// so every tile stays reachable on small screens.
 #[view]
 pub struct WidgetGallery {
-    grid: Weak<Container>,
+    grid:      Weak<Container>,
+    spin_lock: SpinnerLockOnView,
 
     #[init]
     scroll: ScrollView,
@@ -55,16 +57,25 @@ impl WidgetGallery {
         tile
     }
 
+    fn toggle_spin(mut self: Weak<Self>, target: WeakView) {
+        if self.spin_lock.is_active() {
+            self.spin_lock = SpinnerLockOnView::default();
+        } else {
+            self.spin_lock = Spinner::start_on(target);
+        }
+    }
+
     fn add_widgets(self: Weak<Self>) {
-        let btn = self.tile("Button").add_view::<Button>();
-        btn.set_text("Tap me")
+        let button = self.tile("Button").add_view::<Button>();
+        button
+            .set_text("Tap me")
             .set_color(ACCENT)
             .set_text_color(WHITE)
             .set_corner_radius(8);
-        btn.on_tap(|| {
+        button.on_tap(|| {
             Alert::show("Hello from the widget gallery");
         });
-        btn.place().t(48).center_x().size(120, 40);
+        button.place().t(48).center_x().size(120, 40);
 
         self.tile("CheckBox")
             .add_view::<CheckBox>()
@@ -89,6 +100,19 @@ impl WidgetGallery {
         let mut spinner = holder.add_view::<Spinner>();
         spinner.dot_color = ACCENT.dark;
         spinner.place().back();
+
+        let panel = self.tile("Spin on view");
+        let target = panel.add_view::<Container>();
+        target.set_color(BG).set_corner_radius(8);
+        target.place().t(34).center_x().size(80, 56);
+        let button = panel.add_view::<Button>();
+        button
+            .set_text("Toggle")
+            .set_color(ACCENT)
+            .set_text_color(WHITE)
+            .set_corner_radius(8);
+        button.place().b(10).center_x().size(120, 30);
+        button.on_tap(move || self.toggle_spin(target.weak_view()));
 
         let mut drop = self.tile("DropDown").add_view::<DropDown<&'static str>>();
         drop.set_values(vec!["One", "Two", "Three"]);

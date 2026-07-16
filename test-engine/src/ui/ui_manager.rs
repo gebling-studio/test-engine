@@ -1,4 +1,5 @@
 use std::{
+    mem::take,
     ops::Deref,
     path::PathBuf,
     sync::{
@@ -18,7 +19,7 @@ use crate::{
         color::Color,
         flat::{Point, Rect, Size},
     },
-    ui::{Keymap, RootView, Setup, TouchStack, UIAnimation, UIEvent, View, ViewData, WeakView},
+    ui::{Keymap, RootView, Setup, TouchStack, UIAnimation, UIEvent, View, ViewData, ViewFrame, WeakView},
     window::Window,
 };
 
@@ -27,6 +28,16 @@ pub(crate) static DELETED_VIEWS: Mutex<Vec<Own<dyn View>>> = Mutex::new(Vec::new
 static ANIMATIONS: Mutex<Vec<UIAnimation>> = Mutex::new(Vec::new());
 
 static UI_MANAGER: OnceLock<UIManager> = OnceLock::new();
+
+/// False while an app is still doing async startup, a loading screen fetching
+/// assets for one. The test autorun waits for ready before tearing the root
+/// down, since a mid load teardown frees views the load task still touches. An
+/// app with no such phase leaves it at the ready default.
+static APP_READY: AtomicBool = AtomicBool::new(true);
+
+/// Actions parked by `on_app_ready` while the app is not ready yet, run in
+/// order the moment it becomes ready.
+static ON_APP_READY: Mutex<Vec<Box<dyn FnOnce() + Send>>> = Mutex::new(Vec::new());
 
 #[cfg(ios)]
 static IOS_KEYBOARD_INIT: std::sync::Once = std::sync::Once::new();
@@ -113,7 +124,25 @@ impl UIManager {
         Self::set_scale(scale);
     }
 
-    pub(crate) fn on_scale_changed<U>(subscriber: Weak<U>, mut cb: impl FnMut(f32) + Send + 'static) {
+    /// The override in effect, 0.0 meaning none. The test harness pins scale 1
+    /// and has to put this back, or the app stays at scale 1 on a screen that
+    /// is not, which on a phone means half sized UI.
+    pub(crate) fn scale_override() -> f32 {
+        f32::from_bits(Self::get().manual_scale.load(Ordering::Relaxed))
+    }
+
+    /// Drop the override and go back to the screen's own scale.
+    pub(crate) fn restore_scale_override(scale: f32) {
+        assert_main_thread();
+        let sf = Self::get();
+
+        sf.manual_scale.store(scale.to_bits(), Ordering::Relaxed);
+
+        let real = Window::screen_scale();
+        Self::set_scale(if scale == 0.0 { real } else { scale });
+    }
+
+    pub(crate) fn on_scale_changed<U: ?Sized>(subscriber: Weak<U>, mut cb: impl FnMut(f32) + Send + 'static) {
         Self::get().scale_changed.val(subscriber, move |scale| {
             cb(scale);
         });
@@ -179,6 +208,33 @@ impl UIManager {
         &Self::get().app_instance_id
     }
 
+    /// An app with async startup calls this with `false` while it loads and
+    /// `true` once its real UI is up. Setting `true` runs everything parked on
+    /// `on_app_ready`.
+    pub fn set_app_ready(ready: bool) {
+        let parked = {
+            let mut queue = ON_APP_READY.lock();
+            APP_READY.store(ready, Ordering::Relaxed);
+            if ready { take(&mut *queue) } else { vec![] }
+        };
+        for action in parked {
+            action();
+        }
+    }
+
+    /// Runs `action` once the app is ready, right now if it already is. The
+    /// store and this check share the queue lock, so a concurrent
+    /// `set_app_ready` can neither drop the action nor run it twice.
+    pub(crate) fn on_app_ready(action: impl FnOnce() + Send + 'static) {
+        let mut queue = ON_APP_READY.lock();
+        if APP_READY.load(Ordering::Relaxed) {
+            drop(queue);
+            action();
+        } else {
+            queue.push(Box::new(action));
+        }
+    }
+
     pub(crate) fn window_resolution() -> Size {
         let size = if Platform::IOS {
             Window::render_size()
@@ -186,6 +242,15 @@ impl UIManager {
             Window::inner_size()
         };
         (size.width, size.height).into()
+    }
+
+    /// Pixels the app renders into. The same as the window in an app, because
+    /// the root fills it. A UI test pins the root to a fixed canvas instead, so
+    /// a game or a level lands on the same pixels on any screen.
+    pub(crate) fn render_area() -> Size {
+        let size = Self::root_view().size();
+        let scale = Self::scale();
+        (size.width * scale, size.height * scale).into()
     }
 
     pub(crate) fn display_scale() -> f32 {

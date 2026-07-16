@@ -1,10 +1,11 @@
 mod checks;
+mod collect;
 pub mod helpers;
 mod human;
 mod record;
 mod report;
-mod runner;
 pub mod state;
+mod suite;
 mod ui_test;
 
 use std::{
@@ -14,19 +15,20 @@ use std::{
 };
 
 use anyhow::{Result, bail};
+pub use collect::{TestFailure, any_failed, clear_failures, push_failure, run_test, take_failures};
 pub use helpers::*;
 use hreads::{from_main, is_main_thread, on_main, wait_for_next_frame};
 pub use human::{enable_human_mode, human_mode};
 pub(crate) use human::{hold_for_human, human_pause, human_pause_quick};
 use log::{error, warn};
 use parking_lot::Mutex;
-pub(crate) use record::reset_record_probe_count;
 pub use record::{enable_color_recording, recording_colors, set_record_probe_count};
+pub(crate) use record::{reset_record_probe_count, set_record_canvas};
 use refs::Own;
 pub use report::failure_report;
-pub use runner::run_test_app;
 use serde::de::DeserializeOwned;
 pub use state::*;
+pub use suite::{TestRunReport, run_all_tests, run_test_map};
 
 pub use self::ui_test::*;
 use crate::{

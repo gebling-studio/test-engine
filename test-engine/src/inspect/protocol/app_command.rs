@@ -13,7 +13,20 @@ pub enum AppCommand {
         png_base64: String,
     },
     Edits(Vec<EditEntry>),
+    TestResults {
+        total:    usize,
+        failures: Vec<TestFailureRepr>,
+    },
+    /// Unix seconds of when the app's Rust code was compiled, see
+    /// `test-engine/build.rs`.
+    BuildTime(u64),
     UI(UIResponse),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TestFailureRepr {
+    pub name:   String,
+    pub detail: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

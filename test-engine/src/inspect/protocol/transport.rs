@@ -1,16 +1,13 @@
 use anyhow::Result;
-#[cfg(debug_assertions)]
 use hreads::on_main;
-#[cfg(debug_assertions)]
 use log::debug;
 use serde_json::{from_slice, to_vec};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
-    net::{TcpStream, ToSocketAddrs},
+    net::{TcpListener, TcpStream, ToSocketAddrs},
+    spawn,
     sync::Mutex,
 };
-#[cfg(debug_assertions)]
-use tokio::{net::TcpListener, spawn};
 
 use crate::inspect::protocol::{AppCommand, InspectorCommand};
 
@@ -32,7 +29,6 @@ impl Client {
     }
 }
 
-#[cfg(debug_assertions)]
 pub(crate) async fn serve(listener: TcpListener, handler: fn(InspectorCommand) -> AppCommand) -> Result<()> {
     loop {
         let (mut stream, addr) = listener.accept().await?;
@@ -44,7 +40,6 @@ pub(crate) async fn serve(listener: TcpListener, handler: fn(InspectorCommand) -
     }
 }
 
-#[cfg(debug_assertions)]
 async fn handle_connection(
     stream: &mut TcpStream,
     handler: fn(InspectorCommand) -> AppCommand,

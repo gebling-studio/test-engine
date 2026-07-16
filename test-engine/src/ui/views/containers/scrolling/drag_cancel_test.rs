@@ -4,14 +4,14 @@ use refs::Weak;
 
 use crate::{
     self as test_engine,
-    ui::{Button, ScrollView, Setup, ViewData, ViewSubviews, ViewTest, view_test},
+    ui::{Button, ScrollView, Setup, ViewData, ViewSubviews, ViewTest, view},
     ui_test::inject_touches,
 };
 
 /// Drag scrolling must not tap the view the drag began on.
 /// Before the fix releasing a drag over a button pressed it, because the
 /// button kept the capture and moved along with the content under the finger.
-#[view_test]
+#[view]
 struct DragCancel {
     taps:   u32,
     button: Weak<Button>,

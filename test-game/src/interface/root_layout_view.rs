@@ -2,7 +2,7 @@ use test_engine::{
     refs::Weak,
     ui::{
         Container, LIGHT_BLUE, NoImage, NumberView, Setup, Style, UIManager, ViewData, ViewSubviews,
-        ViewTest, view_test,
+        ViewTest, view,
     },
     ui_test::check_colors,
 };
@@ -13,7 +13,7 @@ const CORNER_STYLE: Style = Style::new(|v| {
     v.set_color(LIGHT_BLUE).place().size(80, 80);
 });
 
-#[view_test]
+#[view]
 pub struct RootLayoutView {
     #[init]
     scale: NumberView,

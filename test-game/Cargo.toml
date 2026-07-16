@@ -30,7 +30,8 @@ serde = { workspace = true }
 serde_json = { workspace = true, optional = true }
 sysinfo = { workspace = true, optional = true }
 
-test-engine = { workspace = true }
+test-engine = { workspace = true, features = ["inspect", "ui-tests"] }
+ui-test-suite = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 dotenvy = { workspace = true }

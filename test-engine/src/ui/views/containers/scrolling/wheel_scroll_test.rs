@@ -4,11 +4,11 @@ use refs::Weak;
 
 use crate::{
     self as test_engine,
-    ui::{Alert, ScrollView, Setup, ViewData, ViewSubviews, ViewTest, view_test},
+    ui::{Alert, ScrollView, Setup, ViewData, ViewSubviews, ViewTest, view},
     ui_test::{inject_scroll, inject_touches},
 };
 
-#[view_test]
+#[view]
 struct WheelScrollTest {
     inner: Weak<ScrollView>,
 

@@ -1,0 +1,72 @@
+use std::{
+    any::Any,
+    panic::{AssertUnwindSafe, catch_unwind},
+};
+
+use anyhow::Result;
+use log::error;
+use parking_lot::Mutex;
+
+use super::failure_report;
+
+/// One failed test. `detail` holds the returned error or the panic message
+/// together with the failure report.
+pub struct TestFailure {
+    pub name:   String,
+    pub detail: String,
+}
+
+static FAILURES: Mutex<Vec<TestFailure>> = Mutex::new(Vec::new());
+
+/// Drop every recorded failure. The full suite calls this before a run so a
+/// second run in the same process starts clean.
+pub fn clear_failures() {
+    FAILURES.lock().clear();
+}
+
+/// Take and clear the failures collected so far.
+pub fn take_failures() -> Vec<TestFailure> {
+    std::mem::take(&mut FAILURES.lock())
+}
+
+pub fn any_failed() -> bool {
+    !FAILURES.lock().is_empty()
+}
+
+fn record(name: &str, detail: String) {
+    error!("{name}: FAILED");
+    FAILURES.lock().push(TestFailure {
+        name: name.to_string(),
+        detail,
+    });
+}
+
+/// Record a failure from outside the runner, used by the panic hook for a main
+/// thread panic that `catch_unwind` here cannot reach.
+pub fn push_failure(name: &str, detail: String) {
+    record(name, detail);
+}
+
+fn panic_message(panic: &(dyn Any + Send)) -> String {
+    if let Some(s) = panic.downcast_ref::<&str>() {
+        (*s).to_string()
+    } else if let Some(s) = panic.downcast_ref::<String>() {
+        s.clone()
+    } else {
+        "unknown panic".to_string()
+    }
+}
+
+/// Run one registered test. Catches a returned `Err` and a panic, records the
+/// failure, and returns without propagating, so the run keeps going and every
+/// failure is reported at the end.
+pub fn run_test(name: &str, test: impl FnOnce() -> Result<()>) {
+    match catch_unwind(AssertUnwindSafe(test)) {
+        Ok(Ok(())) => {}
+        Ok(Err(err)) => record(name, format!("{err:?}")),
+        Err(panic) => {
+            let report = failure_report().unwrap_or_else(|e| format!("failed to collect report: {e}"));
+            record(name, format!("panic: {}\n{report}", panic_message(&*panic)));
+        }
+    }
+}

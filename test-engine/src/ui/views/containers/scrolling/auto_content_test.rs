@@ -8,14 +8,14 @@ use crate::{
         LossyConvert,
         color::{BLUE, GREEN, YELLOW},
     },
-    ui::{Container, ScrollView, Setup, ViewData, ViewSubviews, ViewTest, view_test},
+    ui::{Container, ScrollView, Setup, ViewData, ViewSubviews, ViewTest, view},
     ui_test::{check_colors, inject_scroll, inject_touches},
 };
 
 /// Covers the automatic content size: a scroll view whose content size
 /// was never set gets its width from the viewport and its height from
 /// the lowest subview edge, hidden subviews not counting.
-#[view_test]
+#[view]
 struct AutoContentTest {
     #[init]
     scroll: ScrollView,

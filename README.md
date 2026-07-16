@@ -55,8 +55,9 @@ flags.
 
 ## Platform support
 
-TestEngine currently supports Windows, Linux, macOS, iOS and WebAssembly. Android support is
-temporarily disabled and is not covered by CI.
+TestEngine currently supports Windows, Linux, macOS, iOS, Android and WebAssembly. The Android
+APK builds fully inside docker via `make android`, so no host Android tooling is needed.
+Minimum supported Android version is 8.0, API 26.
 
 ---
 

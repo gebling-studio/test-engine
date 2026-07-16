@@ -4,14 +4,14 @@ use refs::Weak;
 
 use crate::{
     gm::color::{BLUE, RED},
-    ui::{Container, Setup, ViewData, ViewTest, ViewTouch, view_test},
+    ui::{Container, Setup, ViewData, ViewTest, ViewTouch, view},
     ui_test::inject_touches,
 };
 
 /// A view hidden during an active press must lose the touch capture.
 /// Before the fix it kept it forever: hover moves triggered its events
 /// after unhiding and it consumed other views' touch ends.
-#[view_test]
+#[view]
 struct HiddenTouch {
     a_moved: u32,
     a_up:    u32,

@@ -1,10 +1,11 @@
 use std::{
     collections::HashMap,
-    env::temp_dir,
-    fs::{read_to_string, write},
+    env::{current_dir, temp_dir},
+    fs::{read_dir, read_to_string, write},
     net::{IpAddr, SocketAddr},
-    path::PathBuf,
-    time::Duration,
+    path::{Path, PathBuf},
+    process::exit,
+    time::{Duration, UNIX_EPOCH},
 };
 
 use anyhow::{Result, bail};
@@ -87,6 +88,12 @@ enum Command {
     PlaySound,
     /// List all edits applied to the app in this session
     Edits,
+    /// Run the app's whole UI test suite in the app and report every failure
+    RunTests,
+    /// When the running app's Rust code was compiled, against the newest source
+    /// file here. Tells a stale binary from a current one before anything is
+    /// tested against it.
+    BuildTime,
 }
 
 // Responses hold Own pointers which must drop on the main thread. The
@@ -149,6 +156,8 @@ async fn main() -> Result<()> {
             send(&client, InspectorCommand::PlaySound).await?;
             println!("ok");
         }
+        Command::RunTests => run_tests(&client).await?,
+        Command::BuildTime => build_time(&client).await?,
         Command::Edits => {
             let AppCommand::Edits(edits) = send(&client, InspectorCommand::ListEdits).await? else {
                 bail!("Unexpected response to edits");
@@ -187,6 +196,24 @@ async fn main() -> Result<()> {
             };
             print_edited(&client, request, &view_id).await?;
         }
+    }
+
+    Ok(())
+}
+
+async fn run_tests(client: &Client) -> Result<()> {
+    let AppCommand::TestResults { total, failures } = send(client, InspectorCommand::RunTests).await? else {
+        bail!("Unexpected response to run-tests");
+    };
+
+    println!("{total} tests, {} failed", failures.len());
+
+    for failure in &failures {
+        println!("\n===== {} =====\n{}", failure.name, failure.detail);
+    }
+
+    if !failures.is_empty() {
+        exit(1);
     }
 
     Ok(())
@@ -350,6 +377,84 @@ async fn discover() -> Result<HashMap<String, SocketAddr>> {
     }
 
     Ok(apps)
+}
+
+/// An iOS build relinks the app bundle every time while happily reusing a
+/// stale `libtest_game.a`, so a fresh looking bundle can run code from an hour
+/// ago. The only honest answer comes from the running app itself, and the only
+/// useful form of it is a verdict against what is on disk here.
+async fn build_time(client: &Client) -> Result<()> {
+    let AppCommand::BuildTime(built) = send(client, InspectorCommand::GetBuildTime).await? else {
+        bail!("Unexpected response to build-time");
+    };
+
+    println!("app code built: {built}");
+
+    let Some((newest, path)) = newest_source(&current_dir()?)? else {
+        println!("No source files here, cannot tell whether the app is current");
+        return Ok(());
+    };
+
+    println!("newest source:  {newest}  {}", path.display());
+
+    if newest > built {
+        let minutes = (newest - built) / 60;
+        bail!(
+            "App is stale. Source is {minutes} minutes newer than the running code. Rebuild and reinstall before testing anything against it."
+        );
+    }
+
+    println!("verdict: app is up to date");
+
+    Ok(())
+}
+
+/// Newest mtime among the files that end up compiled in, as unix seconds.
+fn newest_source(dir: &Path) -> Result<Option<(u64, PathBuf)>> {
+    let mut newest: Option<(u64, PathBuf)> = None;
+
+    for entry in read_dir(dir)? {
+        let path = entry?.path();
+
+        let name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+
+        // `target` holds build output, and its mtimes are always newer than the
+        // sources they came from, which would make every app look stale.
+        // `inspector` and `te-inspect` are host side clients that never link
+        // into an app, so editing them cannot make one stale either. A check
+        // that cries wolf is a check nobody runs.
+        if name.starts_with('.')
+            || name == "target"
+            || name == "build"
+            || name == "inspector"
+            || name == "te-inspect"
+        {
+            continue;
+        }
+
+        if path.is_dir() {
+            if let Some(found) = newest_source(&path)?
+                && newest.as_ref().is_none_or(|(time, _)| found.0 > *time)
+            {
+                newest = Some(found);
+            }
+            continue;
+        }
+
+        let ext = path.extension().unwrap_or_default().to_string_lossy().to_string();
+
+        if !matches!(ext.as_str(), "rs" | "wgsl" | "toml") {
+            continue;
+        }
+
+        let modified = path.metadata()?.modified()?.duration_since(UNIX_EPOCH)?.as_secs();
+
+        if newest.as_ref().is_none_or(|(time, _)| modified > *time) {
+            newest = Some((modified, path));
+        }
+    }
+
+    Ok(newest)
 }
 
 fn resolve(apps: &HashMap<String, SocketAddr>, app: Option<String>) -> Result<SocketAddr> {

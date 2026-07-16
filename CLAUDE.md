@@ -1,13 +1,17 @@
 # TestEngine
 
 Cross platform game engine and UI framework in Rust. Rendering on WGPU.
-Supports: Windows, Linux, Mac, iOS and WebAssembly. Android is temporarily unsupported.
+Supports: Windows, Linux, Mac, iOS, Android and WebAssembly.
 
 The engine is one library crate, `test-engine`, with modules like `gm`, `ui`, `window`,
 `render`, `level` under `test-engine/src/`. `deps/` holds only the proc macro crates.
 Apps and test binaries are separate crates on top. Internals are `pub(crate)`, the
 app-facing API is `pub` — keep new items `pub(crate)` unless apps need them, so the
 `dead_code` lint stays meaningful.
+
+The UI test corpus is its own crate, `ui-test-suite`, so `test-game` can link it and carry
+every test onto a device. It must never depend on `test-game`, that is a cycle, since the
+`ui-test` runner links both.
 
 No proof, no merge. A performance claim needs an A/B per [docs/benchmark.md](docs/benchmark.md)
 acceptance criteria, a correctness claim needs a reproduced failure. Unproved ideas go to
@@ -39,17 +43,23 @@ Do not read these upfront. Read the matching file only when the task touches tha
 - [docs/roadmap.md](docs/roadmap.md) — missing engine features found by porting a real app,
   with current state, design notes, and order. Read before planning or starting a new
   engine capability, and update it when one lands.
+- [docs/ios.md](docs/ios.md) — what keeps iOS 12 and the A7 working: `NSLog` output, the
+  ObjC exception preprocessor, the two version settings that look alike, the weak linked
+  CoreGraphics and the wgpu fork. Read before touching anything iOS, the `wgpu` pin, the
+  iOS deployment target, or when an app dies on a device with no message.
 
 Docs should be concise.
 
 ## Commands
 
 ```bash
-cargo run -p ui-test -- --stop-on-failure --headless                         # full UI test suite
-cargo run -p ui-test -- --stop-on-failure --headless --test-name <ViewName>  # single test
-cargo run -p ui-test -- --test-name <ViewName> --human                       # watchable run, space to advance
-cargo run -p ui-test -- --stop-on-failure --headless --test-name <ViewName> --record-colors  # print check_colors blocks
+cargo run -p ui-test -- --list                                               # every registered test and the total
+cargo run -p ui-test -- --headless                                           # full UI test suite
+cargo run -p ui-test -- --headless --test-name <name>                        # single test, the name it prints
+cargo run -p ui-test -- --test-name <name> --human                           # watchable run, space to advance
+cargo run -p ui-test -- --headless --test-name <name> --record-colors        # print check_colors blocks
 cargo run -p render-test                                                     # render tests
+make ui                                                                      # desktop suite, plus the iOS simulator suite on macOS, one report
 make ci                                                                      # typos, formatting, lints, unused dependencies
 make lint                                                                    # clippy, pedantic, zero warnings
 cargo machete                                                                # unused dependencies, zero findings
@@ -59,8 +69,9 @@ UI_BENCHMARK=1 cargo run -p test-game --release --features bench             # s
 
 `TE_HEADLESS=1` runs any app without a window.
 
-Without `--stop-on-failure` a failed UI test leaves the app window running. Always pass it.
-`--headless` runs without a window or a display — tests run many times faster. Always pass it too.
+The suite runs every test, prints every failure at the end, then exits 1 if any failed.
+`--headless` runs without a window or a display — tests run many times faster. Always pass
+it.
 
 After touching any `Cargo.toml` or removing code, run `cargo machete`. It must report
 zero unused dependencies.

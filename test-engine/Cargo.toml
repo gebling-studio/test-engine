@@ -10,6 +10,14 @@ name = "test_engine"
 
 [features]
 bench = []
+# The inspect server listens on the network and can edit any view, so it must
+# never reach a shipped app by accident. Off unless an app asks for it.
+inspect = []
+# Registers every `impl ViewTest` into `UI_TESTS`. The switch lives on the proc
+# macro, so off means `view` emits no ctor in any crate and a shipped app
+# carries none. One switch for the whole graph, so no crate can forget it and
+# silently lose its tests.
+ui-tests = ["ui-proc/ui-tests"]
 webgl = ["wgpu/webgl"]
 
 [dependencies]
@@ -74,8 +82,11 @@ winit = { workspace = true, features = ["android-game-activity"] }
 [target.'cfg(not(target_os = "android"))'.dependencies]
 winit = { workspace = true }
 
-[target.'cfg(not(target_os = "ios"))'.dependencies]
+[target.'cfg(not(any(target_os = "ios", target_os = "android")))'.dependencies]
 rfd = { workspace = true }
+
+[target.'cfg(target_os = "ios")'.dependencies]
+objc2-foundation = { workspace = true }
 
 [build-dependencies]
 plat = { workspace = true }

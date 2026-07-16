@@ -1,51 +1,26 @@
-#![allow(incomplete_features)]
-#![feature(specialization)]
-#![feature(arbitrary_self_types)]
+use std::{collections::BTreeMap, env::var, hint::black_box, panic::set_hook, process::exit};
 
-use std::{
-    collections::BTreeMap,
-    env::var,
-    panic::{catch_unwind, set_hook, take_hook},
-    process::exit,
-};
-
-use anyhow::{Result, anyhow, bail};
+use anyhow::Result;
 use clap::Parser;
 use log::info;
 use test_engine::{
     AppRunner, Window,
-    dispatch::from_main,
+    dispatch::{from_main, is_main_thread},
     ui::{Label, UIManager},
-    ui_test::{UITest, enable_color_recording, enable_fps_report, enable_human_mode},
-};
-
-#[cfg(debug_assertions)]
-use crate::inspect::test_inspect;
-use crate::{
-    base::test_base_ui,
-    views::{
-        basic::test_base_views,
-        complex::test_complex_views,
-        containers::test_containers,
-        helpers::test_helper_views,
-        images::test_image_views,
-        // input::test_input_views,
-        layout::test_layout,
+    ui_test::{
+        TestFailure, UITest, UITestEntry, clear_failures, current_test_name, enable_color_recording,
+        enable_fps_report, enable_human_mode, push_failure, run_test, spaced_test_name, take_failures,
     },
 };
-
-mod base;
-#[cfg(debug_assertions)]
-mod inspect;
-mod level;
-mod views;
-
-test_engine::export_ui_tests!();
 
 #[derive(Parser)]
 struct Args {
     #[arg(long, short)]
     test_name: Option<String>,
+
+    /// Print every registered test and the total, then exit without running.
+    #[arg(long)]
+    list: bool,
 
     #[command(flatten)]
     run: RunArgs,
@@ -57,9 +32,6 @@ struct Args {
 /// How the run reacts to failures and what it reports.
 #[derive(clap::Args)]
 struct RunArgs {
-    #[arg(long)]
-    stop_on_failure: bool,
-
     #[arg(long)]
     fps_report: bool,
 
@@ -80,6 +52,25 @@ struct DisplayArgs {
     human: bool,
 }
 
+/// Names the crates whose tests this runner covers, so a linker keeps them.
+///
+/// Every test registers through a `ctor` and nothing calls it by name, so a
+/// linker drops a whole rlib and takes its tests with it. Nothing reports that,
+/// the suite just quietly runs fewer tests. This is the same trap that hid
+/// every test on iOS, see `keep_ctor_linked` in
+/// `test-engine/src/app_starter.rs`.
+fn keep_tests_linked() {
+    ui_test_suite::keep_linked();
+    black_box(test_game::TestGameApp);
+}
+
+/// Every registered test, from the corpus, the app and the engine. They all
+/// register into the one engine owned map, so there is nothing to merge.
+fn all_tests() -> BTreeMap<String, UITestEntry> {
+    keep_tests_linked();
+    test_engine::UI_TESTS.lock().clone()
+}
+
 fn run(args: Args) -> Result<()> {
     if args.run.fps_report {
         enable_fps_report();
@@ -87,7 +78,7 @@ fn run(args: Args) -> Result<()> {
 
     if args.display.human {
         if args.display.headless {
-            bail!("--human requires a window, remove --headless");
+            anyhow::bail!("--human requires a window, remove --headless");
         }
         enable_human_mode();
     }
@@ -96,23 +87,31 @@ fn run(args: Args) -> Result<()> {
         enable_color_recording();
     }
 
-    if args.run.stop_on_failure {
-        let default_hook = take_hook();
-        set_hook(Box::new(move |info| {
-            default_hook(info);
-            let report = catch_unwind(test_engine::ui_test::failure_report)
-                .unwrap_or_else(|_| Err(anyhow!("report collection panicked")));
+    install_fatal_panic_hook();
 
-            match report {
-                Ok(report) => eprintln!("{report}"),
-                Err(err) => eprintln!("Failed to collect failure report: {err}"),
-            }
-            exit(1);
-        }));
+    let tests = all_tests();
+
+    // A suite that runs nothing otherwise reports success, which looks exactly
+    // like a suite that passes. Registration is a ctor nothing calls by name, so
+    // an empty map means the `ui-tests` feature is off or a linker dropped a
+    // whole crate, never that there are no tests.
+    anyhow::ensure!(
+        !tests.is_empty(),
+        "No UI tests registered. Either the `test-engine/ui-tests` feature is off, or a linker \
+         dropped a test crate whose ctors nothing references, see `keep_tests_linked`.",
+    );
+
+    if args.list {
+        for name in tests.keys() {
+            println!("{name}");
+        }
+        println!("\n{} UI tests", tests.len());
+        return Ok(());
     }
 
     let test_name = args.test_name;
     let human = args.display.human;
+    let total = if test_name.is_some() { 1 } else { tests.len() };
 
     let actor = async move {
         Label::set_default_text_size(32);
@@ -127,27 +126,24 @@ fn run(args: Args) -> Result<()> {
             }
         });
 
-        let my_tests: BTreeMap<_, _> = crate::UI_TESTS.lock().clone();
-
-        let mut te_tests: BTreeMap<_, _> = test_game::UI_TESTS.lock().clone();
-        te_tests.append(&mut test_engine::UI_TESTS.lock().clone());
+        clear_failures();
 
         if let Some(test_name) = test_name {
-            if let Some(test) = my_tests.get(&test_name) {
-                test()?;
-                UITest::finish();
-                AppRunner::stop();
-                return Ok(());
-            }
+            // Also accept the struct ident, so a tool reading `impl ViewTest for
+            // ScrollViewTest` off the source can pass what it sees without
+            // deriving the spaced name itself. `spaced_test_name` is the one
+            // place that rule lives, and drifting from it is what made the old
+            // generated `#[test]` pass a name the runner rejected.
+            let key = spaced_test_name(&test_name);
 
-            let Some(test) = te_tests.get(&test_name) else {
-                // Exit directly. Erroring out of here panics the worker
-                // and the stop_on_failure hook then deadlocks collecting
-                // a report from the already stopped main loop.
-                println!("Test: {test_name} not found");
+            let Some(test) = tests.get(&key) else {
+                eprintln!("UI test not found: {test_name}");
+                eprintln!("Run `cargo run -p ui-test -- --list` to see every registered test.");
                 exit(1);
             };
-            test()?;
+
+            run_test(&key, test.run);
+
             UITest::finish();
             AppRunner::stop();
             return Ok(());
@@ -156,12 +152,10 @@ fn run(args: Args) -> Result<()> {
         let cycles: u32 = var("UI_TEST_CYCLES").unwrap_or("2".to_string()).parse().unwrap();
 
         for i in 1..=cycles {
-            test().await?;
-            info!("Cycle {i}: OK");
-
-            for test in te_tests.values() {
-                test()?;
+            for (name, test) in &tests {
+                run_test(name, test.run);
             }
+            info!("Cycle {i}: OK");
         }
 
         UITest::finish();
@@ -176,24 +170,54 @@ fn run(args: Args) -> Result<()> {
         AppRunner::start_with_actor(actor)?;
     }
 
-    Ok(())
+    let failures = take_failures();
+
+    if failures.is_empty() {
+        println!("{total} UI tests passed");
+        return Ok(());
+    }
+
+    report_failures(total, &failures);
+    exit(1);
+}
+
+/// A panic inside a `from_main` closure runs on the main thread and kills the
+/// frame loop, so `CatchUnwind` on the actor never sees it and any pending
+/// `from_main` hangs. Detect that case, report everything gathered so far plus
+/// the fatal test, and exit. Actor thread panics are left to `CatchUnwind`.
+fn install_fatal_panic_hook() {
+    set_hook(Box::new(move |info| {
+        if !is_main_thread() {
+            return;
+        }
+
+        let name = current_test_name();
+        let name = if name.is_empty() {
+            "unknown".to_string()
+        } else {
+            name
+        };
+        push_failure(&name, format!("main thread panic: {info}"));
+        report_failures(all_tests().len(), &take_failures());
+        exit(1);
+    }));
+}
+
+/// Print every failed test once, most useful line first, then the full detail.
+fn report_failures(total: usize, failures: &[TestFailure]) {
+    let mut seen = std::collections::BTreeSet::new();
+    let unique: Vec<&TestFailure> = failures.iter().filter(|f| seen.insert(f.name.clone())).collect();
+
+    eprintln!("\n{} of {total} UI test(s) failed:", unique.len());
+    for f in &unique {
+        eprintln!("  - {}", f.name);
+    }
+
+    for f in &unique {
+        eprintln!("\n===== {} =====\n{}", f.name, f.detail);
+    }
 }
 
 fn main() -> Result<()> {
     run(Args::parse())
-}
-
-async fn test() -> Result<()> {
-    test_base_ui().await?;
-    test_base_views().await?;
-    #[cfg(debug_assertions)]
-    test_inspect().await?;
-    test_layout().await?;
-    test_complex_views().await?;
-    test_image_views().await?;
-    test_containers().await?;
-    // test_input_views().await?;
-    test_helper_views().await?;
-
-    Ok(())
 }

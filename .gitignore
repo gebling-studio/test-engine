@@ -119,8 +119,6 @@ profile.json.gz
 test-game/dist/*
 example-app/dist/*
 
-*decrypted*
-
 .env
 
 .claude/

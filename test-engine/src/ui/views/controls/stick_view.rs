@@ -76,11 +76,11 @@ mod test {
 
     use crate::{
         gm::flat::Point,
-        ui::{Setup, StickView, ViewData, ViewTest, view_test},
+        ui::{Setup, StickView, ViewData, ViewTest, view},
         ui_test::inject_touches,
     };
 
-    #[view_test]
+    #[view]
     struct StickViewTest {
         point: Point,
 

@@ -7,6 +7,8 @@ pub enum InspectorCommand {
     PlaySound,
     Screenshot,
     ListEdits,
+    RunTests,
+    GetBuildTime,
     UI(UIRequest),
 }
 

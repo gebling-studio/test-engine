@@ -44,8 +44,8 @@ impl Paths {
     }
 
     // Desktop always uses it for asset discovery. Mobile needs it only for
-    // the debug inspect edit log.
-    #[cfg(any(desktop, all(not_wasm, debug_assertions)))]
+    // the inspect edit log.
+    #[cfg(any(desktop, all(not_wasm, feature = "inspect")))]
     pub(crate) fn git_root() -> anyhow::Result<PathBuf> {
         #[cfg(wasm)]
         {

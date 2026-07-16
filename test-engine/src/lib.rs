@@ -22,6 +22,8 @@ mod app_starter;
 mod config;
 mod dispatch_tools;
 mod game_drawer;
+#[cfg(target_os = "ios")]
+mod ios_log;
 mod pipelines;
 
 pub mod audio;
@@ -73,7 +75,9 @@ pub mod net {
 pub mod dispatch {
     #[cfg(not_wasm)]
     pub use ::hreads::first_ok;
-    pub use ::hreads::{after, from_main, ok_main, on_main, sleep, spawn, wait_async, wait_for_next_frame};
+    pub use ::hreads::{
+        after, from_main, is_main_thread, ok_main, on_main, sleep, spawn, wait_async, wait_for_next_frame,
+    };
 
     pub use crate::{dispatch_tools::*, gm::drop_on_main};
 }
@@ -87,10 +91,10 @@ pub use plat::Platform;
 
 #[cfg(target_os = "android")]
 pub type AndroidApp = winit::platform::android::activity::AndroidApp;
-#[cfg(target_os = "android")]
-pub type EventLoop = winit::event_loop::EventLoop<crate::window::Events>;
 
-#[allow(clippy::type_complexity)]
+/// Every UI test, from the engine, the corpus and the app. One map, filled by
+/// a ctor per view before `main`, so the count is known without running
+/// anything and nothing has to merge lists.
 pub static UI_TESTS: __internal_macro_deps::Mutex<
-    std::collections::BTreeMap<String, fn() -> anyhow::Result<()>>,
+    std::collections::BTreeMap<String, crate::ui_test::UITestEntry>,
 > = __internal_macro_deps::Mutex::new(std::collections::BTreeMap::new());

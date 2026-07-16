@@ -1,13 +1,23 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 fn main() {
     plat::platforms();
+    stamp_build_time();
+}
 
-    // The inspect module compiles in only under debug_assertions. A release
-    // profile with debug-assertions enabled would ship it, so refuse to build.
-    let release = std::env::var("PROFILE").as_deref() == Ok("release");
-    let debug_assertions = std::env::var_os("CARGO_CFG_DEBUG_ASSERTIONS").is_some();
+/// Stamps when this crate was last compiled, which `te-inspect build-time`
+/// reads back off a running app.
+///
+/// The link time of the app bundle is not the same thing and cannot replace
+/// this. An iOS build relinks the bundle every time while happily reusing a
+/// stale `libtest_game.a`, so the binary looks freshly built, runs old code,
+/// and every test against it is a lie. This stamp lives inside the Rust code,
+/// so it only moves when the Rust code is really rebuilt.
+fn stamp_build_time() {
+    let seconds = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("System clock is before the unix epoch")
+        .as_secs();
 
-    assert!(
-        !(release && debug_assertions),
-        "inspect is debug-only. Do not enable debug-assertions in a release profile."
-    );
+    println!("cargo:rustc-env=TE_BUILD_TIME={seconds}");
 }

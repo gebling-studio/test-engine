@@ -1,11 +1,11 @@
 use anyhow::Result;
 use test_engine::{
     refs::Weak,
-    ui::{BLUE, Button, RED, Setup, ViewData, ViewTest, view_test},
+    ui::{BLUE, Button, RED, Setup, ViewData, ViewTest, view},
     ui_test::check_colors,
 };
 
-#[view_test]
+#[view]
 struct JustView {
     #[init]
     red:  Button,

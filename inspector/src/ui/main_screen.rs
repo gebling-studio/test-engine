@@ -241,7 +241,11 @@ impl MainScreen {
                 self.restore_selection();
             }),
             AppCommand::Error(err) => error!("App returned an error: {err}"),
-            AppCommand::Ok | AppCommand::Screenshot { .. } | AppCommand::Edits(_) => {}
+            AppCommand::Ok
+            | AppCommand::Screenshot { .. }
+            | AppCommand::Edits(_)
+            | AppCommand::BuildTime(_)
+            | AppCommand::TestResults { .. } => {}
         }
     }
 }

@@ -5,6 +5,7 @@ use crate::render::{
 };
 
 mod background_pipeline;
+mod lab_pipeline;
 mod pipeline_type;
 mod polygon_pipeline;
 mod rect_pipeline;
@@ -41,6 +42,7 @@ pub(crate) type UIShadowPipeline =
     RectPipeline<{ PipelineType::Color }, "ui_shadow", UI_SHADOW_CODE, RectView, UIShadowInstance>;
 
 pub use background_pipeline::BackgroundPipeline;
+pub(crate) use lab_pipeline::LabPipeline;
 pub use polygon_pipeline::PolygonPipeline;
 pub use ui_backdrop_pipeline::UIBackdropPipeline;
 pub use ui_blur_pipeline::UIBlurPipeline;

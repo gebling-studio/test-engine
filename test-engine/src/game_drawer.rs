@@ -4,7 +4,7 @@ use crate::{
     game::{Game, Shape},
     gm::flat::Point,
     render::{BackgroundPipeline, SpriteView, TexturedSpriteBoxPipeline, data::TexturedSpriteInstance},
-    ui::UIManager,
+    ui::{UIManager, ui_drawer::set_viewport},
     window::RenderPass,
 };
 
@@ -17,14 +17,10 @@ impl GameDrawer {
     pub fn draw(pass: &mut RenderPass, game: &mut Game) {
         game.update();
 
-        BACKGROUND.get_mut().draw(
-            pass,
-            &game.skybox,
-            UIManager::window_resolution(),
-            Point::default(),
-            0.0,
-            1.0,
-        );
+        let area = UIManager::render_area();
+        set_viewport(pass, area);
+
+        BACKGROUND.get_mut().draw(pass, &game.skybox, area, Point::default(), 0.0, 1.0);
 
         for object in &game.objects {
             if let Shape::Rect(size) = object.shape {
@@ -45,11 +41,13 @@ impl GameDrawer {
             pass,
             SpriteView {
                 camera_pos:      Point::default(),
-                resolution:      UIManager::window_resolution(),
+                resolution:      area,
                 camera_rotation: 0.0,
                 scale:           1.0,
                 _padding:        0,
             },
         );
+
+        set_viewport(pass, UIManager::window_resolution());
     }
 }

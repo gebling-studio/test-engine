@@ -1,10 +1,27 @@
 use std::pin::Pin;
 
-use refs::Own;
+use refs::{Own, main_lock::MainLock};
 
 use crate::{app_starter::test_engine_start_with_app, gm::flat::Size, ui::View};
 
 pub type PinnedFuture<T> = Pin<Box<dyn Future<Output = anyhow::Result<T>>>>;
+
+/// The running app, reachable for as long as it runs.
+///
+/// It lives here rather than inside `AppRunner` because more than the runner
+/// needs it. A UI test run tears the root view down, and putting it back means
+/// asking the app for a new one long after launch.
+static APP: MainLock<Option<Box<dyn App>>> = MainLock::new();
+
+pub(crate) fn set_app(app: Box<dyn App>) {
+    *APP.get_mut() = Some(app);
+}
+
+pub(crate) fn app() -> &'static dyn App {
+    APP.get_mut()
+        .as_deref()
+        .expect("App is not set. `test_engine_start_with_app` does that.")
+}
 
 pub trait App {
     fn before_launch(&self) {}
@@ -57,15 +74,5 @@ macro_rules! register_app {
 
             Box::new(<$app>::default())
         }
-    };
-}
-
-#[macro_export]
-macro_rules! export_ui_tests {
-    () => {
-        #[allow(clippy::type_complexity)]
-        pub static UI_TESTS: test_engine::__internal_macro_deps::Mutex<
-            std::collections::BTreeMap<String, fn() -> anyhow::Result<()>>,
-        > = test_engine::__internal_macro_deps::Mutex::new(std::collections::BTreeMap::new());
     };
 }

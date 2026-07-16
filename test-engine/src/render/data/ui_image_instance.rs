@@ -10,19 +10,22 @@ use crate::{
     render::vertex_layout::VertexLayout,
 };
 
+/// Field order is not free. The fragment stage reads this through a storage
+/// buffer, where a `vec4` must start at a multiple of 16, so every `vec4` comes
+/// first. See `UIRectInstance` for the same reasoning and a layout test.
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Zeroable, Pod)]
 pub struct UIImageInstance {
+    pub border_color: Color,
+    pub corner_radii: CornerRadii,
     pub position:     Point,
     pub size:         Size,
-    pub border_color: Color,
+    pub uv_position:  Point,
+    pub uv_size:      Size,
     pub border_width: f32,
-    pub corner_radii: CornerRadii,
     pub z_position:   f32,
     pub flags:        u32,
     pub scale:        f32,
-    pub uv_position:  Point,
-    pub uv_size:      Size,
 }
 
 impl UIImageInstance {
@@ -78,10 +81,35 @@ impl UIImageInstance {
 }
 
 impl VertexLayout for UIImageInstance {
-    const ATTRIBS: &'static [wgpu::VertexAttribute] = &wgpu::vertex_attr_array![2 => Float32x2, 3 => Float32x2, 4 => Float32x4, 5 => Float32, 6 => Float32x4, 7 => Float32, 8 => Uint32, 9 => Float32, 10 => Float32x2, 11 => Float32x2];
+    const ATTRIBS: &'static [wgpu::VertexAttribute] = &wgpu::vertex_attr_array![2 => Float32x4, 3 => Float32x4, 4 => Float32x2, 5 => Float32x2, 6 => Float32x2, 7 => Float32x2, 8 => Float32, 9 => Float32, 10 => Uint32, 11 => Float32];
     const VERTEX_LAYOUT: VertexBufferLayout<'static> = VertexBufferLayout {
         array_stride: size_of::<Self>() as BufferAddress,
         step_mode:    VertexStepMode::Instance,
         attributes:   Self::ATTRIBS,
     };
+}
+
+#[cfg(test)]
+mod test {
+    use std::mem::offset_of;
+
+    use super::UIImageInstance;
+
+    /// `ui_image.wgsl` names these offsets in its `std430` storage struct. A
+    /// reordered field would still compile and would feed the shader whatever
+    /// happened to land at the offset it expected.
+    #[test]
+    fn std430_layout() {
+        assert_eq!(offset_of!(UIImageInstance, border_color), 0);
+        assert_eq!(offset_of!(UIImageInstance, corner_radii), 16);
+        assert_eq!(offset_of!(UIImageInstance, position), 32);
+        assert_eq!(offset_of!(UIImageInstance, size), 40);
+        assert_eq!(offset_of!(UIImageInstance, uv_position), 48);
+        assert_eq!(offset_of!(UIImageInstance, uv_size), 56);
+        assert_eq!(offset_of!(UIImageInstance, border_width), 64);
+        assert_eq!(offset_of!(UIImageInstance, z_position), 68);
+        assert_eq!(offset_of!(UIImageInstance, flags), 72);
+        assert_eq!(offset_of!(UIImageInstance, scale), 76);
+        assert_eq!(size_of::<UIImageInstance>(), 80);
+    }
 }
