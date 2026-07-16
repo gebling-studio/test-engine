@@ -91,8 +91,6 @@ pub use plat::Platform;
 
 #[cfg(target_os = "android")]
 pub type AndroidApp = winit::platform::android::activity::AndroidApp;
-#[cfg(target_os = "android")]
-pub type EventLoop = winit::event_loop::EventLoop<crate::window::Events>;
 
 /// Every UI test, from the engine, the corpus and the app. One map, filled by
 /// a ctor per view before `main`, so the count is known without running

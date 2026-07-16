@@ -133,31 +133,6 @@ impl AppRunner {
         }
     }
 
-    #[cfg(target_os = "android")]
-    pub async fn start(app: Box<dyn App>, android_app: crate::AndroidApp) -> Result<()> {
-        std::panic::set_hook(Box::new(|pan| {
-            let backtrace = std::backtrace::Backtrace::force_capture();
-            eprintln!("{pan}");
-            eprintln!("Backtrace: {backtrace}");
-        }));
-
-        use winit::platform::android::EventLoopBuilderExtAndroid;
-
-        // android_logger::try_init(android_logger::Config::default().
-        // with_max_level(LevelFilter::Trace));
-
-        // try_init();
-
-        android_logger::init_once(android_logger::Config::default().with_max_level(log::LevelFilter::Warn));
-
-        let event_loop: crate::EventLoop = crate::EventLoop::with_user_event()
-            .with_android_app(android_app)
-            .build()
-            .unwrap();
-
-        Window::start(Self::new(app), event_loop).await
-    }
-
     #[cfg(not_wasm)]
     pub fn start_with_actor(
         actions: impl std::future::Future<Output = Result<()>> + Send + 'static,

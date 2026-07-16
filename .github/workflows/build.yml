@@ -79,7 +79,7 @@ jobs:
             { os: windows, runner: windows-latest },
 
             { os: ios, runner: mac },
-            #          { os: android, runner: ubuntu-latest },
+            { os: android, runner: ubuntu-latest },
           ]
     runs-on: ${{ matrix.target.runner }}
     steps:

@@ -40,12 +40,6 @@ static HEADLESS: AtomicBool = AtomicBool::new(false);
 /// Doesn't work on some Androids and on Web
 pub(crate) const SUPPORT_SCREENSHOT: bool = !Platform::ANDROID && !Platform::WASM;
 
-#[cfg(target_os = "android")]
-pub(crate) type Events = winit::platform::android::activity::AndroidApp;
-
-#[cfg(not(target_os = "android"))]
-pub type Events = ();
-
 pub struct Window {
     pub state: State,
 

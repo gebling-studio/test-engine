@@ -82,7 +82,7 @@ winit = { workspace = true, features = ["android-game-activity"] }
 [target.'cfg(not(target_os = "android"))'.dependencies]
 winit = { workspace = true }
 
-[target.'cfg(not(target_os = "ios"))'.dependencies]
+[target.'cfg(not(any(target_os = "ios", target_os = "android")))'.dependencies]
 rfd = { workspace = true }
 
 [target.'cfg(target_os = "ios")'.dependencies]

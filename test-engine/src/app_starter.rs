@@ -1,5 +1,3 @@
-use std::hint::black_box;
-
 use winit::event_loop::{ControlFlow, EventLoop};
 
 use crate::{
@@ -20,7 +18,11 @@ use crate::{
 /// and every test registration was dropped in silence. This reference is that
 /// undefined symbol.
 fn keep_ctor_linked() {
-    black_box(&crate::__internal_macro_deps::ctor::collect::GUARD_ATOMIC);
+    // Only apple targets collect constructors into a guarded section. ELF
+    // targets run them natively through `.init_array`, and the guard symbol
+    // does not exist there.
+    #[cfg(target_vendor = "apple")]
+    std::hint::black_box(&crate::__internal_macro_deps::ctor::collect::GUARD_ATOMIC);
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -40,6 +42,20 @@ fn run_app(event_loop: EventLoop<Window>, app: &mut AppHandler) {
 #[cfg(not(target_os = "android"))]
 #[unsafe(no_mangle)]
 pub extern "C" fn test_engine_start_app() -> std::ffi::c_int {
+    #[allow(unused_unsafe)]
+    test_engine_start_with_app(unsafe { test_engine_create_app() })
+}
+
+/// Handed over from `android_main` and consumed when the event loop is
+/// built, which happens deep in a path shared with every other platform,
+/// so it cannot arrive there as a parameter.
+#[cfg(target_os = "android")]
+static ANDROID_APP: crate::__internal_macro_deps::Mutex<Option<crate::AndroidApp>> =
+    crate::__internal_macro_deps::Mutex::new(None);
+
+#[cfg(target_os = "android")]
+pub fn test_engine_start_app(android_app: crate::AndroidApp) -> std::ffi::c_int {
+    ANDROID_APP.lock().replace(android_app);
     #[allow(unused_unsafe)]
     test_engine_start_with_app(unsafe { test_engine_create_app() })
 }
@@ -72,7 +88,18 @@ fn start_with_app(app: Box<dyn App>, headless: bool) -> std::ffi::c_int {
         #[cfg(wasm)]
         let _ = headless;
 
+        #[cfg(not(target_os = "android"))]
         let event_loop = EventLoop::<Window>::with_user_event().build().unwrap();
+
+        #[cfg(target_os = "android")]
+        let event_loop = {
+            use winit::platform::android::EventLoopBuilderExtAndroid;
+            EventLoop::<Window>::with_user_event()
+                .with_android_app(ANDROID_APP.lock().take().expect("AndroidApp is not set"))
+                .build()
+                .unwrap()
+        };
+
         event_loop.set_control_flow(ControlFlow::Poll);
         let app = AppHandler::new(AppRunner::new(app), &event_loop);
         run_app(event_loop, app);
@@ -80,8 +107,19 @@ fn start_with_app(app: Box<dyn App>, headless: bool) -> std::ffi::c_int {
 
     let headless = headless || std::env::var("TE_HEADLESS").is_ok();
 
-    #[cfg(not_wasm)]
+    #[cfg(all(not_wasm, not_android))]
     AppRunner::setup_log();
+
+    // Android swallows stdout and stderr, logcat is the only output that
+    // reaches the developer, so both logs and panics go through it.
+    #[cfg(target_os = "android")]
+    {
+        android_logger::init_once(android_logger::Config::default().with_max_level(log::LevelFilter::Info));
+        std::panic::set_hook(Box::new(|panic| {
+            let backtrace = std::backtrace::Backtrace::force_capture();
+            log::error!("{panic}\nBacktrace: {backtrace}");
+        }));
+    }
 
     #[cfg(target_os = "ios")]
     {
