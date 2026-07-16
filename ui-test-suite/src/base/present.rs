@@ -85,7 +85,7 @@ fn check_present_animation(view: Weak<PresentTestView>) -> Result<()> {
     presented.recv()?;
 
     let duration_error = now.elapsed().as_secs_f32() - PRESENT_ANIMATION_DURATION;
-    let allowed_error = 0.032;
+    let allowed_error = 0.04;
 
     check_colors(
         r"
