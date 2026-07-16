@@ -1,4 +1,5 @@
 use std::{
+    mem::take,
     ops::Deref,
     path::PathBuf,
     sync::{
@@ -27,6 +28,16 @@ pub(crate) static DELETED_VIEWS: Mutex<Vec<Own<dyn View>>> = Mutex::new(Vec::new
 static ANIMATIONS: Mutex<Vec<UIAnimation>> = Mutex::new(Vec::new());
 
 static UI_MANAGER: OnceLock<UIManager> = OnceLock::new();
+
+/// False while an app is still doing async startup, a loading screen fetching
+/// assets for one. The test autorun waits for ready before tearing the root
+/// down, since a mid load teardown frees views the load task still touches. An
+/// app with no such phase leaves it at the ready default.
+static APP_READY: AtomicBool = AtomicBool::new(true);
+
+/// Actions parked by `on_app_ready` while the app is not ready yet, run in
+/// order the moment it becomes ready.
+static ON_APP_READY: Mutex<Vec<Box<dyn FnOnce() + Send>>> = Mutex::new(Vec::new());
 
 #[cfg(ios)]
 static IOS_KEYBOARD_INIT: std::sync::Once = std::sync::Once::new();
@@ -195,6 +206,33 @@ impl UIManager {
 
     pub fn app_instance_id() -> &'static str {
         &Self::get().app_instance_id
+    }
+
+    /// An app with async startup calls this with `false` while it loads and
+    /// `true` once its real UI is up. Setting `true` runs everything parked on
+    /// `on_app_ready`.
+    pub fn set_app_ready(ready: bool) {
+        let parked = {
+            let mut queue = ON_APP_READY.lock();
+            APP_READY.store(ready, Ordering::Relaxed);
+            if ready { take(&mut *queue) } else { vec![] }
+        };
+        for action in parked {
+            action();
+        }
+    }
+
+    /// Runs `action` once the app is ready, right now if it already is. The
+    /// store and this check share the queue lock, so a concurrent
+    /// `set_app_ready` can neither drop the action nor run it twice.
+    pub(crate) fn on_app_ready(action: impl FnOnce() + Send + 'static) {
+        let mut queue = ON_APP_READY.lock();
+        if APP_READY.load(Ordering::Relaxed) {
+            drop(queue);
+            action();
+        } else {
+            queue.push(Box::new(action));
+        }
     }
 
     pub(crate) fn window_resolution() -> Size {

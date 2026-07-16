@@ -30,6 +30,7 @@ pub struct LoadingView {
 impl Setup for LoadingView {
     fn setup(self: Weak<Self>) {
         LOADED.store(false, Ordering::Relaxed);
+        UIManager::set_app_ready(false);
 
         self.spinner.place().center().size(200, 200);
 
@@ -86,6 +87,7 @@ impl LoadingView {
         UIManager::set_view(HomeView::new());
 
         LOADED.store(true, Ordering::Relaxed);
+        UIManager::set_app_ready(true);
 
         Ok(())
     }

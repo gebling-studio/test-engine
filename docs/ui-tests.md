@@ -34,6 +34,15 @@ An app runs the same suite from inside itself, which is how tests run on a devic
 `te-inspect run-tests` triggers it over the network. `test-game` also has a "Run UI tests"
 button in its dev menu. See [inspect.md](inspect.md).
 
+Set `TE_RUN_TESTS` and the app runs the whole suite once it is ready, prints
+`TE_TEST_RESULT <n> tests, <m> failed` and exits with a matching code. It waits on
+`UIManager::on_app_ready`, since a mid load teardown frees views the load task still
+touches, so an app with a loading screen marks itself not ready until assets land. No
+inspector and no mDNS, so it runs while the desktop lane runs. `make ui` uses it: on macOS
+it runs the desktop suite and the iOS simulator suite in parallel, then prints one report.
+The simulator lane is `build/ios/sim-test.ts`, an iPhone 8 on iOS 16.4, the oldest device
+this toolchain can boot. See [ios.md](ios.md).
+
 ## One registry
 
 Every test, whatever crate it lives in, registers into a single map, `test_engine::UI_TESTS`,

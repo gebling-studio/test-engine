@@ -244,6 +244,42 @@ impl AppRunner {
     pub fn fps() -> f32 {
         Window::current().fps()
     }
+
+    /// Runs the whole UI suite and exits, when `TE_RUN_TESTS` is set.
+    ///
+    /// The tests drive the main thread through `from_main`, so the run has to
+    /// live on a worker task while the main loop keeps pumping. That is the
+    /// same reason `InspectService` runs `run_all_tests` off the main
+    /// thread. This exists so a simulator or device run is a single launch
+    /// with an exit code, no inspector connection and no mDNS to
+    /// disambiguate.
+    #[cfg(all(not_wasm, feature = "ui-tests"))]
+    fn spawn_test_autorun() {
+        use std::process::exit;
+
+        if std::env::var("TE_RUN_TESTS").is_err() {
+            return;
+        }
+
+        // Wait for the app to finish any async startup before running. An app
+        // can swap a loading screen for its real UI once assets land, and
+        // tearing that root down mid load frees views the load task still
+        // touches. An app with no loading phase is ready at once.
+        UIManager::on_app_ready(|| {
+            hreads::spawn(async {
+                let report = crate::ui_test::run_all_tests();
+
+                for failure in &report.failures {
+                    println!("TEST FAILED: {}\n{}", failure.name, failure.detail);
+                }
+
+                let failed = report.failures.len();
+                println!("TE_TEST_RESULT {} tests, {failed} failed", report.total);
+
+                exit(i32::from(failed != 0));
+            });
+        });
+    }
 }
 
 impl crate::window::WindowEvents for AppRunner {
@@ -287,6 +323,9 @@ impl crate::window::WindowEvents for AppRunner {
                 }
                 #[cfg(feature = "inspect")]
                 crate::inspect::InspectService::start_listening();
+
+                #[cfg(feature = "ui-tests")]
+                Self::spawn_test_autorun();
             }
 
             UIManager::keymap().add(UIManager::root_view(), 'i', || {
