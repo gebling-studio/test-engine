@@ -13,6 +13,8 @@
 #![feature(arbitrary_self_types)]
 
 mod base;
+// The engine compiles the inspector out on wasm, so its tests go with it.
+#[cfg(not_wasm)]
 mod inspect;
 mod level;
 mod views;
