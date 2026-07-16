@@ -60,13 +60,13 @@ pub fn check_colors(data: &str) -> Result<()> {
         .collect();
 
     if human_mode() {
-        let positions: Vec<(u32, u32)> = checks
+        let probes: Vec<((u32, u32), U8Color)> = checks
             .iter()
-            .map(|(pos, _)| (pos.x.lossy_convert(), pos.y.lossy_convert()))
+            .map(|(pos, color)| ((pos.x.lossy_convert(), pos.y.lossy_convert()), *color))
             .collect();
 
         let test_name = TEST_NAME.lock().clone();
-        show_probes(&positions, &test_name, next_check_index(&test_name));
+        show_probes(&probes, &test_name, next_check_index(&test_name));
     }
 
     check_colors_structured(&checks)

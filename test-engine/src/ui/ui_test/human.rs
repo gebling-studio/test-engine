@@ -16,7 +16,7 @@ use parking_lot::Mutex;
 use crate::{
     gm::{
         LossyConvert,
-        color::{BLACK, CLEAR, WHITE},
+        color::{BLACK, CLEAR, U8Color, WHITE},
     },
     ui::{Container, Setup, UIManager, ViewData, ViewFrame, ViewSubviews, WeakView},
     ui_test::TEST_NAME,
@@ -66,30 +66,50 @@ pub(crate) fn hold_for_human() {
     wait_for_space();
 }
 
+/// Size of the swatch showing a probe's color, and of the outline drawn
+/// around the probed pixel. The outline is a black square in a white one,
+/// so it stays visible on any background.
+const SWATCH: f32 = 8.0;
+const OUTLINE: f32 = 12.0;
+
 /// Marks every checked pixel with a square around it, the pixel in the
-/// center, and holds until space. Black square in a white one, so
-/// markers stay visible on any background.
-pub(crate) fn show_probes(positions: &[(u32, u32)], test_name: &str, index: usize) {
-    let positions = positions.to_vec();
+/// center, puts a swatch of the color that probe pins just outside the
+/// square's top right corner, and holds until space.
+///
+/// The outline alone says where a probe sits, not what it asserts, and
+/// that is the half that matters. A probe pinning the background beside
+/// a glyph looks exactly like one pinning the glyph.
+pub(crate) fn show_probes(probes: &[((u32, u32), U8Color)], test_name: &str, index: usize) {
+    let probes = probes.to_vec();
 
     let markers = from_main(move || {
         let mut markers: Vec<WeakView> = vec![];
 
-        for (x, y) in positions {
+        let mut add = |frame: (f32, f32, f32, f32), fill, border| {
+            let mut view = Container::new();
+            view.set_z_position(0.1);
+            view.set_color(fill)
+                .set_border_color(border)
+                .set_border_width(1)
+                .set_frame(frame);
+            markers.push(UIManager::root_view().add_subview_to_root(view));
+        };
+
+        for ((x, y), color) in probes {
             let x: f32 = x.lossy_convert();
             let y: f32 = y.lossy_convert();
 
-            for (size, color) in [(12.0, WHITE), (10.0, BLACK)] {
-                let mut view = Container::new();
-                view.set_z_position(0.1);
-                view.set_color(CLEAR).set_border_color(color).set_border_width(1).set_frame((
-                    x - size / 2.0,
-                    y - size / 2.0,
-                    size,
-                    size,
-                ));
-                markers.push(UIManager::root_view().add_subview_to_root(view));
+            for (size, border) in [(OUTLINE, WHITE), (OUTLINE - 2.0, BLACK)] {
+                add((x - size / 2.0, y - size / 2.0, size, size), CLEAR, border);
             }
+
+            // Outside the outline, so it never covers the probed pixel.
+            let corner = OUTLINE / 2.0;
+            add(
+                (x + corner, y - corner - SWATCH, SWATCH, SWATCH),
+                color.into(),
+                WHITE,
+            );
         }
 
         markers

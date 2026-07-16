@@ -289,7 +289,9 @@ the work as done.
 `--human` makes a run watchable: vsync stays on, injected touches are drawn on screen, every
 injected event pauses (`UI_TEST_HUMAN_DELAY` ms, default 400, moved touches an eighth of it),
 and every screenshot pauses first so the verified state is visible. Every `check_colors`
-marks its checked pixels with squares on screen, the window title names the check, and the
+outlines its checked pixels on screen, each with a swatch of the color that probe pins just
+outside the outline's top right corner, so a probe sitting on the background next to a glyph
+is telling apart from one sitting on the glyph. The window title names the check, and the
 run holds until space before asserting. After each test the title shows the result and the
 run holds again. Works for one test or the whole suite. Rejected together with `--headless`.
 
@@ -303,10 +305,20 @@ flag, paste each block over its placeholder, rerun normally to verify.
 
 The picker is deterministic, the same screen always produces the same block. It is bounded
 to the canvas, the frame around it is not part of the test and does not exist on a device.
-It samples a 4px grid, keeps only pixels whose 3x3 neighborhood is near uniform — skipping
-antialiased edges, which differ between renderers — clusters candidates by color so text
-ink is probed alongside backgrounds, gives small enclosed features like letter holes their
-own probes first, and spreads the rest spatially.
+It samples a 4px grid, keeps only pixels whose neighborhood is near uniform along at least
+one axis — skipping antialiased corners, the pixels a sub pixel layout shift moves most —
+clusters candidates by color so text ink is probed alongside backgrounds, gives small
+enclosed features like letter holes their own probes first, and spreads the rest spatially.
+
+One axis, not all of them. Uniform in every direction needs a stem 3 pixels wide, which
+only a blocky font has at a normal text size, so every hairline or striped font used to
+yield no candidates at all. Its labels recorded nothing but the background around the
+glyphs and read as tested: `Label stress` pinned 26 of its 40 labels, and blanking the
+other 14 kept the suite green. Uniform along a stem holds however thin the stem is.
+
+Changing the picker does not invalidate existing blocks. `stable_color` is only reached
+under `--record-colors`, a normal run just compares the pinned pixels, so old blocks keep
+passing and a test only gains the better probes when someone re-records it.
 
 Default is 32 probes per check. A test declares its own density with
 `set_record_probe_count(n)` as the first statement of `perform_test`, since starting the test

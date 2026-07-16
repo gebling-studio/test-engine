@@ -25,9 +25,17 @@ static CANVAS: Mutex<Option<(u32, u32)>> = Mutex::new(None);
 const DEFAULT_PROBE_COUNT: usize = 32;
 const GRID_STEP: u32 = 4;
 
-/// A probe candidate must have a near uniform neighborhood of this radius.
-/// Filters out antialiased edges, which differ between renderers.
-/// Radius 1 keeps glyph interiors, radius 2 rejects most text.
+/// A probe candidate must have a near uniform neighborhood along at least
+/// one axis, at this radius. Filters out antialiased corners, which are the
+/// pixels most sensitive to a sub pixel layout shift.
+///
+/// One axis, not all of them. Demanding every direction is uniform asks for
+/// a glyph stem at least 3 pixels wide, which only a blocky font has at a
+/// normal text size. Every hairline or striped font produced zero candidates
+/// and its labels recorded nothing but the background around the text, so
+/// the glyphs went unchecked and the test still passed when they vanished.
+/// Along a stem the pixels are identical, however thin it is, which is what
+/// this asks for instead.
 const STABLE_RADIUS: u32 = 1;
 const STABLE_TOLERANCE: i16 = 10;
 
@@ -111,8 +119,7 @@ pub(crate) fn print_recorded_colors() -> Result<()> {
     println!();
 
     if human_mode() {
-        let positions: Vec<(u32, u32)> = probes.iter().map(|(pos, _)| *pos).collect();
-        show_probes(&positions, &test_name, index);
+        show_probes(&probes, &test_name, index);
     }
 
     Ok(())
@@ -312,13 +319,15 @@ fn directional_run(shot: &Screenshot, probe: &Probe, (dx, dy): (i64, i64)) -> u3
 fn stable_color(shot: &Screenshot, x: u32, y: u32) -> Option<U8Color> {
     let center = shot.get_pixel((x, y));
 
-    for py in y - STABLE_RADIUS..=y + STABLE_RADIUS {
-        for px in x - STABLE_RADIUS..=x + STABLE_RADIUS {
-            if shot.get_pixel((px, py)).diff_u8(center) > STABLE_TOLERANCE {
-                return None;
-            }
-        }
-    }
+    let uniform_along = |dx: u32, dy: u32| {
+        shot.get_pixel((x - dx, y - dy)).diff_u8(center) <= STABLE_TOLERANCE
+            && shot.get_pixel((x + dx, y + dy)).diff_u8(center) <= STABLE_TOLERANCE
+    };
 
-    Some(center)
+    // Vertical catches a stem, horizontal catches a bar.
+    if uniform_along(0, STABLE_RADIUS) || uniform_along(STABLE_RADIUS, 0) {
+        Some(center)
+    } else {
+        None
+    }
 }
