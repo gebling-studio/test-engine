@@ -38,7 +38,6 @@ jobs:
 
   wasm:
     name: Wasm
-    needs: [quality]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -51,7 +50,6 @@ jobs:
 
   ui-tests:
     name: UI Tests
-    needs: [quality]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -70,7 +68,6 @@ jobs:
 
   build:
     name: Build
-    needs: [quality]
     strategy:
       fail-fast: false
       matrix:
@@ -105,7 +102,6 @@ jobs:
 
   linux:
     name: Build Linux
-    needs: [quality]
     strategy:
       fail-fast: false
       matrix:
