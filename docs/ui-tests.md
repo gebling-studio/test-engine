@@ -127,8 +127,18 @@ Because the root itself is the canvas, anything laid out against the root lands 
 including modals, alerts and drop downs. Touch dispatch starts at the root, so injected
 touches outside the canvas go nowhere.
 
-Declare a different canvas when the default is too small. Keep it within the smallest
-supported screen, 640 by 1136 on an iPhone 5S, or the test cannot run on device.
+Declare a different canvas when the default is too small. Two ceilings apply and the
+lower one wins, so a canvas has to clear both.
+
+Width and height must fit the smallest supported screen, 640 by 1136 on an iPhone 5S,
+or the test cannot run on device. Height must also fit the desktop render surface,
+which is `App::initial_size`, 1200 by 1000 by default and not overridden by `ui-test`.
+So the real ceiling is 640 by 1000, and 1136 is unreachable on desktop.
+
+Going over is silent, not loud. Nothing below 1000 renders, and the probe recorder
+clips to the screenshot with `height.min(shot.size.height)`, so the rows past the
+surface record no probes and read as tested. A canvas of 640 by 1136 leaves its bottom
+three rows of labels dead with a green run.
 
 ```rust
 impl ViewTest for LongTableTest {
@@ -208,7 +218,7 @@ skipped at runtime. `Hover::update` is `#[cfg(desktop)]`, so `hover.rs` is too. 
 through the screen keyboard on a phone rather than injected key events, so the text field tests
 are desktop only as well.
 
-Desktop runs 99 tests and an iPhone runs 96. The difference is the platform, not the suite:
+Desktop runs 100 tests and an iPhone runs 97. The difference is the platform, not the suite:
 `custom_text_field`, `hover` and `text_field` are the three gated modules.
 Gate the module in its `mod.rs`, with a comment saying which feature is missing:
 

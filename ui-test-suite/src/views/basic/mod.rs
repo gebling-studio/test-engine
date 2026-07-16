@@ -22,6 +22,7 @@ mod label_fit_text;
 mod label_font;
 mod label_image;
 mod label_measure;
+mod label_stress;
 mod letter_spacing;
 mod multiline_label;
 mod nine_segment;
