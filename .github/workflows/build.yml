@@ -66,6 +66,21 @@ jobs:
       - name: Run UI tests
         run: cargo run -p ui-test --profile=ci -- --headless
 
+  ios-ui-tests:
+    name: iOS UI Tests
+    runs-on: mac
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          submodules: recursive
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Run UI tests on the iOS simulator
+        run: bun ./build/ios/sim-test.ts
+
   build:
     name: Build
     strategy:
