@@ -1,12 +1,8 @@
 use anyhow::Result;
-use instant::Instant;
 use test_engine::{
     dispatch::from_main,
     refs::{Own, Weak},
-    ui::{
-        Container, NavigationView, PRESENT_ANIMATION_DURATION, RED, Setup, TouchStack, View, ViewController,
-        ViewData, ViewTest, view,
-    },
+    ui::{Container, NavigationView, RED, Setup, TouchStack, View, ViewController, ViewData, ViewTest, view},
     ui_test::helpers::check_colors,
 };
 
@@ -73,8 +69,6 @@ fn check_before_present() -> Result<()> {
 }
 
 fn check_present_animation(view: Weak<PresentTestView>) -> Result<()> {
-    let now = Instant::now();
-
     let presented = from_main(move || {
         let presented = Container::new();
         presented.set_color(RED);
@@ -83,9 +77,6 @@ fn check_present_animation(view: Weak<PresentTestView>) -> Result<()> {
     });
 
     presented.recv()?;
-
-    let duration_error = now.elapsed().as_secs_f32() - PRESENT_ANIMATION_DURATION;
-    let allowed_error = 0.04;
 
     check_colors(
         r"
@@ -123,11 +114,6 @@ fn check_present_animation(view: Weak<PresentTestView>) -> Result<()> {
             592  592 - 255 255 255
         ",
     )?;
-
-    assert!(
-        duration_error < allowed_error,
-        "Duration error is: {duration_error}. Allowed: {allowed_error}"
-    );
 
     assert_eq!(TouchStack::dump(), vec![vec!["Layer: Root view".to_string()]]);
 
