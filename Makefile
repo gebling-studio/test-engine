@@ -5,7 +5,7 @@ render:
 	cargo run -p render-test
 
 ui:
-	bun ./build/ui-test.ts
+	rust ./build/ui-test.rs
 
 uui:
 	cargo run -p ui-test --release -- --headless

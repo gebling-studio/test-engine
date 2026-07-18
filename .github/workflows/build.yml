@@ -75,11 +75,11 @@ jobs:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup rustscript
+        uses: VladasZ/rustscript@v0.1
 
       - name: Run UI tests on the iOS simulator
-        run: bun ./build/ios/sim-test.ts
+        run: rust ./build/ios/sim-test.rs
 
   build:
     name: Build
@@ -100,20 +100,20 @@ jobs:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup rustscript
+        uses: VladasZ/rustscript@v0.1
 
       - name: Free Space
         if: ${{ matrix.target.os != 'windows' }}
-        run: bun build/scripts/free_action_runner.ts
+        run: rust build/scripts/free_action_runner.rs
 
       - name: Build and test
         if: ${{ matrix.target.os != 'windows' }}
-        run: bun build/build.ts ${{ matrix.target.os }}
+        run: rust build/build.rs ${{ matrix.target.os }}
 
       - name: Build and test Windows
         if: ${{ matrix.target.os == 'windows' }}
-        run: bun build/build.ts
+        run: rust build/build.rs
 
   linux:
     name: Build Linux
@@ -136,11 +136,11 @@ jobs:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup rustscript
+        uses: VladasZ/rustscript@v0.1
 
       - name: Free Space
-        run: bun build/scripts/free_action_runner.ts
+        run: rust build/scripts/free_action_runner.rs
 
       - name: Build
-        run: echo ${{ matrix.target.container }} && bun build/in_docker.ts ${{ matrix.target.container }}
+        run: echo ${{ matrix.target.container }} && rust build/in_docker.rs ${{ matrix.target.container }}

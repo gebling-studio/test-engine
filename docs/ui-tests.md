@@ -40,7 +40,7 @@ Set `TE_RUN_TESTS` and the app runs the whole suite once it is ready, prints
 touches, so an app with a loading screen marks itself not ready until assets land. No
 inspector and no mDNS, so it runs while the desktop lane runs. `make ui` uses it: on macOS
 it runs the desktop suite and the iOS simulator suite in parallel, then prints one report.
-The simulator lane is `build/ios/sim-test.ts`, an iPhone 8 on iOS 16.4, the oldest device
+The simulator lane is `build/ios/sim-test.rs`, an iPhone 8 on iOS 16.4, the oldest device
 this toolchain can boot. See [ios.md](ios.md).
 
 ## One registry
