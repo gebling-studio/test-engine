@@ -22,6 +22,7 @@ bench = ["dep:sysinfo", "dep:serde_json", "test-engine/bench"]
 
 [dependencies]
 anyhow = { workspace = true }
+fake = { workspace = true }
 fastrand = { workspace = true }
 log = { workspace = true }
 netrun = { workspace = true }
@@ -36,6 +37,9 @@ ui-test-suite = { workspace = true }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 dotenvy = { workspace = true }
 tokio = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { workspace = true, features = ["wasm_js"] }
 
 [build-dependencies]
 plat = { workspace = true }
