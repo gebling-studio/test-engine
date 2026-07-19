@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, env::var, hint::black_box, panic::set_hook, process::exit};
+use std::{collections::BTreeMap, env::var, hint::black_box, panic::set_hook, path::PathBuf, process::exit};
 
 use anyhow::Result;
 use clap::Parser;
@@ -8,8 +8,9 @@ use test_engine::{
     dispatch::{from_main, is_main_thread},
     ui::{Label, UIManager},
     ui_test::{
-        TestFailure, UITest, UITestEntry, clear_failures, current_test_name, enable_color_recording,
-        enable_fps_report, enable_human_mode, push_failure, run_test, spaced_test_name, take_failures,
+        TestFailure, UITest, UITestEntry, capture_requested_screenshot, clear_failures, current_test_name,
+        enable_color_recording, enable_fps_report, enable_human_mode, enable_screenshot_capture,
+        push_failure, run_test, spaced_test_name, take_failures,
     },
 };
 
@@ -50,6 +51,10 @@ struct DisplayArgs {
     /// each test until space is pressed.
     #[arg(long)]
     human: bool,
+
+    /// Save a test screenshot without opening a window. Requires --test-name.
+    #[arg(long, value_name = "PATH")]
+    screenshot: Option<PathBuf>,
 }
 
 /// Names the crates whose tests this runner covers, so a linker keeps them.
@@ -77,10 +82,15 @@ fn run(args: Args) -> Result<()> {
     }
 
     if args.display.human {
-        if args.display.headless {
-            anyhow::bail!("--human requires a window, remove --headless");
+        if args.display.headless || args.display.screenshot.is_some() {
+            anyhow::bail!("--human requires a window, remove --headless and --screenshot");
         }
         enable_human_mode();
+    }
+
+    if let Some(path) = args.display.screenshot.clone() {
+        anyhow::ensure!(args.test_name.is_some(), "--screenshot requires --test-name");
+        enable_screenshot_capture(path);
     }
 
     if args.run.record_colors {
@@ -144,6 +154,10 @@ fn run(args: Args) -> Result<()> {
 
             run_test(&key, test.run);
 
+            if let Err(error) = capture_requested_screenshot() {
+                push_failure(&key, format!("screenshot capture failed: {error}"));
+            }
+
             UITest::finish();
             AppRunner::stop();
             return Ok(());
@@ -164,7 +178,7 @@ fn run(args: Args) -> Result<()> {
         Ok(())
     };
 
-    if args.display.headless {
+    if args.display.headless || args.display.screenshot.is_some() {
         AppRunner::start_headless_with_actor(actor)?;
     } else {
         AppRunner::start_with_actor(actor)?;

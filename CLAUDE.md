@@ -18,6 +18,9 @@ acceptance criteria, a correctness claim needs a reproduced failure. Unproved id
 [docs/guesses.md](docs/guesses.md), not into the code.
 
 Every new UI feature or bugfix must land together with a new UI test that covers it. No exceptions.
+That test must run on every supported UI-test platform where the production feature exists.
+A large canvas, desktop scale, fixture layout or easier reproduction is never a reason to gate it
+to desktop; adapt the test while reusing the real production view and behavior.
 See [docs/ui-tests.md](docs/ui-tests.md) for how UI tests work.
 
 ## Docs
@@ -56,6 +59,7 @@ Docs should be concise.
 cargo run -p ui-test -- --list                                               # every registered test and the total
 cargo run -p ui-test -- --headless                                           # full UI test suite
 cargo run -p ui-test -- --headless --test-name <name>                        # single test, the name it prints
+cargo run -p ui-test -- --test-name <name> --screenshot <path>               # capture one test offscreen
 cargo run -p ui-test -- --test-name <name> --human                           # watchable run, space to advance
 cargo run -p ui-test -- --headless --test-name <name> --record-colors        # print check_colors blocks
 cargo run -p render-test                                                     # render tests
@@ -71,7 +75,7 @@ UI_BENCHMARK=1 cargo run -p test-game --release --features bench             # s
 
 The suite runs every test, prints every failure at the end, then exits 1 if any failed.
 `--headless` runs without a window or a display — tests run many times faster. Always pass
-it.
+it unless `--screenshot` already selects the offscreen runner.
 
 After touching any `Cargo.toml` or removing code, run `cargo machete`. It must report
 zero unused dependencies.

@@ -12,6 +12,7 @@ cargo run -p ui-test                          # full suite, all tests, 2 cycles
 UI_TEST_CYCLES=5 cargo run -p ui-test         # more cycles
 cargo run -p ui-test -- --test-name "Rest request"  # one test
 cargo run -p ui-test -- --headless            # offscreen, much faster, for CI and agents
+cargo run -p ui-test -- --test-name "Font zoo" --screenshot /tmp/font-zoo.png  # one offscreen capture
 make uui                                      # full suite, headless, release mode
 cargo run -p ui-test -- --test-name "Font zoo" --human            # watch one test, space to advance
 cargo run -p ui-test -- --record-colors --headless --test-name "Font zoo"  # print check_colors blocks
@@ -116,6 +117,12 @@ software Vulkan driver. Screenshots and `check_colors` still work. Run headed wh
 want to watch the UI. The network test (`Rest request`) checks `Window::headless()` at the top
 of its `perform_test` and returns before the tap that sends the request, since a registry has
 no place to hang that condition.
+
+`--screenshot <path>` requires one `--test-name` and selects the headless runner by itself.
+The runner saves the final tested frame when the test does not choose a capture point. A
+test that needs an earlier exact state calls `capture_screenshot()` there; it still saves
+only when the command requested an output path. Screenshot mode is for fast agent inspection,
+not a substitute for the required `--human` user review.
 
 For profiling, pass `--fps-report` to print a report at the end of the run: frames, duration
 and average fps per test. Per-test fps varies a lot between runs — macOS sometimes paces frames
@@ -222,13 +229,19 @@ so there is exactly one of it and no crate can forget its own and silently lose 
 
 ## Platform gating
 
-A test for a feature the platform does not have is gated where the feature is gated, not
-skipped at runtime. `Hover::update` is `#[cfg(desktop)]`, so `hover.rs` is too. Typing goes
-through the screen keyboard on a phone rather than injected key events, so the text field tests
-are desktop only as well.
+Every UI test must run on every supported UI-test platform where the production behavior exists.
+This includes renderer regressions first found on desktop, tests that set a desktop scale, and
+fixtures whose original presentation is larger than the cross-platform canvas. A canvas size,
+fixture layout, screenshot workflow or convenient reproduction is never a valid reason for
+`#[cfg(desktop)]`. Keep the real production view and behavior, and arrange the test so it fits the
+640 by 1000 cross-platform canvas.
 
-Desktop runs 100 tests and an iPhone runs 97. The difference is the platform, not the suite:
-`custom_text_field`, `hover` and `text_field` are the three gated modules.
+Platform gating is allowed only when the production feature itself is compiled out or cannot
+exist on that platform. Gate such a test where the feature is gated, not with a runtime skip.
+`Hover::update` is `#[cfg(desktop)]`, so `hover.rs` is too. Typing goes through the screen keyboard
+on a phone rather than injected key events, so the text field tests are desktop only as well.
+Test counts may differ between platforms only for these feature-availability gates. Never gate a
+cross-platform rendering, layout or interaction regression merely to make the current fixture fit.
 Gate the module in its `mod.rs`, with a comment saying which feature is missing:
 
 ```rust

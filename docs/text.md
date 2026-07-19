@@ -11,6 +11,13 @@ label's `Font`. Each `Font` owns a `wgpu_text::TextBrush` for rasterization and 
 (`test-engine/src/window/text/shaped_layout.rs`), a custom `GlyphPositioner` that shapes
 every line with rustybuzz and hands pre-positioned glyphs to glyph_brush.
 
+Before drawing, the UI tree queues every visible label once and processes each font's
+glyph atlas to its final layout for the frame. Clip boundaries can flush text several
+times in one frame. Without the preload, a later flush can grow and reorder the shared
+atlas after earlier vertices already captured its texture coordinates, which renders
+unrelated glyph fragments in those earlier labels. The draw pass then queues the same
+sections for their actual clipped batches against the stable atlas.
+
 Shaping through rustybuzz exists because ab_glyph reads only the legacy `kern`
 table. Modern fonts, SF Pro included, keep kerning in `GPOS`, so the builtin
 glyph_brush layout renders them with no kerning at all. rustybuzz applies GPOS,

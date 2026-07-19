@@ -9,6 +9,7 @@ pub enum InspectorCommand {
     ListEdits,
     RunTests,
     GetBuildTime,
+    GetStartTime,
     UI(UIRequest),
 }
 
