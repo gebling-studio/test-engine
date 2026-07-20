@@ -2,6 +2,7 @@ mod effects;
 mod frosted_hud;
 mod game_scene;
 mod scroll_tables;
+mod text_corruption;
 mod text_fonts;
 mod widget_gallery;
 

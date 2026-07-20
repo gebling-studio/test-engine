@@ -387,8 +387,12 @@ async fn build_time(client: &Client) -> Result<()> {
     let AppCommand::BuildTime(built) = send(client, InspectorCommand::GetBuildTime).await? else {
         bail!("Unexpected response to build-time");
     };
+    let AppCommand::StartTime(started) = send(client, InspectorCommand::GetStartTime).await? else {
+        bail!("Unexpected response to start-time");
+    };
 
     println!("app code built: {built}");
+    println!("app started:    {started}");
 
     let Some((newest, path)) = newest_source(&current_dir()?)? else {
         println!("No source files here, cannot tell whether the app is current");
@@ -397,16 +401,44 @@ async fn build_time(client: &Client) -> Result<()> {
 
     println!("newest source:  {newest}  {}", path.display());
 
-    if newest > built {
-        let minutes = (newest - built) / 60;
-        bail!(
-            "App is stale. Source is {minutes} minutes newer than the running code. Rebuild and reinstall before testing anything against it."
-        );
+    match freshness(built, started, newest) {
+        Freshness::Current => println!("verdict: app is up to date"),
+        Freshness::ChangedSinceStart { seconds } => {
+            let minutes = seconds / 60;
+            bail!(
+                "App is stale. Source changed {minutes} minutes after this app started. Rebuild and reinstall before testing anything against it."
+            );
+        }
+        Freshness::EngineOlder { seconds } => {
+            let minutes = seconds / 60;
+            bail!(
+                "Cannot prove the app is current. Source is {minutes} minutes newer than the engine build, but predates this app launch. This can be a current app-only rebuild or a stale reused Rust library. Verify app-only evidence before testing against it."
+            );
+        }
     }
 
-    println!("verdict: app is up to date");
-
     Ok(())
+}
+
+#[derive(Debug, PartialEq)]
+enum Freshness {
+    Current,
+    ChangedSinceStart { seconds: u64 },
+    EngineOlder { seconds: u64 },
+}
+
+fn freshness(built: u64, started: u64, newest: u64) -> Freshness {
+    if newest > started {
+        return Freshness::ChangedSinceStart {
+            seconds: newest - started,
+        };
+    }
+    if newest > built {
+        return Freshness::EngineOlder {
+            seconds: newest - built,
+        };
+    }
+    Freshness::Current
 }
 
 /// Newest mtime among the files that end up compiled in, as unix seconds.
@@ -471,5 +503,28 @@ fn resolve(apps: &HashMap<String, SocketAddr>, app: Option<String>) -> Result<So
         0 => bail!(NO_APPS),
         1 => Ok(*apps.values().next().unwrap()),
         _ => bail!("Multiple apps running, pass --app. Running apps: {}", ids()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Freshness, freshness};
+
+    #[test]
+    fn current_when_engine_was_built_after_source() {
+        assert_eq!(freshness(200, 300, 100), Freshness::Current);
+    }
+
+    #[test]
+    fn stale_when_source_changed_after_app_started() {
+        assert_eq!(
+            freshness(100, 200, 230),
+            Freshness::ChangedSinceStart { seconds: 30 }
+        );
+    }
+
+    #[test]
+    fn ambiguous_when_app_started_after_source_but_engine_is_older() {
+        assert_eq!(freshness(100, 300, 220), Freshness::EngineOlder { seconds: 120 });
     }
 }

@@ -37,7 +37,10 @@ Lives in `test-engine/src/inspect/protocol/`. Length-prefixed JSON frames over T
 - `ListEdits` — returns every edit applied in this session.
 - `GetBuildTime` — unix seconds of when `test-engine` was compiled, stamped by
   `test-engine/build.rs`. `te-inspect build-time` compares it to the newest source here and
-  exits non zero when the app is older. The stamp has to live in the Rust code: an iOS
+  combines it with `GetStartTime`, the unix seconds when the app process started. Source
+  newer than the process is definitely stale. Source older than the process but newer than
+  the engine build is reported as inconclusive: it can be a current app-only rebuild or a
+  stale reused Rust library. The stamp has to live in the Rust code: an iOS
   build relinks the `.app` every time while reusing a stale `libtest_game.a`, so the
   bundle's own timestamp, md5 and install all report fresh while old code runs.
 
@@ -48,6 +51,9 @@ Lives in `test-engine/src/inspect/protocol/`. Length-prefixed JSON frames over T
   proof: something that only the new code produces, a test count or an `nm` symbol, settles
   it. A fresh verdict is still worth having, it catches the case that matters, a `.a` that
   never rebuilt.
+- `GetStartTime` — unix seconds of when the current process started, recorded before the
+  app runner launches. Used with `GetBuildTime` to distinguish a source edit made after
+  launch from an app-only source edit already present when the process started.
 - `PlaySound` — plays a sound in the app, for finding which instance is which.
 - `RunTests` — runs the app's whole UI test suite in the app and returns the total and
   every failure. Needs nothing from the app: every test registers into the engine's own

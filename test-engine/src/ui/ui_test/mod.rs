@@ -1,3 +1,4 @@
+mod capture;
 mod checks;
 mod collect;
 pub mod helpers;
@@ -15,6 +16,7 @@ use std::{
 };
 
 use anyhow::{Result, bail};
+pub use capture::{capture_requested_screenshot, capture_screenshot, enable_screenshot_capture};
 pub use collect::{TestFailure, any_failed, clear_failures, push_failure, run_test, take_failures};
 pub use helpers::*;
 use hreads::{from_main, is_main_thread, on_main, wait_for_next_frame};

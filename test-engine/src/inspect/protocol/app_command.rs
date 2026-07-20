@@ -20,6 +20,8 @@ pub enum AppCommand {
     /// Unix seconds of when the app's Rust code was compiled, see
     /// `test-engine/build.rs`.
     BuildTime(u64),
+    /// Unix seconds of when this app process started.
+    StartTime(u64),
     UI(UIResponse),
 }
 

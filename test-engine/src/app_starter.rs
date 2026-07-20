@@ -105,6 +105,9 @@ fn start_with_app(app: Box<dyn App>, headless: bool) -> std::ffi::c_int {
         run_app(event_loop, app);
     }
 
+    #[cfg(all(not_wasm, feature = "inspect"))]
+    crate::inspect::InspectService::record_app_start();
+
     let headless = headless || std::env::var("TE_HEADLESS").is_ok();
 
     #[cfg(all(not_wasm, not_android))]

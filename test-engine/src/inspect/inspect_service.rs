@@ -1,5 +1,10 @@
 #![cfg(not_wasm)]
 
+use std::{
+    sync::OnceLock,
+    time::{SystemTime, UNIX_EPOCH},
+};
+
 use anyhow::Result;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use chrono::Local;
@@ -25,7 +30,18 @@ use crate::{
 
 pub struct InspectService;
 
+static APP_STARTED: OnceLock<u64> = OnceLock::new();
+
 impl InspectService {
+    pub(crate) fn record_app_start() {
+        APP_STARTED.get_or_init(|| {
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("System clock is before the unix epoch")
+                .as_secs()
+        });
+    }
+
     pub(crate) fn start_listening() {
         log_spawn(async {
             let listener = TcpListener::bind("0.0.0.0:0").await?;
@@ -70,6 +86,9 @@ impl InspectService {
             // when the bundle around it was linked. See `test-engine/build.rs`.
             InspectorCommand::GetBuildTime => {
                 AppCommand::BuildTime(env!("TE_BUILD_TIME").parse().expect("TE_BUILD_TIME is not a number"))
+            }
+            InspectorCommand::GetStartTime => {
+                AppCommand::StartTime(*APP_STARTED.get().expect("App start time was not recorded"))
             }
             InspectorCommand::UI(ui) => Self::process_ui_command(ui),
         }
