@@ -52,7 +52,15 @@ impl Display for Touch {
         let x: isize = self.position.x.lossy_convert();
         let y: isize = self.position.y.lossy_convert();
 
-        write!(f, "{:<4} {:<4} {}", x, y, self.event)
+        write!(f, "{:<4} {:<4} {}", x, y, self.event)?;
+
+        // Only multitouch prints the id, so recorded single finger tests keep
+        // their exact three column form.
+        if self.id != 1 {
+            write!(f, " {}", self.id)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -68,14 +76,21 @@ impl FromStr for Touch {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let vals: Vec<_> = s.split_whitespace().collect();
 
+        // A fourth token is the finger id for multitouch. Without it the
+        // touch is the lone finger 1, so every single finger test is unchanged.
+        let id = match vals.get(3) {
+            Some(id) => id.parse()?,
+            None => 1,
+        };
+
         let touch = Touch {
-            id:       1,
+            id,
             position: Point {
                 x: vals[0].parse()?,
                 y: vals[1].parse()?,
             },
-            event:    vals[2].parse()?,
-            button:   MouseButton::Left,
+            event: vals[2].parse()?,
+            button: MouseButton::Left,
         };
 
         Ok(touch)

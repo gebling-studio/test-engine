@@ -138,12 +138,14 @@ impl ViewSubviews for ScrollView {
 impl Scrollable for ScrollView {
     fn __process_scroll_touch(&mut self, touch: Touch) -> bool {
         if touch.is_ended() {
+            // Only the finger this scroll was following ends its drag. A
+            // different finger lifting elsewhere must not clear this scroll's
+            // capture, or a second scroll dragged at the same time would stop.
             if touch.id == self.__base_view().__touch_id {
                 self.add_inertia_animation();
+                self.__base_view().__touch_id = NO_TOUCH_ID;
+                self.dragging = false;
             }
-
-            self.__base_view().__touch_id = NO_TOUCH_ID;
-            self.dragging = false;
             return false;
         }
 
@@ -154,7 +156,12 @@ impl Scrollable for ScrollView {
         let mut target_frame = self.content.__base_view().__absolute_frame;
         target_frame.origin.y -= self.content.__base_view().__content_offset;
 
-        if touch.is_began() && target_frame.contains(touch.position) {
+        // A scroll already dragged by one finger keeps following that finger
+        // and ignores a second one, so two fingers never fight over it.
+        if touch.is_began()
+            && self.__base_view().__touch_id == NO_TOUCH_ID
+            && target_frame.contains(touch.position)
+        {
             self.__base_view().__touch_id = touch.id;
             self.began_touch = touch.position;
             self.previous_touch = touch.position;
