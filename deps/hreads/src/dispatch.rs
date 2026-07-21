@@ -122,13 +122,13 @@ pub fn invoke_dispatched() {
 
 #[cfg(all(test, not_wasm))]
 mod test {
-    use serial_test::serial;
-    use tokio::runtime::Runtime;
-
     use std::sync::{
         Arc,
         atomic::{AtomicUsize, Ordering},
     };
+
+    use serial_test::serial;
+    use tokio::runtime::Runtime;
 
     use crate::{from_main, invoke_dispatched, on_main, set_current_thread_as_main, set_dispatch_waker};
 

@@ -37,7 +37,10 @@ pub fn set_current_thread_as_main() {
 fn supposed_main_id() -> u64 {
     let id = MAIN_THREAD_ID.load(Ordering::Relaxed);
 
-    assert_ne!(id, 0, "Main thread is not set. Call set_current_thread_as_main() first.");
+    assert_ne!(
+        id, 0,
+        "Main thread is not set. Call set_current_thread_as_main() first."
+    );
 
     id
 }

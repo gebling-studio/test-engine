@@ -60,7 +60,10 @@ pub struct AppHandler {
 }
 
 impl AppHandler {
-    pub(crate) fn new(app: impl WindowEvents + 'static, event_loop: &EventLoop<UserEvent>) -> &'static mut Self {
+    pub(crate) fn new(
+        app: impl WindowEvents + 'static,
+        event_loop: &EventLoop<UserEvent>,
+    ) -> &'static mut Self {
         let handler = APP_HANDLER.get_mut();
 
         *handler = Some(Self {
