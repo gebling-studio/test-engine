@@ -5,6 +5,7 @@ mod window_events;
 mod app_handler;
 mod frame_counter;
 pub mod image;
+mod redraw;
 mod render_frame;
 mod screen;
 mod screenshot;
@@ -26,4 +27,8 @@ pub use winit::{
 pub use self::{
     app_handler::AppHandler, render_frame::RenderFrame, screenshot::*, state::SURFACE_TEXTURE_FORMAT,
     text::*, vertex_buffer::VertexBuffer, window::*, window_events::*,
+};
+pub(crate) use self::{
+    app_handler::UserEvent,
+    redraw::{request_frame, set_wake_proxy, take_needs_render},
 };

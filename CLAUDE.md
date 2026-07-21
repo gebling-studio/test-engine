@@ -4,7 +4,9 @@ Cross platform game engine and UI framework in Rust. Rendering on WGPU.
 Supports: Windows, Linux, Mac, iOS, Android and WebAssembly.
 
 The engine is one library crate, `test-engine`, with modules like `gm`, `ui`, `window`,
-`render`, `level` under `test-engine/src/`. `deps/` holds only the proc macro crates.
+`render`, `level` under `test-engine/src/`. `deps/` holds the proc macro crates plus the
+vendored foundational crates `hreads`, `refs`, `vents` and `netrun`, used as path
+dependencies so the whole tree resolves to one `hreads` with no crates.io patch.
 Apps and test binaries are separate crates on top. Internals are `pub(crate)`, the
 app-facing API is `pub` — keep new items `pub(crate)` unless apps need them, so the
 `dead_code` lint stays meaningful.

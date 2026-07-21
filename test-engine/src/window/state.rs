@@ -339,6 +339,13 @@ impl State {
                 sender.send(result).unwrap();
             });
 
+            // On demand rendering lets the loop sleep after this frame, with
+            // nothing left to drive the GPU. Poll here so the map completes and
+            // the screenshot is delivered no matter the frame cadence.
+            if let Err(err) = Window::device().poll(wgpu::PollType::wait_indefinitely()) {
+                warn!("Screenshot device poll failed: {err}");
+            }
+
             hreads::spawn(async move {
                 let _ = receiver.recv().unwrap();
                 Self::deliver_screenshot(buffer, &buffer_sender);

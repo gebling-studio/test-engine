@@ -393,7 +393,13 @@ impl UIManager {
     }
 
     pub(crate) fn commit_animations() {
-        ANIMATIONS.lock().retain_mut(|a| {
+        let mut animations = ANIMATIONS.lock();
+
+        if animations.is_empty() {
+            return;
+        }
+
+        animations.retain_mut(|a| {
             let retain = a.active();
 
             if retain {
@@ -404,6 +410,13 @@ impl UIManager {
 
             retain
         });
+
+        drop(animations);
+
+        // An animation is live, so keep the loop drawing. This also fires once
+        // after the last one finishes, so its settled and on_finish state
+        // reaches the screen before the loop goes back to sleep.
+        crate::window::request_frame();
     }
 }
 

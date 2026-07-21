@@ -22,7 +22,7 @@ use crate::{
         flat::{Point, Size},
     },
     window::{
-        Screenshot,
+        Screenshot, UserEvent,
         app_handler::AppHandler,
         screen::Screen,
         state::{SURFACE_TEXTURE_FORMAT, State},
@@ -225,7 +225,7 @@ impl Window {
     pub(crate) async fn start_internal(
         size: PhysicalSize<u32>,
         window: winit::window::Window,
-        proxy: EventLoopProxy<Window>,
+        proxy: EventLoopProxy<UserEvent>,
     ) -> Result<()> {
         let winit_window = Arc::new(window);
 
@@ -279,7 +279,7 @@ impl Window {
             title_set: false,
         };
 
-        if proxy.send_event(window).is_err() {
+        if proxy.send_event(UserEvent::WindowReady(Box::new(window))).is_err() {
             bail!("Failed to send window event");
         }
 

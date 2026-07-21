@@ -20,6 +20,12 @@ pub(crate) struct LevelDrawer;
 impl LevelDrawer {
     pub(crate) fn update() {
         LevelManager::update();
+
+        // A running level animates every frame, so keep the loop awake while
+        // one is loaded. A plain UI screen has no level and stays idle.
+        if !LevelManager::no_level() {
+            crate::window::request_frame();
+        }
     }
 
     pub fn draw(pass: &mut RenderPass) {
