@@ -2,6 +2,12 @@
 [workspace]
 
 default-members = ["test-game"]
+exclude = [
+  "deps/hreads",
+  "deps/refs",
+  "deps/vents",
+  "deps/netrun",
+]
 members = [
   "bench",
   "deps/ui-proc-test",
@@ -112,16 +118,12 @@ wgpu = { git = "https://github.com/VladasZ/wgpu", rev = "47e55304a59f0c8d933cb3b
 wgpu_text = { git = "https://github.com/VladasZ/wgpu-text", rev = "deb50e912148d660e938e69eb27225753b5353a0" }
 winit = "0.30"
 
-# hreads = { path = "../deps/hreads" }
-hreads = "0.14"
-
-netrun = "0.35"
-# refs = { path = "../deps/refs/refs" }
-refs = { version = "0.53", default-features = true }
-# netrun = { path = "../deps/netrun/netrun" }
+hreads = { path = "deps/hreads" }
+refs = { path = "deps/refs", default-features = true }
+vents = { path = "deps/vents" }
+netrun = { path = "deps/netrun" }
 plat = "0.9"
 reflected = "0.30"
-vents = "0.15"
 
 level-proc = { path = "deps/level-proc" }
 test-engine = { path = "test-engine" }

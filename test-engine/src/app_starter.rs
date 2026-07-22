@@ -3,7 +3,7 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use crate::{
     App, AppRunner,
     app::test_engine_create_app,
-    window::{AppHandler, Window},
+    window::{AppHandler, UserEvent},
 };
 
 /// Names a symbol in the `ctor` crate so a linker keeps that crate's object.
@@ -26,7 +26,7 @@ fn keep_ctor_linked() {
 }
 
 #[cfg(target_arch = "wasm32")]
-fn run_app(event_loop: EventLoop<Window>, app: &'static mut AppHandler) {
+fn run_app(event_loop: EventLoop<UserEvent>, app: &'static mut AppHandler) {
     // Runs the app async via the browsers event loop
     use winit::platform::web::EventLoopExtWebSys;
     hreads::spawn(async move {
@@ -35,7 +35,7 @@ fn run_app(event_loop: EventLoop<Window>, app: &'static mut AppHandler) {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn run_app(event_loop: EventLoop<Window>, app: &mut AppHandler) {
+fn run_app(event_loop: EventLoop<UserEvent>, app: &mut AppHandler) {
     event_loop.run_app(app).expect("Event loop failed");
 }
 
@@ -89,18 +89,29 @@ fn start_with_app(app: Box<dyn App>, headless: bool) -> std::ffi::c_int {
         let _ = headless;
 
         #[cfg(not(target_os = "android"))]
-        let event_loop = EventLoop::<Window>::with_user_event().build().unwrap();
+        let event_loop = EventLoop::<UserEvent>::with_user_event().build().unwrap();
 
         #[cfg(target_os = "android")]
         let event_loop = {
             use winit::platform::android::EventLoopBuilderExtAndroid;
-            EventLoop::<Window>::with_user_event()
+            EventLoop::<UserEvent>::with_user_event()
                 .with_android_app(ANDROID_APP.lock().take().expect("AndroidApp is not set"))
                 .build()
                 .unwrap()
         };
 
+        // Native sleeps until an event or a requested frame, so an idle screen
+        // costs no CPU. Background work wakes the loop through the dispatch
+        // waker. Wasm keeps the browser driven polling it had.
+        #[cfg(not_wasm)]
+        {
+            event_loop.set_control_flow(ControlFlow::Wait);
+            crate::window::set_wake_proxy(event_loop.create_proxy());
+            hreads::set_dispatch_waker(crate::window::request_frame);
+        }
+        #[cfg(wasm)]
         event_loop.set_control_flow(ControlFlow::Poll);
+
         let app = AppHandler::new(AppRunner::new(app), &event_loop);
         run_app(event_loop, app);
     }

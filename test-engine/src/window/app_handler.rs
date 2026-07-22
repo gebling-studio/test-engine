@@ -26,10 +26,21 @@ static APP_HANDLER: MainLock<Option<AppHandler>> = MainLock::new();
 /// scaled again by `SCROLL_SPEED` in the engine.
 const LINE_SCROLL_PIXELS: f32 = 28.0;
 
+/// What the event loop delivers through its user event channel.
+pub(crate) enum UserEvent {
+    /// The GPU window finished async setup on a worker and is ready to install.
+    /// Boxed because it dwarfs the other variant.
+    WindowReady(Box<Window>),
+    /// A nudge that only exists to wake the loop from `ControlFlow::Wait` when
+    /// background work queued a main thread callback. Handled by drawing a
+    /// frame in `about_to_wait`, so the handler itself does nothing.
+    Wake,
+}
+
 #[allow(clippy::large_enum_variant)]
 enum AppHandlerState {
     Ready(Window),
-    Init(Option<EventLoopProxy<Window>>),
+    Init(Option<EventLoopProxy<UserEvent>>),
 }
 
 impl AppHandlerState {
@@ -49,7 +60,10 @@ pub struct AppHandler {
 }
 
 impl AppHandler {
-    pub fn new(app: impl WindowEvents + 'static, event_loop: &EventLoop<Window>) -> &'static mut Self {
+    pub(crate) fn new(
+        app: impl WindowEvents + 'static,
+        event_loop: &EventLoop<UserEvent>,
+    ) -> &'static mut Self {
         let handler = APP_HANDLER.get_mut();
 
         *handler = Some(Self {
@@ -117,7 +131,7 @@ impl AppHandler {
     }
 }
 
-impl ApplicationHandler<Window> for AppHandler {
+impl ApplicationHandler<UserEvent> for AppHandler {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if let AppHandlerState::Init(proxy) = &mut self.state
             && let Some(proxy) = proxy.take()
@@ -156,12 +170,26 @@ impl ApplicationHandler<Window> for AppHandler {
         }
     }
 
-    fn user_event(&mut self, _event_loop: &ActiveEventLoop, window: Window) {
-        self.state = AppHandlerState::Ready(window);
-        self.te_window_events.window_ready();
+    fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: UserEvent) {
+        match event {
+            UserEvent::WindowReady(window) => {
+                self.state = AppHandlerState::Ready(*window);
+                self.te_window_events.window_ready();
+            }
+            // Waking the loop was the whole point. `about_to_wait` runs right
+            // after this and draws a frame because a redraw was requested.
+            UserEvent::Wake => {}
+        }
     }
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _window_id: WindowId, event: WindowEvent) {
+        // Any event other than a redraw can change what is on screen: input,
+        // resize, theme, a dropped file. Ask for a frame so the change shows.
+        // A redraw already draws, so it must not ask for another or the loop
+        // never sleeps. Only native waits, wasm keeps its own polling cadence.
+        #[cfg(not_wasm)]
+        let request_frame = self.state.ready() && !matches!(event, WindowEvent::RedrawRequested);
+
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::CursorMoved { position, .. } => {
@@ -224,13 +252,29 @@ impl ApplicationHandler<Window> for AppHandler {
             }
             _ => {}
         }
+
+        #[cfg(not_wasm)]
+        if request_frame {
+            crate::window::request_frame();
+        }
     }
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
-        if self.state.ready()
-            && let Some(window) = Window::winit_window()
-        {
-            window.request_redraw();
+        if self.state.not_ready() {
+            return;
         }
+
+        let Some(window) = Window::winit_window() else {
+            return;
+        };
+
+        // Native sleeps in `ControlFlow::Wait` and draws only when a frame was
+        // requested. Wasm keeps polling and drawing every iteration.
+        #[cfg(not_wasm)]
+        if !crate::window::take_needs_render() {
+            return;
+        }
+
+        window.request_redraw();
     }
 }

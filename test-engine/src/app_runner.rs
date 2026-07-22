@@ -1,4 +1,4 @@
-use std::{path::PathBuf, sync::Once};
+use std::{collections::HashMap, path::PathBuf, sync::Once};
 
 use anyhow::Result;
 use hreads::{from_main, invoke_dispatched};
@@ -36,8 +36,15 @@ static CURSOR_POSITION: MainLock<Point> = MainLock::new();
 /// pixels by `LINE_SCROLL_PIXELS` in the window crate, then scaled by this.
 const SCROLL_SPEED: f32 = 0.25;
 
+/// Mouse events use id 1 and `NO_TOUCH_ID` is 0, so real fingers start above
+/// both. Keeps a finger from ever colliding with the pointer or the "no
+/// capture" sentinel.
+const FIRST_TOUCH_ID: usize = 2;
+
 pub struct AppRunner {
     pub cursor_position: Point,
+    touch_ids:           HashMap<u64, usize>,
+    next_touch_id:       usize,
 }
 
 impl AppRunner {
@@ -130,7 +137,30 @@ impl AppRunner {
 
         Self {
             cursor_position: Point::default(),
+            touch_ids:       HashMap::new(),
+            next_touch_id:   FIRST_TOUCH_ID,
         }
+    }
+
+    /// Winit gives each finger a `u64` id that can be 0 and can outrange
+    /// `usize` on wasm. Remap it to a fresh non-zero engine id per finger so
+    /// two fingers stay independent and never clash with the mouse id. The
+    /// mapping is dropped on `Ended` so a finished finger frees its id.
+    fn engine_touch_id(&mut self, winit_id: u64, event: TouchEvent) -> usize {
+        let id = if let Some(id) = self.touch_ids.get(&winit_id) {
+            *id
+        } else {
+            let id = self.next_touch_id;
+            self.next_touch_id += 1;
+            self.touch_ids.insert(winit_id, id);
+            id
+        };
+
+        if event == TouchEvent::Ended {
+            self.touch_ids.remove(&winit_id);
+        }
+
+        id
     }
 
     #[cfg(not_wasm)]
@@ -382,15 +412,17 @@ impl crate::window::WindowEvents for AppRunner {
     }
 
     fn touch_event(&mut self, touch: winit::event::Touch) -> bool {
+        let event = match touch.phase {
+            TouchPhase::Started => TouchEvent::Began,
+            TouchPhase::Moved => TouchEvent::Moved,
+            TouchPhase::Ended | TouchPhase::Cancelled => TouchEvent::Ended,
+        };
+
         Input::process_touch_event(Touch {
-            id:       1,
+            id: self.engine_touch_id(touch.id, event),
             position: (touch.location.x, touch.location.y).into(),
-            event:    match touch.phase {
-                TouchPhase::Started => TouchEvent::Began,
-                TouchPhase::Moved => TouchEvent::Moved,
-                TouchPhase::Ended | TouchPhase::Cancelled => TouchEvent::Ended,
-            },
-            button:   MouseButton::Left,
+            event,
+            button: MouseButton::Left,
         })
     }
 
