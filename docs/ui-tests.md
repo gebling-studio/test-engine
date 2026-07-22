@@ -44,6 +44,31 @@ it runs the desktop suite and the iOS simulator suite in parallel, then prints o
 The simulator lane is `build/ios/sim-test.rs`, an iPhone 8 on iOS 16.4, the oldest device
 this toolchain can boot. See [ios.md](ios.md).
 
+## Run from the editor
+
+A patched rust-analyzer puts a run button on every `impl ViewTest for X` line. It runs
+`cargo run -p ui-test -- --test-name X --human`, the watchable single test command. Stock
+rust-analyzer sees nothing runnable in that impl.
+
+The patch lives in the fork at
+[VladasZ/rust-analyzer](https://github.com/VladasZ/rust-analyzer), branch
+`view-test-runnable`. It adds a `ViewTest` runnable kind. `ide` detects the impl,
+`target_spec` maps it to the fixed `ui-test` invocation, and it is exposed through both the
+code lens and `experimental/runnables`, so VS Code lenses and Zed gutter tasks both get it.
+
+To use it, build the fork in release and make it the binary the editor runs. One gotcha for
+Zed. When `rust-toolchain.toml` lists the `rust-analyzer` component, Zed asks rustup first
+and checks PATH only after that, so a patched binary earlier on PATH is never found. Replace
+the toolchain's own binary with a symlink to the patched build:
+
+```bash
+ln -sf <patched rust-analyzer> ~/.rustup/toolchains/<channel>/bin/rust-analyzer
+```
+
+A rustup reinstall of the toolchain restores the stock binary, then the symlink needs to be
+redone. Zed refetches runnables only when a buffer opens or changes, so reopen the file if
+the button is missing after a server restart.
+
 ## One registry
 
 Every test, whatever crate it lives in, registers into a single map, `test_engine::UI_TESTS`,
