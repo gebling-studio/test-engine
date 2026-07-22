@@ -24,11 +24,13 @@ pub use winit::{
     window::Theme,
 };
 
+#[cfg(not_wasm)]
+pub(crate) use self::redraw::set_wake_proxy;
 pub use self::{
     app_handler::AppHandler, render_frame::RenderFrame, screenshot::*, state::SURFACE_TEXTURE_FORMAT,
     text::*, vertex_buffer::VertexBuffer, window::*, window_events::*,
 };
 pub(crate) use self::{
     app_handler::UserEvent,
-    redraw::{request_frame, set_wake_proxy, take_needs_render},
+    redraw::{request_frame, take_needs_render},
 };
