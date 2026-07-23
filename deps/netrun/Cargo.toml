@@ -28,12 +28,10 @@ repository = "https://github.com/VladasZ/netrun"
 
 [lib]
 name = "netrun"
-crate-type = [
-    "dylib",
-    "rlib",
-    "staticlib",
-]
 path = "src/lib.rs"
+
+[lints]
+workspace = true
 
 [dependencies.anyhow]
 version = "1.0"
@@ -82,6 +80,9 @@ version = "0.11"
 
 [dev-dependencies.pretty_assertions]
 version = "1.4"
+
+[dev-dependencies.test-log]
+version = "0.2"
 
 [dev-dependencies.wasm-bindgen-test]
 version = "0.3"

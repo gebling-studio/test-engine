@@ -8,6 +8,9 @@ name = "vents"
 repository = "https://github.com/VladasZ/vents"
 version = "0.15.1"
 
+[lints]
+workspace = true
+
 [features]
 default = []
 

@@ -51,7 +51,7 @@ impl<In: Serialize, Out: DeserializeOwned> Request<In, Out> {
     }
 
     pub fn description(&self) -> String {
-        format!("{} {}->{}", self.path, type_name::<In>(), type_name::<Out>(),)
+        format!("{} {}->{}", self.path, type_name::<In>(), type_name::<Out>())
     }
 }
 

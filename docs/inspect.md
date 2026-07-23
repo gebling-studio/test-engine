@@ -18,8 +18,7 @@ Two clients exist:
   `tree`, `view`, `ui`, `screenshot`, `edit-rule`, `set-text`, `set-color`, `set-scale`,
   `edits`, `play-sound`, `run-tests`, `build-time`. The last discovery is cached in the temp dir, so repeat calls
   connect instantly and fall back to a fresh mDNS browse when the cached address is dead.
-  The agent workflow is documented in
-  [.claude/skills/test-engine/SKILL.md](../.claude/skills/test-engine/SKILL.md).
+  The agent workflow lives in the maintainer's skill files outside this repo.
 
 ## Protocol
 

@@ -120,6 +120,21 @@ pub trait DataManager<T: Managed> {
 
     #[allow(async_fn_in_trait)]
     async fn download(name: impl ToString, url: &str) -> Result<Weak<T>> {
+        /// Wakes the waiters even if the leading download errors,
+        /// panics, or its task is dropped mid await.
+        struct FinishGuard {
+            in_flight: &'static InFlightDownloads,
+            name:      String,
+        }
+
+        impl Drop for FinishGuard {
+            fn drop(&mut self) {
+                if let Some(event) = self.in_flight.lock().remove(&self.name) {
+                    event.notify(usize::MAX);
+                }
+            }
+        }
+
         let name = name.to_string();
 
         if let Some(existing) = Self::get_existing(&name) {
@@ -145,21 +160,6 @@ pub trait DataManager<T: Managed> {
             listener.await;
             return Self::get_existing(&name)
                 .ok_or_else(|| anyhow!("Download of '{name}' failed in the task which started it"));
-        }
-
-        /// Wakes the waiters even if the leading download errors,
-        /// panics, or its task is dropped mid await.
-        struct FinishGuard {
-            in_flight: &'static InFlightDownloads,
-            name:      String,
-        }
-
-        impl Drop for FinishGuard {
-            fn drop(&mut self) {
-                if let Some(event) = self.in_flight.lock().remove(&self.name) {
-                    event.notify(usize::MAX);
-                }
-            }
         }
 
         let _guard = FinishGuard {

@@ -9,9 +9,8 @@ name = "refs"
 repository = "https://github.com/VladasZ/refs"
 version = "0.53.0"
 
-[lib]
-crate-type = ["dylib", "rlib", "staticlib"]
-name = "refs"
+[lints]
+workspace = true
 
 [features]
 checks = []

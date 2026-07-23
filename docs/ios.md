@@ -22,17 +22,20 @@ foreign exception, never a Rust panic.
 Read the log with `idevicesyslog -u <udid>`, unfiltered. Its `-m` filter silently drops
 matching lines.
 
-## Two version settings that look alike
+## The deployment target
 
-- `IPHONEOS_DEPLOYMENT_TARGET` is a **compile time** value. `objc2::available!` reads it
-  through `option_env!` and folds to a constant `true` whenever the target already meets
-  the version being checked, which deletes the runtime guard. Setting it to 13.0 made
-  wgpu's `available!(ios = 13.0)` vanish and sent `supportsFamily:` to the A7, which has
-  no such selector. `make build-ios` pins 12.0. Never raise it to or above a version the
-  code guards against.
-- `.cargo/config.toml` `-Wl,-platform_version,ios,13.0,13.0` is a **linker** flag and does
-  not affect `available!`. It stays at 13.0 because `aws-lc-sys` needs `__chkstk_darwin`,
-  an iOS 13 symbol. Lowering it breaks the link of the dylib crates.
+`IPHONEOS_DEPLOYMENT_TARGET` is a **compile time** value. `objc2::available!` reads it
+through `option_env!` and folds to a constant `true` whenever the target already meets
+the version being checked, which deletes the runtime guard. Setting it to 13.0 made
+wgpu's `available!(ios = 13.0)` vanish and sent `supportsFamily:` to the A7, which has
+no such selector. `make build-ios` pins 12.0. Never raise it to or above a version the
+code guards against.
+
+There used to be a look-alike second setting, a `-platform_version,ios,13.0` linker flag
+in `.cargo/config.toml`. It existed only because the vendored foundational crates built
+intermediate dylibs whose link needed `__chkstk_darwin`, an iOS 13 `aws-lc-sys` symbol.
+Those crates are rlib only now, nothing links a dylib during the lib build, and the flag
+is gone, verified with `make build-ios`.
 
 `cargo build --lib` links nothing, so it cannot reproduce a link error that
 `make build-ios` hits. Check with the Makefile target.

@@ -30,6 +30,22 @@ work must use `on_main` or `from_main` before triggering a UI event.
   Panics when called on the main thread: the future may need `from_main`, which needs the frame
   loop, which the blocked main thread cannot run. That is a guaranteed deadlock.
 
+## Frames on demand
+
+The winit loop sleeps in `ControlFlow::Wait` and renders only when someone asked for a
+frame. Anything that must reach the screen calls `request_frame` in
+`test-engine/src/window/redraw.rs`: window and input events, animations, the level drawer
+while a level is loaded. A static screen with no level requests nothing and burns no CPU.
+
+`request_frame` is safe from any thread. On the main thread the loop is already awake, from
+another thread it wakes the sleeping loop with a winit user event. The dispatch queue is
+wired in: `hreads` calls the waker on every background enqueue via `set_dispatch_waker`,
+so a queued `on_main` closure never waits on an idle loop. Queueing it requests the frame
+that drains it.
+
+Headless runs render every iteration and ignore the flag. Wasm is single threaded and
+browser driven, the loop polls every iteration and needs no waking.
+
 ## Rules
 
 - Never block the main thread waiting for background work.

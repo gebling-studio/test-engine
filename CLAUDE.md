@@ -66,6 +66,7 @@ cargo run -p ui-test -- --test-name <name> --human                           # w
 cargo run -p ui-test -- --headless --test-name <name> --record-colors        # print check_colors blocks
 cargo run -p render-test                                                     # render tests
 make ui                                                                      # desktop suite, plus the iOS simulator suite on macOS, one report
+make uui                                                                     # desktop suite only, headless, release mode
 make ci                                                                      # typos, formatting, lints, unused dependencies
 make lint                                                                    # clippy, pedantic, zero warnings
 cargo machete                                                                # unused dependencies, zero findings

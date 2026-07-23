@@ -375,10 +375,20 @@ it survives the next re-record.
 `--record-colors --human` combined shows the freshly picked probes the same way normal
 human runs show existing ones, to review what gets pinned before pasting.
 
-Re-recording an existing block to make a failing test pass is editing expectations — same
-rule as above, only with explicit approval. Approval to record is not approval of the
-result: paste the block, show the render with `--test-name <name> --human --record-colors`,
-and wait. A passing rerun proves nothing, the expectation came from that same render.
+Re-recording an existing block rewrites the spec. Approval of a code change is not
+approval to re-record, and approval to record is not approval of the recorded result.
+The gates, every one mandatory:
+
+1. Inspect the failure screenshot and confirm the render is intentionally different.
+2. Name the test, explain why its pixels moved, ask permission to record, and wait.
+3. Record only that test with `--headless --test-name <name> --record-colors`.
+4. Paste the block over the old one and compare the two. Keep every probe inside the
+   declared canvas.
+5. Show the recorded render and probe markers with `--test-name <name> --human
+   --record-colors`.
+6. Stop and wait for explicit acceptance. Run no other test, suite, check or commit while
+   that review is pending. A passing rerun proves nothing, the expectation came from that
+   same render.
 
 A recorded block is large. Keep it in a `const` next to the test rather than inline, so
 the function stays readable and within the line limit.

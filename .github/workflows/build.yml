@@ -29,9 +29,9 @@ jobs:
           sudo apt-get install -y cmake pkg-config libssl-dev xorg-dev libasound2-dev
 
       - name: Install quality tools
-        run: |
-          cargo install typos-cli --version 1.48.0 --locked
-          cargo install cargo-machete --version 0.9.2 --locked
+        uses: taiki-e/install-action@v2
+        with:
+          tool: typos-cli@1.48.0,cargo-machete@0.9.2
 
       - name: Run quality checks
         run: make ci
@@ -44,6 +44,11 @@ jobs:
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
+
+      - name: Install trunk
+        uses: taiki-e/install-action@v2
+        with:
+          tool: trunk
 
       - name: Build
         run: make wasm

@@ -2,15 +2,13 @@
 [workspace]
 
 default-members = ["test-game"]
-exclude = [
-  "deps/hreads",
-  "deps/refs",
-  "deps/vents",
-  "deps/netrun",
-]
 members = [
   "bench",
+  "deps/hreads",
+  "deps/netrun",
+  "deps/refs",
   "deps/ui-proc-test",
+  "deps/vents",
   "example-app",
   "fuzz",
   "inspector",
