@@ -9,7 +9,7 @@ use refs::main_lock::MainLock;
 use winit::{
     application::ApplicationHandler,
     event::{MouseScrollDelta, WindowEvent},
-    event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy},
+    event_loop::{ActiveEventLoop, ControlFlow, EventLoop, EventLoopProxy},
     keyboard::{KeyCode, PhysicalKey},
     window::WindowId,
 };
@@ -259,7 +259,7 @@ impl ApplicationHandler<UserEvent> for AppHandler {
         }
     }
 
-    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+    fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
         if self.state.not_ready() {
             return;
         }
@@ -268,12 +268,23 @@ impl ApplicationHandler<UserEvent> for AppHandler {
             return;
         };
 
-        // Native sleeps in `ControlFlow::Wait` and draws only when a frame was
-        // requested. Wasm keeps polling and drawing every iteration.
         #[cfg(not_wasm)]
-        if !crate::window::take_needs_render() {
-            return;
+        {
+            let continuous = crate::window::continuous_render_active();
+            let pending = crate::window::take_needs_render();
+            if !continuous && !pending {
+                event_loop.set_control_flow(ControlFlow::Wait);
+                return;
+            }
+            event_loop.set_control_flow(if continuous {
+                ControlFlow::Poll
+            } else {
+                ControlFlow::Wait
+            });
         }
+
+        #[cfg(wasm)]
+        event_loop.set_control_flow(ControlFlow::Poll);
 
         window.request_redraw();
     }

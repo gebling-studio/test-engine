@@ -272,7 +272,18 @@ impl AppRunner {
         // touches. An app with no loading phase is ready at once.
         UIManager::on_app_ready(|| {
             hreads::spawn(async {
-                let report = crate::ui_test::run_all_tests();
+                let mut tests = crate::UI_TESTS.lock().clone();
+
+                // Run only the named tests when set, a comma separated list, to
+                // isolate cases on a device or simulator where the whole suite
+                // is slow to reach them. Order in the map is still alphabetical.
+                if let Ok(only) = std::env::var("TE_TEST_ONLY") {
+                    let keep: Vec<String> =
+                        only.split(',').map(|n| crate::ui_test::spaced_test_name(n.trim())).collect();
+                    tests.retain(|name, _| keep.contains(name));
+                }
+
+                let report = crate::ui_test::run_test_map(&tests);
 
                 for failure in &report.failures {
                     println!("TEST FAILED: {}\n{}", failure.name, failure.detail);

@@ -32,5 +32,5 @@ pub use self::{
 };
 pub(crate) use self::{
     app_handler::UserEvent,
-    redraw::{request_frame, take_needs_render},
+    redraw::{continuous_render_active, request_frame, take_needs_render},
 };

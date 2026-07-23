@@ -32,19 +32,39 @@ work must use `on_main` or `from_main` before triggering a UI event.
 
 ## Frames on demand
 
-The winit loop sleeps in `ControlFlow::Wait` and renders only when someone asked for a
-frame. Anything that must reach the screen calls `request_frame` in
-`test-engine/src/window/redraw.rs`: window and input events, animations, the level drawer
-while a level is loaded. A static screen with no level requests nothing and burns no CPU.
+The winit loop draws only when a frame is requested, so a static screen with nothing moving
+burns no CPU. `request_frame` in `test-engine/src/window/redraw.rs` sets a redraw flag and is
+safe from any thread. Window and input events call it, and so does the dispatch waker, which
+`hreads` fires on every background `on_main`/`from_main` enqueue, so a queued closure never
+waits on an idle loop.
 
-`request_frame` is safe from any thread. On the main thread the loop is already awake, from
-another thread it wakes the sleeping loop with a winit user event. The dispatch queue is
-wired in: `hreads` calls the waker on every background enqueue via `set_dispatch_waker`,
-so a queued `on_main` closure never waits on an idle loop. Queueing it requests the frame
-that drains it.
+Continuous work keeps the loop running by itself. While a live animation or a loaded level
+exists, `continuous_render_active` is true and `about_to_wait` sets `ControlFlow::Poll`, so the
+loop iterates and each requested frame is delivered. Once neither exists it goes back to
+`ControlFlow::Wait` and sleeps. The choice keys off the presence of the work, not a per-frame
+flag, because under `Poll` `about_to_wait` also runs on the empty iterations between draws and a
+flag would read false there.
 
-Headless runs render every iteration and ignore the flag. Wasm is single threaded and
-browser driven, the loop polls every iteration and needs no waking.
+The two platforms order the loop differently and it matters. On desktop `about_to_wait` runs
+after the render, so it sees an animation added mid-frame and switches to `Poll` on its own. On
+iOS `about_to_wait` runs before the render, so it misses that animation, and a `request_frame`
+made while drawing, like the one from `commit_animations`, comes too late for the current
+iteration. So on iOS only, `request_frame` also wakes the loop from the main thread, and the next
+iteration re-checks the flag and keeps drawing. Doing that same wake on desktop livelocks the
+loop, so it is gated to iOS.
+
+Headless runs render every iteration and ignore the flag. Wasm is single threaded and browser
+driven, the loop polls every iteration and needs no waking.
+
+### Known issue: windowed screenshots starve
+
+A screenshot, the path behind `check_colors` in UI tests, waits for one rendered frame driven by
+a single `request_frame`. On the desktop windowed loop that frame is starved when the window is
+not focused, most likely by macOS App Nap throttling the wake, so each screenshot can take a
+second or more and a windowed suite crawls. Headless is unaffected since it renders every
+iteration, and the iOS simulator is unaffected since its display link keeps frames flowing. This
+arrived with render on demand and is not yet fixed. It costs only the speed of a windowed run,
+not correctness.
 
 ## Rules
 

@@ -46,6 +46,15 @@ this toolchain can boot. `make ui-ios` runs only that lane. It needs the base iO
 and the iOS 16.4 simulator runtime installed through `xcodebuild -downloadPlatform iOS`, else
 the storyboard build fails and the whole lane reports `0 passed 0 failed`. See [ios.md](ios.md).
 
+`make ui-ios` streams the suite live, the same `Started`/`OK` lines the desktop lane prints, so
+a hang names the test it stuck on. The app logs through NSLog, which tags every console line
+with a timestamp and process name, and the lane strips that prefix so the stream reads like
+desktop. Under `make ui` the lane sets `TE_IOS_QUIET` and goes back to buffering, printing only
+`[ios]` milestones, so three parallel lanes do not mangle each other's output.
+
+`TE_TEST_ONLY` narrows a `TE_RUN_TESTS` run to a comma separated list of test names. It is for
+isolating one case on a device or simulator, where the whole suite is slow to reach it.
+
 ## Run from the editor
 
 A patched rust-analyzer puts a run button on every `impl ViewTest for X` line. It runs
