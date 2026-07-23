@@ -66,8 +66,10 @@ ln -sf <patched rust-analyzer> ~/.rustup/toolchains/<channel>/bin/rust-analyzer
 ```
 
 A rustup reinstall of the toolchain restores the stock binary, then the symlink needs to be
-redone. Zed refetches runnables only when a buffer opens or changes, so reopen the file if
-the button is missing after a server restart.
+redone. Zed also needs `"enable_lsp_tasks": true` on its rust-analyzer entry, since it drops
+LSP runnables by default and the button rides on `experimental/runnables`. Zed refetches
+runnables only when a buffer opens or changes, so reopen the file if the button is missing
+after a server restart.
 
 ## One registry
 
