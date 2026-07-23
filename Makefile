@@ -10,6 +10,9 @@ ui:
 uui:
 	cargo run -p ui-test --release -- --headless
 
+ui-ios:
+	rust ./build/ios/sim-test.rs
+
 all:
 	order
 	make wasm

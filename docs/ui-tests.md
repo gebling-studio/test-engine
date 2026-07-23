@@ -42,7 +42,9 @@ touches, so an app with a loading screen marks itself not ready until assets lan
 inspector and no mDNS, so it runs while the desktop lane runs. `make ui` uses it: on macOS
 it runs the desktop suite and the iOS simulator suite in parallel, then prints one report.
 The simulator lane is `build/ios/sim-test.rs`, an iPhone 8 on iOS 16.4, the oldest device
-this toolchain can boot. See [ios.md](ios.md).
+this toolchain can boot. `make ui-ios` runs only that lane. It needs the base iOS platform
+and the iOS 16.4 simulator runtime installed through `xcodebuild -downloadPlatform iOS`, else
+the storyboard build fails and the whole lane reports `0 passed 0 failed`. See [ios.md](ios.md).
 
 ## Run from the editor
 
