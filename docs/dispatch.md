@@ -56,6 +56,13 @@ loop, so it is gated to iOS.
 Headless runs render every iteration and ignore the flag. Wasm is single threaded and browser
 driven, the loop polls every iteration and needs no waking.
 
+The `Animation drives frames` UI test guards the part of this that can be pinned down. It starts
+an animation from code, with nothing injecting input, and checks that the loop reports continuous
+work and that the animation finishes on its own. It does not reproduce the iOS stall, which only
+showed up part way through a full suite run and never on its own, so the iOS lane is what catches
+that one. Note that any `from_main` between starting an animation and waiting for it wakes the
+loop and hides exactly this class of bug.
+
 ### Known issue: windowed screenshots starve
 
 A screenshot, the path behind `check_colors` in UI tests, waits for one rendered frame driven by
